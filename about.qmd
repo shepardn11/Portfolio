@@ -6,12 +6,12 @@ title: "About Me"
 
 <img src="images/profile.jpg" alt="add photo to /images" class="rounded-circle mb-3" width="160">
 
-<h1>Your Name</h1>
+<h1>Shepard Smyth</h1>
 
-<a href="https://linkedin.com/in/your-profile" class="btn btn-outline-primary btn-sm" target="_blank">
+<a href="https://www.linkedin.com/in/shepardsmythn11" class="btn btn-outline-primary btn-sm" target="_blank">
   <i class="fab fa-linkedin"></i> LinkedIn
 </a>
-<a href="https://github.com/your-username" class="btn btn-outline-primary btn-sm" target="_blank">
+<a href="https://github.com/shepardn11" class="btn btn-outline-primary btn-sm" target="_blank">
   <i class="fab fa-github"></i> GitHub
 </a>
 
@@ -19,45 +19,43 @@ title: "About Me"
 
 ## Background
 
-Write a compelling narrative about your background, education, and what drives your passion for product management. This is your chance to tell your story and connect with potential employers or collaborators.
+Born and raised in the California Bay Area I have always been awed by the new technological advancments and inventions being developed. Hearing about the world changing products being built close to home gave me a deep passion for innovation and the entreprenurial life. This influenced me to dive deep into new markets, whether that included joining AI clubs, robotics classes, or lectures to her and understand what was out their and wanted is still needed. All in all my passion and drive to enter Product Mangement has come from my character of liking to create and improve. Whether it is a room, a toy, or a system my mind thrives on seeing the possible.   
 
 ### Education
 
-- **Degree Name**, University Name (Year)
-- **Relevant Coursework**: List key courses related to product management, analytics, or business
-- **Academic Achievements**: Honor societies, relevant projects, or awards
+- **Business Strategy**, Brigham Young University (Junior)
+- **Finance 201, Economics 110, Accounting 200, Information Systems 201, Information Systems 110**: List key courses related to product management, analytics, or business
+- **	Marriot School of Business Dean’s List (top 5% of students), BYU Academic Based Scholarship, Content Creator for the BYU AI in Business Club**: Honor societies, relevant projects, or awards
 
 ### Experience
 
-#### Job/Internship Title - Company Name
-*Dates*
+####  Analyst Intern- Isom Advisors
+*May-Aug - 2025*
 
-- Key accomplishment or responsibility
-- Another achievement with quantifiable results
-- Skills or technologies used
+- Created powerpoint presentations to be shared with school boards and bond underwriters 
+- Analyzed markets to ensure best bond interst rates
+- Worked on excel and powerpoint daily to track reliable and presentable data
 
-#### Another Position - Company Name
-*Dates*
+#### Project Manager Intern - Carabie 
+*Jan - April - 2025*
 
-- What you contributed to the organization
-- Projects you worked on
-- Impact you made
+- Work directly with the CEO to manage and optimize the website and media platforms, driving engagement and expanding audience reach
+- Lead the strategic expansion of Carabie into new platforms and markets, increasing brand presence and sales
+- 	Research market trends and competitors to stay ahead of industry changes, refine marketing strategies and adjust product development
 
 ### Skills & Interests
 
 **Technical Skills**
-- Programming languages (Python, R, SQL)
-- Analytics tools (Tableau, Power BI, Google Analytics)
-- Product management tools (Jira, Confluence, Figma)
+- Expeirence with ERP’s, Data Security and Privacy, Database Modeling, SQL, IT/IS Project Management, Flowcharting, Excel Automation (VBA), Tableau (Data Analytics and Visualization), Solver (Optimization with Excel), Statistics in Excel, Including Prediction, Web Development (HTML, CSS), LLM Use
 
 **Soft Skills**
-- Communication and presentation
-- Cross-functional collaboration
-- Strategic thinking and problem-solving
+- Public speaking and presentation
+- Working well at participating and managing a team
+- Love to problem solve
 
 **Interests**
-Share what you're passionate about outside of work - this helps humanize your professional brand and can be great conversation starters.
+- 4-year varsity lacrosse and water polo (captain), travelled to Costa Rica, Mexico, Hawaii, and California to surf, skied 13+ resorts, 2,000+ hours spent playing piano 
 
 ### What's Next
+- I would love to enter the product mangament field focusing on physical products. I hope to work closely with products that cater to athletes and the outdoors, as those are subjects I can connect with. Long term career goals include starting my own business or many from different products I imagine useful in this world
 
-Describe your career goals and what type of opportunities you're seeking. This helps visitors understand how they might work with you or whether you'd be a good fit for their organization.
