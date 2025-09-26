@@ -21,7 +21,7 @@ title: "Shepard Smyth's Product Management Portfolio"
 
 ::: {.g-col-12 .g-col-md-6 .card}
 
-### Daily Wordle
+### [Daily Wordle](https://daily-wordle.vercel.app/)
 Daily wordle is a challenging guessing puzzle meant to stimulate the brain and provide fun 
 
 :::

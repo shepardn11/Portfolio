@@ -15,7 +15,7 @@ website:
       - text: Projects
         menu:
           - href: projects/project-1.qmd
-            text: Name of my first app
+            text: Wordle Daily
           #- href: projects/project-2.qmd
           #  text: Business Case Presentation
           #- href: projects/project-3.qmd
