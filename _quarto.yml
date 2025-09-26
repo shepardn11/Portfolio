@@ -4,7 +4,7 @@ project:
 
 website:
   title: ""
-  favicon: images/prototyping-favicon.png
+  favicon: images/favicon.ico
   navbar:
     background: primary
     left:
