@@ -1,5 +1,5 @@
 ---
-title: "Welcome to My Product Management Portfolio"
+title: "Shepard Smyth's Product Management Portfolio"
 ---
 
 ::: {.hero-banner .text-center}
@@ -21,8 +21,8 @@ title: "Welcome to My Product Management Portfolio"
 
 ::: {.g-col-12 .g-col-md-6 .card}
 
-### [Name of my first app](projects/project-1.qmd)
-A one sentence description of my first application which is deployed to vercel. 
+### Daily Wordle
+Daily wordle is a challenging guessing puzzle meant to stimulate the brain and provide fun 
 
 :::
 

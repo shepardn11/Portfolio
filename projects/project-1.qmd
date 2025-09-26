@@ -51,4 +51,232 @@ Tools Used:
 
 ## Product Requirements Document
 
-Paste in the PRD that you submitted to Claude Code
+Wordle - Product Requirements Document
+1. Product Overview
+1.1 Product Name
+Wordle
+1.2 Product Description
+A daily word puzzle game where players have 6 attempts to guess a 5-letter word. After each guess, tiles change color to provide feedback on letter accuracy and positioning.
+1.3 Target Platform
+Web application (HTML/CSS/JavaScript)
+2. Core Gameplay Requirements
+2.1 Game Board
+
+6 rows × 5 columns grid of letter tiles
+Each row represents one guess attempt
+Tiles are initially empty and become filled as user types
+Visual feedback through color changes after each guess submission
+
+2.2 Word Requirements
+
+Target word must be exactly 5 letters
+Only valid English words accepted as guesses
+Daily word selection (same word for all players on same day)
+Word list should exclude proper nouns, plurals, and obscure terms
+
+2.3 Input System
+
+Accept keyboard input (physical and on-screen)
+Letters A-Z only
+Backspace to delete letters
+Enter to submit guess
+Visual keyboard showing letter states
+
+2.4 Feedback System
+After each guess submission, tiles change color:
+
+Green: Letter is correct and in the right position
+Yellow: Letter is in the word but in the wrong position
+Gray: Letter is not in the target word
+
+2.5 Game States
+
+Playing: User can input guesses
+Won: User guessed correctly within 6 attempts
+Lost: User failed to guess within 6 attempts
+Invalid: User entered invalid word (show error message)
+
+3. User Interface Requirements
+3.1 Layout
+
+Clean, minimalist design
+Centered game board
+On-screen keyboard below the board
+Header with game title
+Statistics/results area
+
+3.2 Visual Design
+
+Tile animations when letters are entered and revealed
+Smooth color transitions for feedback
+Responsive design for mobile and desktop
+High contrast colors for accessibility
+Dark mode support
+
+3.3 Keyboard
+
+QWERTY layout
+Visual feedback showing used letters
+Same color coding as game tiles (green/yellow/gray)
+Disabled state for used letters
+
+4. Game Logic Requirements
+4.1 Validation Rules
+
+Guess must be exactly 5 letters
+Guess must be a valid English word
+Cannot submit incomplete words
+Cannot modify previous guesses
+
+4.2 Feedback Logic
+
+Check each letter position independently
+Handle duplicate letters correctly:
+
+If target has 1 'A' but guess has 2 'A's, only mark one as yellow/green
+Priority: exact position matches (green) before wrong position (yellow)
+
+
+
+4.3 Win/Loss Conditions
+
+Win: Exact match of target word
+Loss: 6 incorrect guesses used
+Display appropriate end-game message
+
+5. Data Management
+5.1 Word Lists
+
+Curated list of valid 5-letter target words (~2,300 words)
+Larger dictionary for guess validation (~10,000+ words)
+Daily word selection algorithm (deterministic based on date)
+
+5.2 Game State Persistence
+
+Save current game progress in localStorage
+Persist statistics across sessions
+Handle page refresh without losing progress
+
+5.3 Statistics Tracking
+
+Games played
+Win percentage
+Current streak
+Max streak
+Guess distribution (1-6 guesses)
+
+6. Technical Requirements
+6.1 Performance
+
+Fast response to user input (<100ms)
+Smooth animations (60fps)
+Minimal load time
+Works offline after initial load
+
+6.2 Compatibility
+
+Modern browsers (Chrome, Firefox, Safari, Edge)
+Mobile responsive (iOS Safari, Android Chrome)
+Touch and keyboard input support
+
+6.3 Architecture
+
+Vanilla JavaScript (no framework dependencies)
+Modular code structure
+Clean separation of concerns:
+
+Game logic
+UI rendering
+Input handling
+Data persistence
+
+
+
+7. File Structure
+wordle/
+├── index.html
+├── css/
+│   └── styles.css
+├── js/
+│   ├── game.js          # Core game logic
+│   ├── ui.js            # UI rendering and updates
+│   ├── input.js         # Input handling
+│   ├── words.js         # Word lists and validation
+│   └── storage.js       # localStorage management
+└── assets/
+    └── (any images/icons)
+8. Key Features Implementation
+8.1 Daily Word System
+javascript// Pseudo-code for daily word selection
+function getTodaysWord() {
+    const startDate = new Date('2024-01-01');
+    const today = new Date();
+    const daysSinceStart = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+    return WORD_LIST[daysSinceStart % WORD_LIST.length];
+}
+8.2 Guess Validation
+javascript// Pseudo-code for feedback generation
+function generateFeedback(guess, target) {
+    const feedback = new Array(5).fill('gray');
+    const targetLetters = target.split('');
+    const guessLetters = guess.split('');
+    
+    // First pass: mark exact matches
+    for (let i = 0; i < 5; i++) {
+        if (guessLetters[i] === targetLetters[i]) {
+            feedback[i] = 'green';
+            targetLetters[i] = null; // Mark as used
+        }
+    }
+    
+    // Second pass: mark wrong positions
+    for (let i = 0; i < 5; i++) {
+        if (feedback[i] === 'gray') {
+            const letterIndex = targetLetters.indexOf(guessLetters[i]);
+            if (letterIndex !== -1) {
+                feedback[i] = 'yellow';
+                targetLetters[letterIndex] = null; // Mark as used
+            }
+        }
+    }
+    
+    return feedback;
+}
+9. Success Criteria
+9.1 Functional Requirements
+
+✅ All game rules implemented correctly
+✅ Proper feedback for all guess scenarios
+✅ Persistent game state
+✅ Statistics tracking
+✅ Responsive design
+
+9.2 User Experience
+
+Intuitive controls
+Clear visual feedback
+Satisfying animations
+Quick load times
+No bugs or crashes
+
+10. Future Enhancements (Optional)
+
+Hard mode (revealed hints must be used)
+Share results functionality
+Multiple language support
+Custom word lists
+Multiplayer variants
+Accessibility improvements (screen readers)
+PWA capabilities
+
+
+Development Notes
+This PRD provides the complete specification for building a Wordle clone. The implementation should focus on clean, maintainable code with proper separation of concerns. Start with core gameplay mechanics before adding polish and animations.
+Key implementation priorities:
+
+Basic game board and input system
+Word validation and feedback logic
+Game state management
+Visual design and animations
+Statistics and persistence
+Mobile responsiveness
