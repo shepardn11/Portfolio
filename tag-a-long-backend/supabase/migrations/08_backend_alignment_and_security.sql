@@ -306,6 +306,12 @@ CREATE POLICY "user_reports_insert_own"
 -- HELPER FUNCTIONS (Updated for new table names)
 -- ============================================================================
 
+-- Drop old function versions first to avoid signature conflicts
+DROP FUNCTION IF EXISTS get_user_feed(UUID, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS get_user_feed(TEXT, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS search_listings(TEXT, TEXT, INTEGER, INTEGER);
+DROP FUNCTION IF EXISTS get_listings_by_category(TEXT, TEXT, INTEGER, INTEGER);
+
 -- Update get_user_feed for activity_listings
 CREATE OR REPLACE FUNCTION get_user_feed(
   requesting_user_id UUID,
