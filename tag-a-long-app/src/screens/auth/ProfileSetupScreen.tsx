@@ -29,7 +29,7 @@ interface Props {
 }
 
 export default function ProfileSetupScreen({ navigation }: Props) {
-  const { user, updateUser, setIsAuthenticated } = useAuthStore();
+  const { user, updateUser, setIsAuthenticated, setProfileSetupComplete } = useAuthStore();
   const [bio, setBio] = useState('');
   const [instagramHandle, setInstagramHandle] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
@@ -96,7 +96,8 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   };
 
   const completeSetup = () => {
-    // Mark user as authenticated - this will redirect them to the main app
+    // Mark profile setup as complete and authenticate user
+    setProfileSetupComplete(true);
     setIsAuthenticated(true);
     setIsLoading(false);
   };

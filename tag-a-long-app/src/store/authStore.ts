@@ -9,6 +9,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  profileSetupComplete: boolean;
   isLoading: boolean;
   error: string | null;
 
@@ -20,6 +21,7 @@ interface AuthState {
   setUser: (user: User | null) => void;
   updateUser: (updates: Partial<User>) => void;
   setIsAuthenticated: (value: boolean) => void;
+  setProfileSetupComplete: (value: boolean) => void;
   clearError: () => void;
 }
 
@@ -27,6 +29,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
   isAuthenticated: false,
+  profileSetupComplete: false,
   isLoading: true,
   error: null,
 
@@ -48,9 +51,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user,
           token,
           isAuthenticated: true,
+          profileSetupComplete: true, // Login means they already have an account
           isLoading: false,
           error: null,
         });
+        await AsyncStorage.setItem('profileSetupComplete', 'true');
       } else {
         throw new Error(response.error?.message || 'Login failed');
       }
@@ -134,6 +139,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (token && userStr) {
         const user = JSON.parse(userStr);
 
+        // Check if profile setup is complete
+        const setupComplete = await AsyncStorage.getItem('profileSetupComplete');
+        const isSetupComplete = setupComplete === 'true';
+
         // Optionally, verify token is still valid by fetching fresh user data
         try {
           const freshUser = await profileAPI.getMyProfile();
@@ -142,7 +151,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({
             user: freshUser,
             token,
-            isAuthenticated: true,
+            isAuthenticated: isSetupComplete, // Only authenticate if setup is complete
+            profileSetupComplete: isSetupComplete,
             isLoading: false,
           });
         } catch (error) {
@@ -152,6 +162,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             user: null,
             token: null,
             isAuthenticated: false,
+            profileSetupComplete: false,
             isLoading: false,
           });
         }
@@ -195,6 +206,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Set authentication status
   setIsAuthenticated: (value: boolean) => {
     set({ isAuthenticated: value });
+  },
+
+  // Set profile setup complete
+  setProfileSetupComplete: (value: boolean) => {
+    set({ profileSetupComplete: value });
+    AsyncStorage.setItem('profileSetupComplete', value.toString());
   },
 
   // Clear error
