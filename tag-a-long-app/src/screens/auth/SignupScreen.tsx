@@ -87,7 +87,8 @@ export default function SignupScreen({ navigation }: Props) {
         date_of_birth: dateOfBirth
       });
       console.log('Signup successful!');
-      // User is now authenticated, will be redirected automatically
+      // Navigate to profile setup to add photos and bio
+      navigation.navigate('ProfileSetup');
     } catch (error: any) {
       console.error('Signup error:', error);
       console.error('Signup error response:', error.response?.data);
