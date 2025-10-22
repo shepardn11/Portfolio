@@ -96,16 +96,9 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   };
 
   const completeSetup = () => {
-    // Mark user as authenticated and ready to use the app
-    Alert.alert('Welcome!', 'Your profile is ready. Start exploring activities!', [
-      {
-        text: 'Get Started',
-        onPress: () => {
-          // User will be redirected to main app automatically since they're authenticated
-          setIsLoading(false);
-        },
-      },
-    ]);
+    // Mark user as authenticated - this will redirect them to the main app
+    setIsAuthenticated(true);
+    setIsLoading(false);
   };
 
   const handleSkip = () => {
