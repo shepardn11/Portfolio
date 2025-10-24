@@ -205,13 +205,39 @@ export default function ProfileSetupScreen({ navigation }: Props) {
         updateUser(updatedUser);
       }
 
-      // If user wants premium, show subscription info
+      // If user wants premium, create Stripe checkout session
       if (wantsPremium) {
-        Alert.alert(
-          'Premium Subscription',
-          'Premium features coming soon! You can upgrade later from your profile.',
-          [{ text: 'OK', onPress: () => completeSetup() }]
-        );
+        try {
+          const response = await apiClient.getInstance().post('/subscription/create-checkout');
+
+          if (response.data.url) {
+            // Open Stripe checkout in browser
+            Alert.alert(
+              'Premium Subscription',
+              'You will be redirected to complete your premium subscription ($4.99/month). Would you like to continue?',
+              [
+                { text: 'Cancel', onPress: () => completeSetup(), style: 'cancel' },
+                {
+                  text: 'Continue',
+                  onPress: () => {
+                    // Open Stripe checkout URL
+                    window.open(response.data.url, '_blank');
+                    completeSetup();
+                  }
+                }
+              ]
+            );
+          } else {
+            throw new Error('No checkout URL received');
+          }
+        } catch (error: any) {
+          console.error('Create checkout error:', error);
+          Alert.alert(
+            'Subscription Error',
+            'Could not create checkout session. You can upgrade later from your profile.',
+            [{ text: 'OK', onPress: () => completeSetup() }]
+          );
+        }
       } else {
         completeSetup();
       }
