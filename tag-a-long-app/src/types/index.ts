@@ -8,6 +8,7 @@ export interface User {
   city: string;
   bio?: string;
   profile_photo_url?: string;
+  photo_gallery?: string[];
   instagram_handle?: string;
   created_at: string;
   is_premium?: boolean;

@@ -87,8 +87,10 @@ export default function SignupScreen({ navigation }: Props) {
         date_of_birth: dateOfBirth
       });
       console.log('Signup successful!');
+      console.log('DEBUG: About to navigate to ProfileSetup');
       // Navigate to profile setup to add photos and bio
       navigation.navigate('ProfileSetup');
+      console.log('DEBUG: navigation.navigate(ProfileSetup) called');
     } catch (error: any) {
       console.error('Signup error:', error);
       console.error('Signup error response:', error.response?.data);
@@ -134,6 +136,9 @@ export default function SignupScreen({ navigation }: Props) {
               onChangeText={setDisplayName}
               editable={!isLoading}
             />
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementText}>• At least 2 characters</Text>
+            </View>
 
             <TextInput
               style={styles.input}
@@ -143,6 +148,10 @@ export default function SignupScreen({ navigation }: Props) {
               autoCapitalize="none"
               editable={!isLoading}
             />
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementText}>• At least 3 characters</Text>
+              <Text style={styles.requirementText}>• Lowercase letters only</Text>
+            </View>
 
             <TextInput
               style={styles.input}
@@ -160,6 +169,9 @@ export default function SignupScreen({ navigation }: Props) {
               editable={!isLoading}
               keyboardType="numbers-and-punctuation"
             />
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementText}>• Format: YYYY-MM-DD (e.g., 2000-01-15)</Text>
+            </View>
 
             <TextInput
               style={styles.input}
@@ -169,6 +181,12 @@ export default function SignupScreen({ navigation }: Props) {
               secureTextEntry
               editable={!isLoading}
             />
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementText}>• At least 8 characters</Text>
+              <Text style={styles.requirementText}>• One uppercase letter</Text>
+              <Text style={styles.requirementText}>• One lowercase letter</Text>
+              <Text style={styles.requirementText}>• One number</Text>
+            </View>
 
             <TextInput
               style={styles.input}
@@ -244,9 +262,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     fontSize: 16,
-    marginBottom: 15,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+  },
+  requirementsContainer: {
+    marginBottom: 15,
+    paddingLeft: 10,
+  },
+  requirementText: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
   },
   signupButton: {
     backgroundColor: '#6366f1',

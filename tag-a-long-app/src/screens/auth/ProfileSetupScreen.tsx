@@ -18,6 +18,9 @@ import { AuthStackParamList } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { profileAPI } from '../../api/endpoints';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import apiClient from '../../api/client';
+import { uploadImage } from '../../utils/imageUpload';
 
 type ProfileSetupScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -32,27 +35,153 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   const { user, updateUser, setIsAuthenticated, setProfileSetupComplete } = useAuthStore();
   const [bio, setBio] = useState('');
   const [instagramHandle, setInstagramHandle] = useState('');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [galleryPhotos, setGalleryPhotos] = useState<(string | null)[]>([null, null, null, null, null]);
   const [wantsPremium, setWantsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(null);
 
-  const handleAddPhoto = () => {
-    if (photos.length >= 5) {
-      Alert.alert('Maximum Photos', 'You can upload up to 5 photos');
-      return;
+  const handleAddPhoto = async () => {
+    try {
+      // Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please allow access to your photos to upload a profile picture.');
+        return;
+      }
+
+      // Open image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        console.log('DEBUG ProfileSetup: Inside result check');
+        setIsUploadingPhoto(true);
+        console.log('DEBUG ProfileSetup: isUploadingPhoto set to true');
+        const imageUri = result.assets[0].uri;
+        console.log('DEBUG ProfileSetup: Image selected:', imageUri);
+        console.log('DEBUG ProfileSetup: User:', JSON.stringify(user));
+
+        if (!user || !user.id) {
+          console.error('DEBUG ProfileSetup: User is null or missing ID!');
+          Alert.alert('Error', 'User not found - cannot upload photo');
+          throw new Error('User not found - cannot upload photo');
+        }
+
+        console.log('DEBUG ProfileSetup: User check passed, user.id:', user.id);
+
+        // Upload to Supabase Storage
+        console.log('DEBUG ProfileSetup: Starting upload to Supabase...');
+        const publicUrl = await uploadImage(imageUri, user.id);
+        console.log('DEBUG ProfileSetup: Upload successful, URL:', publicUrl);
+
+        // Update profile via backend API using the photo endpoint
+        console.log('DEBUG ProfileSetup: Updating profile via API...');
+        const response = await apiClient.getInstance().post('/profile/photo', {
+          photo_url: publicUrl,
+        });
+
+        if (!response.data.success) {
+          throw new Error('Failed to update profile with photo');
+        }
+
+        const updatedUser = response.data.data;
+        console.log('DEBUG ProfileSetup: Profile updated:', updatedUser);
+
+        // Update local state
+        console.log('DEBUG ProfileSetup: Setting profilePhoto state to:', publicUrl);
+        setProfilePhoto(publicUrl);
+        updateUser(updatedUser);
+
+        console.log('DEBUG ProfileSetup: Profile photo should now be visible');
+        Alert.alert('Success', 'Profile photo uploaded!');
+      }
+    } catch (error: any) {
+      console.error('DEBUG ProfileSetup: Photo upload error:', error);
+      console.error('DEBUG ProfileSetup: Error details:', error.response?.data);
+      Alert.alert('Upload Failed', error.message || 'Could not upload photo. Please try again.');
+    } finally {
+      setIsUploadingPhoto(false);
     }
-    Alert.alert(
-      'Add Photo',
-      'Photo upload will be implemented with image picker.\nFor now, you can skip this step.',
-      [{ text: 'OK' }]
-    );
-    // TODO: Implement image picker
-    // For now, users can skip photos
   };
 
-  const handleRemovePhoto = (index: number) => {
-    const newPhotos = photos.filter((_, i) => i !== index);
-    setPhotos(newPhotos);
+  const handleRemovePhoto = () => {
+    setProfilePhoto(null);
+  };
+
+  const handleAddGalleryPhoto = async (index: number) => {
+    try {
+      // Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please allow access to your photos to upload a profile picture.');
+        return;
+      }
+
+      // Open image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0] && user) {
+        setUploadingGalleryIndex(index);
+        const imageUri = result.assets[0].uri;
+        console.log('DEBUG ProfileSetup: Gallery image selected:', imageUri, 'index:', index);
+
+        // Upload to Supabase Storage
+        console.log('DEBUG ProfileSetup: Uploading gallery photo to Supabase...');
+        const publicUrl = await uploadImage(imageUri, user.id);
+        console.log('DEBUG ProfileSetup: Gallery upload successful, URL:', publicUrl);
+
+        // Update profile via backend API using the gallery endpoint
+        console.log('DEBUG ProfileSetup: Adding to gallery via API...');
+        const response = await apiClient.getInstance().post('/profile/gallery', {
+          photo_url: publicUrl,
+        });
+
+        if (!response.data.success) {
+          throw new Error('Failed to add photo to gallery');
+        }
+
+        console.log('DEBUG ProfileSetup: Gallery updated:', response.data.data);
+
+        // Update local state with the uploaded photo URL
+        const newGalleryPhotos = [...galleryPhotos];
+        newGalleryPhotos[index] = publicUrl;
+        console.log('DEBUG ProfileSetup: Updating local state, newGalleryPhotos:', newGalleryPhotos);
+        setGalleryPhotos(newGalleryPhotos);
+
+        // Update user store with new gallery
+        if (user) {
+          updateUser({ ...user, photo_gallery: response.data.data.photo_gallery });
+        }
+
+        console.log('DEBUG ProfileSetup: Photo should now be visible at index', index);
+        Alert.alert('Success', 'Photo added to gallery!');
+      }
+    } catch (error: any) {
+      console.error('DEBUG ProfileSetup: Gallery photo upload error:', error);
+      console.error('DEBUG ProfileSetup: Error details:', error.response?.data);
+      Alert.alert('Upload Failed', error.message || 'Could not upload photo. Please try again.');
+    } finally {
+      setUploadingGalleryIndex(null);
+    }
+  };
+
+  const handleRemoveGalleryPhoto = (index: number) => {
+    const newGalleryPhotos = [...galleryPhotos];
+    newGalleryPhotos[index] = null;
+    setGalleryPhotos(newGalleryPhotos);
   };
 
   const handleComplete = async () => {
@@ -124,37 +253,90 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             </Text>
           </View>
 
-          {/* Photos Section */}
+          {/* Profile Photo Section */}
           <View style={styles.photosSection}>
-            <Text style={styles.sectionTitle}>Photos (Optional - up to 5)</Text>
-            <View style={styles.photosGrid}>
-              {[0, 1, 2, 3, 4].map((index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.photoBox}
-                  onPress={handleAddPhoto}
-                  disabled={isLoading}
-                >
-                  {photos[index] ? (
-                    <View>
-                      <Image source={{ uri: photos[index] }} style={styles.photoImage} />
-                      <TouchableOpacity
-                        style={styles.removePhotoButton}
-                        onPress={() => handleRemovePhoto(index)}
-                      >
-                        <Ionicons name="close-circle" size={24} color="#ff4444" />
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <View style={styles.photoPlaceholder}>
-                      <Ionicons name="camera" size={30} color="#999" />
-                      <Text style={styles.photoPlaceholderText}>
-                        {index === 0 ? 'Add' : '+'}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
+            <Text style={styles.sectionTitle}>Profile Photo (Optional)</Text>
+            <View style={styles.photoContainer}>
+              <TouchableOpacity
+                style={styles.largePhotoBox}
+                onPress={handleAddPhoto}
+                disabled={isLoading || isUploadingPhoto}
+              >
+                {(() => {
+                  console.log('DEBUG ProfileSetup: Rendering profile photo, profilePhoto:', profilePhoto, 'isUploadingPhoto:', isUploadingPhoto);
+                  if (isUploadingPhoto) {
+                    return <ActivityIndicator size="large" color="#6366f1" />;
+                  } else if (profilePhoto) {
+                    return (
+                      <View style={{ width: '100%', height: '100%' }}>
+                        <Image
+                          source={{ uri: profilePhoto }}
+                          style={styles.largePhotoImage}
+                          onLoad={() => console.log('DEBUG ProfileSetup: Profile photo loaded')}
+                          onError={(error) => console.log('DEBUG ProfileSetup: Profile photo error:', error.nativeEvent)}
+                        />
+                        <TouchableOpacity
+                          style={styles.removePhotoButton}
+                          onPress={handleRemovePhoto}
+                        >
+                          <Ionicons name="close-circle" size={32} color="#ff4444" />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  } else {
+                    return (
+                      <View style={styles.photoPlaceholder}>
+                        <Ionicons name="camera" size={48} color="#999" />
+                        <Text style={styles.photoPlaceholderText}>Tap to add photo</Text>
+                      </View>
+                    );
+                  }
+                })()}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Photo Gallery Section */}
+          <View style={styles.photosSection}>
+            <Text style={styles.sectionTitle}>Photo Gallery (Optional - up to 5 photos)</Text>
+            <View style={styles.galleryGrid}>
+              {galleryPhotos.map((photo, index) => {
+                console.log(`DEBUG ProfileSetup: Rendering gallery slot ${index}, photo:`, photo);
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.galleryPhotoBox}
+                    onPress={() => handleAddGalleryPhoto(index)}
+                    disabled={isLoading || uploadingGalleryIndex !== null}
+                  >
+                    {uploadingGalleryIndex === index ? (
+                      <ActivityIndicator size="small" color="#6366f1" />
+                    ) : photo ? (
+                      <View style={{ width: '100%', height: '100%' }}>
+                        <Image
+                          source={{ uri: photo }}
+                          style={styles.galleryPhotoImage}
+                          onLoad={() => console.log(`DEBUG ProfileSetup: Image loaded at index ${index}`)}
+                          onError={(error) => console.log(`DEBUG ProfileSetup: Image error at index ${index}:`, error.nativeEvent)}
+                        />
+                        <TouchableOpacity
+                          style={styles.removeGalleryPhotoButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleRemoveGalleryPhoto(index);
+                          }}
+                        >
+                          <Ionicons name="close-circle" size={24} color="#ff4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.galleryPhotoPlaceholder}>
+                        <Ionicons name="add" size={32} color="#999" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
@@ -267,38 +449,75 @@ const styles = StyleSheet.create({
   photosSection: {
     marginBottom: 25,
   },
-  photosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  photoContainer: {
+    alignItems: 'center',
+    marginVertical: 10,
   },
-  photoBox: {
-    width: '18%',
-    aspectRatio: 1,
-    marginBottom: 10,
+  largePhotoBox: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    overflow: 'hidden',
   },
-  photoImage: {
+  largePhotoImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 8,
+    resizeMode: 'cover',
   },
   photoPlaceholder: {
     width: '100%',
     height: '100%',
-    borderRadius: 8,
     backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#e0e0e0',
     borderStyle: 'dashed',
+    borderRadius: 75,
   },
   photoPlaceholderText: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#999',
-    marginTop: 2,
+    marginTop: 8,
   },
   removePhotoButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  galleryPhotoBox: {
+    width: '18%',
+    aspectRatio: 1,
+    marginBottom: 10,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  galleryPhotoImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  galleryPhotoPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    borderStyle: 'dashed',
+    borderRadius: 10,
+  },
+  removeGalleryPhotoButton: {
     position: 'absolute',
     top: -8,
     right: -8,

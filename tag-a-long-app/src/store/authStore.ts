@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Login action
   login: async (credentials: LoginCredentials) => {
     try {
-      set({ isLoading: true, error: null });
+      set({ error: null });
 
       const response = await authAPI.login(credentials);
 
@@ -52,7 +52,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           token,
           isAuthenticated: true,
           profileSetupComplete: true, // Login means they already have an account
-          isLoading: false,
           error: null,
         });
         await AsyncStorage.setItem('profileSetupComplete', 'true');
@@ -66,7 +65,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         'Login failed';
       set({
         error: errorMessage,
-        isLoading: false,
         isAuthenticated: false,
       });
       throw error;
@@ -76,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Signup action
   signup: async (data: SignupData) => {
     try {
-      set({ isLoading: true, error: null });
+      set({ error: null });
 
       const response = await authAPI.signup(data);
 
@@ -88,13 +86,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await apiClient.setAuthToken(token);
         await AsyncStorage.setItem('user', JSON.stringify(user));
 
+        console.log('DEBUG: Setting auth state after signup - isAuthenticated: false, profileSetupComplete: false');
         set({
           user,
           token,
           isAuthenticated: false, // Keep false to stay in auth flow for profile setup
-          isLoading: false,
+          profileSetupComplete: false,
           error: null,
         });
+        console.log('DEBUG: Auth state set. User should now navigate to ProfileSetup');
       } else {
         throw new Error(response.error?.message || 'Signup failed');
       }
@@ -105,7 +105,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         'Signup failed';
       set({
         error: errorMessage,
-        isLoading: false,
         isAuthenticated: false,
       });
       throw error;
@@ -120,7 +119,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         token: null,
         isAuthenticated: false,
-        isLoading: false,
+        profileSetupComplete: false,
         error: null,
       });
     } catch (error) {
@@ -136,6 +135,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const token = await AsyncStorage.getItem('auth_token');
       const userStr = await AsyncStorage.getItem('user');
 
+      console.log('DEBUG: loadUser - token exists:', !!token, 'user exists:', !!userStr);
+
       if (token && userStr) {
         const user = JSON.parse(userStr);
 
@@ -143,11 +144,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const setupComplete = await AsyncStorage.getItem('profileSetupComplete');
         const isSetupComplete = setupComplete === 'true';
 
+        console.log('DEBUG: loadUser - profileSetupComplete from storage:', setupComplete, 'isSetupComplete:', isSetupComplete);
+
         // Optionally, verify token is still valid by fetching fresh user data
         try {
           const freshUser = await profileAPI.getMyProfile();
           await AsyncStorage.setItem('user', JSON.stringify(freshUser));
 
+          console.log('DEBUG: loadUser - Setting isAuthenticated:', isSetupComplete);
           set({
             user: freshUser,
             token,
@@ -156,6 +160,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isLoading: false,
           });
         } catch (error) {
+          console.log('DEBUG: loadUser - Token invalid, clearing auth');
           // Token invalid, clear auth
           await apiClient.clearAuthToken();
           set({
@@ -167,6 +172,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           });
         }
       } else {
+        console.log('DEBUG: loadUser - No token/user found, staying logged out');
         set({
           user: null,
           token: null,
