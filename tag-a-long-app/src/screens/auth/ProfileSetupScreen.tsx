@@ -427,7 +427,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             >
               <View style={styles.premiumContent}>
                 <Ionicons
-                  name={wantsPremium ? 'checkbox-outline' : 'square-outline'}
+                  name={wantsPremium ? 'checkbox' : 'square-outline'}
                   size={24}
                   color="#6366f1"
                 />
