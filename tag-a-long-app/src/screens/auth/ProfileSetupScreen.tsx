@@ -12,6 +12,7 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Linking,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
@@ -185,8 +186,11 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   };
 
   const handleComplete = async () => {
+    console.log('DEBUG: handleComplete called');
+    console.log('DEBUG: wantsPremium:', wantsPremium);
     try {
       setIsLoading(true);
+      console.log('DEBUG: Loading state set to true');
 
       // Update profile with bio and instagram if provided
       const updates: any = {};
@@ -199,39 +203,64 @@ export default function ProfileSetupScreen({ navigation }: Props) {
         updates.instagram_handle = instagramHandle.trim();
       }
 
+      console.log('DEBUG: Updates to apply:', updates);
+
       // Only update if there's something to update
       if (Object.keys(updates).length > 0) {
+        console.log('DEBUG: Updating profile...');
         const updatedUser = await profileAPI.updateProfile(updates);
         updateUser(updatedUser);
+        console.log('DEBUG: Profile updated successfully');
       }
 
       // If user wants premium, create Stripe checkout session
       if (wantsPremium) {
+        console.log('DEBUG: User wants premium, creating checkout session...');
         try {
+          console.log('DEBUG: Calling /subscription/create-checkout endpoint...');
           const response = await apiClient.getInstance().post('/subscription/create-checkout');
+          console.log('DEBUG: Checkout response:', response.data);
 
           if (response.data.url) {
-            // Open Stripe checkout in browser
-            Alert.alert(
-              'Premium Subscription',
-              'You will be redirected to complete your premium subscription ($4.99/month). Would you like to continue?',
-              [
-                { text: 'Cancel', onPress: () => completeSetup(), style: 'cancel' },
-                {
-                  text: 'Continue',
-                  onPress: () => {
-                    // Open Stripe checkout URL
-                    window.open(response.data.url, '_blank');
-                    completeSetup();
-                  }
+            console.log('DEBUG: Got checkout URL:', response.data.url);
+
+            // Stop loading state
+            setIsLoading(false);
+
+            console.log('DEBUG: Opening Stripe checkout URL...');
+
+            // Open Stripe checkout URL - use window.open for web, Linking for mobile
+            try {
+              if (Platform.OS === 'web') {
+                console.log('DEBUG: Opening in web browser using window.open');
+                window.open(response.data.url, '_blank');
+                console.log('DEBUG: window.open called');
+              } else {
+                console.log('DEBUG: Opening in mobile browser using Linking');
+                const canOpen = await Linking.canOpenURL(response.data.url);
+                console.log('DEBUG: Can open URL?', canOpen);
+                if (canOpen) {
+                  await Linking.openURL(response.data.url);
+                  console.log('DEBUG: URL opened successfully');
+                } else {
+                  console.log('DEBUG: Cannot open URL');
+                  Alert.alert('Error', 'Cannot open payment page. Please try again later.');
                 }
-              ]
-            );
+              }
+            } catch (linkError: any) {
+              console.error('DEBUG: Error opening URL:', linkError);
+              Alert.alert('Error', 'Could not open payment page: ' + linkError.message);
+            }
+
+            // Complete setup (user can return to app after payment)
+            console.log('DEBUG: Completing setup...');
+            completeSetup();
           } else {
             throw new Error('No checkout URL received');
           }
         } catch (error: any) {
           console.error('Create checkout error:', error);
+          setIsLoading(false);
           Alert.alert(
             'Subscription Error',
             'Could not create checkout session. You can upgrade later from your profile.',
@@ -398,7 +427,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             >
               <View style={styles.premiumContent}>
                 <Ionicons
-                  name={wantsPremium ? 'checkbox' : 'square-outline'}
+                  name={wantsPremium ? 'checkbox-outline' : 'square-outline'}
                   size={24}
                   color="#6366f1"
                 />
