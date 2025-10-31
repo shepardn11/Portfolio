@@ -27,6 +27,45 @@ const getMyProfile = async (req, res, next) => {
   }
 };
 
+const getProfileById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        display_name: true,
+        username: true,
+        bio: true,
+        city: true,
+        profile_photo_url: true,
+        photo_gallery: true,
+        instagram_handle: true,
+        created_at: true,
+        is_premium: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'User not found',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getProfileByUsername = async (req, res, next) => {
   try {
     const { username } = req.params;
@@ -104,6 +143,61 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+const searchUsers = async (req, res, next) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || query.trim().length === 0) {
+      return res.json({
+        success: true,
+        data: [],
+      });
+    }
+
+    // Search by display_name or username (case-insensitive)
+    const users = await prisma.user.findMany({
+      where: {
+        AND: [
+          { is_active: true },
+          {
+            OR: [
+              {
+                display_name: {
+                  contains: query,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                username: {
+                  contains: query,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        display_name: true,
+        username: true,
+        bio: true,
+        city: true,
+        profile_photo_url: true,
+        is_premium: true,
+      },
+      take: 20, // Limit results to 20
+    });
+
+    res.json({
+      success: true,
+      data: users,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const uploadProfilePhoto = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -138,7 +232,9 @@ const uploadProfilePhoto = async (req, res, next) => {
 
 module.exports = {
   getMyProfile,
+  getProfileById,
   getProfileByUsername,
   updateProfile,
   uploadProfilePhoto,
+  searchUsers,
 };

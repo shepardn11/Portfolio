@@ -7,7 +7,9 @@ const upload = require('../config/multer');
 
 const router = express.Router();
 
+router.get('/search', profileController.searchUsers);
 router.get('/me', authenticateToken, profileController.getMyProfile);
+router.get('/id/:id', profileController.getProfileById);
 router.get('/:username', profileController.getProfileByUsername);
 router.put('/me', authenticateToken, validate(updateProfileSchema), profileController.updateProfile);
 router.post('/me/photo', authenticateToken, upload.single('photo'), profileController.uploadProfilePhoto);
