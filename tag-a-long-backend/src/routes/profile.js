@@ -7,6 +7,11 @@ const upload = require('../config/multer');
 
 const router = express.Router();
 
+// Debug route to verify deployment
+router.get('/test-route-v2', (req, res) => {
+  res.json({ message: 'Route updated successfully v2' });
+});
+
 router.get('/search-users', profileController.searchUsers);
 router.get('/by-id/:id', profileController.getProfileById);
 router.get('/me', authenticateToken, profileController.getMyProfile);
