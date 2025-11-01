@@ -125,7 +125,7 @@ export type HomeStackParamList = {
 
 export type SearchStackParamList = {
   SearchMain: undefined;
-  UserProfile: { userId: string };
+  UserProfile: { user: User };
 };
 
 export type MessagesStackParamList = {

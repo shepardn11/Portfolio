@@ -69,7 +69,7 @@ export default function SearchScreen({ navigation }: Props) {
   const renderUserCard = ({ item }: { item: User }) => (
     <TouchableOpacity
       style={styles.userCard}
-      onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
+      onPress={() => navigation.navigate('UserProfile', { user: item })}
     >
       <View style={styles.userCardContent}>
         {item.profile_photo_url ? (
