@@ -180,6 +180,9 @@ export default function SignupScreen({ navigation }: Props) {
               onChangeText={setPassword}
               secureTextEntry
               editable={!isLoading}
+              autoComplete="off"
+              textContentType="none"
+              autoCorrect={false}
             />
             <View style={styles.requirementsContainer}>
               <Text style={styles.requirementText}>• At least 8 characters</Text>
@@ -195,6 +198,9 @@ export default function SignupScreen({ navigation }: Props) {
               onChangeText={setConfirmPassword}
               secureTextEntry
               editable={!isLoading}
+              autoComplete="off"
+              textContentType="none"
+              autoCorrect={false}
             />
 
             <TouchableOpacity

@@ -6,6 +6,7 @@ const BASE_URL = 'https://tag-a-long-backend.vercel.app/api';
 
 class APIClient {
   private client: AxiosInstance;
+  private authToken: string | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -16,12 +17,14 @@ class APIClient {
       },
     });
 
+    // Initialize token from storage
+    this.initializeToken();
+
     // Add request interceptor to attach auth token
     this.client.interceptors.request.use(
-      async (config) => {
-        const token = await AsyncStorage.getItem('auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+      (config) => {
+        if (this.authToken) {
+          config.headers.Authorization = `Bearer ${this.authToken}`;
         }
         return config;
       },
@@ -45,18 +48,32 @@ class APIClient {
     );
   }
 
+  // Initialize token from AsyncStorage on app start
+  private async initializeToken() {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (token) {
+        this.authToken = token;
+      }
+    } catch (error) {
+      console.error('Error initializing auth token:', error);
+    }
+  }
+
   // Get the axios instance
   getInstance(): AxiosInstance {
     return this.client;
   }
 
-  // Set auth token
+  // Set auth token (updates both memory and storage)
   async setAuthToken(token: string) {
+    this.authToken = token;
     await AsyncStorage.setItem('auth_token', token);
   }
 
-  // Clear auth token
+  // Clear auth token (clears both memory and storage)
   async clearAuthToken() {
+    this.authToken = null;
     await AsyncStorage.removeItem('auth_token');
     await AsyncStorage.removeItem('user');
   }

@@ -40,9 +40,23 @@ export const profileAPI = {
     return response.data.data;
   },
 
+  // Get user by ID
+  getUserById: async (id: string): Promise<User> => {
+    const response = await api.get(`/profile/by-id/${id}`);
+    return response.data.data;
+  },
+
   // Get user by username
   getUserByUsername: async (username: string): Promise<User> => {
     const response = await api.get(`/profile/${username}`);
+    return response.data.data;
+  },
+
+  // Search users by display name or username
+  searchUsers: async (query: string): Promise<User[]> => {
+    const response = await api.get('/profile/search', {
+      params: { query },
+    });
     return response.data.data;
   },
 

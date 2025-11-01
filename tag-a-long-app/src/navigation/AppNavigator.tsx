@@ -15,14 +15,16 @@ import AuthNavigator from './AuthNavigator';
 import FeedScreen from '../screens/home/FeedScreen';
 import CreateListingScreen from '../screens/home/CreateListingScreen';
 import SearchScreen from '../screens/search/SearchScreen';
+import UserProfileScreen from '../screens/user/UserProfileScreen';
 import MessagesScreen from '../screens/messages/MessagesScreen';
 import MyActivitiesScreen from '../screens/activities/MyActivitiesScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
-import { HomeStackParamList } from '../types';
+import { HomeStackParamList, SearchStackParamList } from '../types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+const SearchStack = createNativeStackNavigator<SearchStackParamList>();
 
 // Home Stack Navigator
 function HomeNavigator() {
@@ -31,6 +33,16 @@ function HomeNavigator() {
       <HomeStack.Screen name="Feed" component={FeedScreen} />
       <HomeStack.Screen name="CreateActivity" component={CreateListingScreen} />
     </HomeStack.Navigator>
+  );
+}
+
+// Search Stack Navigator
+function SearchNavigator() {
+  return (
+    <SearchStack.Navigator screenOptions={{ headerShown: false }}>
+      <SearchStack.Screen name="SearchMain" component={SearchScreen} />
+      <SearchStack.Screen name="UserProfile" component={UserProfileScreen} />
+    </SearchStack.Navigator>
   );
 }
 
@@ -73,7 +85,7 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Search"
-        component={SearchScreen}
+        component={SearchNavigator}
         options={{ tabBarLabel: 'Search' }}
       />
       <Tab.Screen

@@ -1,0 +1,381 @@
+// User Profile Screen - View another user's profile
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+import { SearchStackParamList, User } from '../../types';
+import { Ionicons } from '@expo/vector-icons';
+import { profileAPI } from '../../api/endpoints';
+
+type UserProfileScreenNavigationProp = NativeStackNavigationProp<
+  SearchStackParamList,
+  'UserProfile'
+>;
+
+type UserProfileScreenRouteProp = RouteProp<SearchStackParamList, 'UserProfile'>;
+
+interface Props {
+  navigation: UserProfileScreenNavigationProp;
+  route: UserProfileScreenRouteProp;
+}
+
+export default function UserProfileScreen({ navigation, route }: Props) {
+  const { userId } = route.params;
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [userId]);
+
+  const fetchUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const userData = await profileAPI.getUserById(userId);
+      setUser(userData);
+    } catch (err: any) {
+      console.error('Fetch user profile error:', err);
+      setError(err.response?.data?.error?.message || 'Could not load profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    navigation.goBack();
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#6366f1" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
+          <Text style={styles.errorTitle}>Oops!</Text>
+          <Text style={styles.errorText}>{error || 'Could not load profile'}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      <ScrollView style={styles.content}>
+        {/* Profile Photo */}
+        <View style={styles.photoSection}>
+          {user.profile_photo_url ? (
+            <Image
+              source={{ uri: user.profile_photo_url }}
+              style={styles.profilePhoto}
+            />
+          ) : (
+            <View style={styles.profilePhotoPlaceholder}>
+              <Ionicons name="person" size={64} color="#999" />
+            </View>
+          )}
+
+          {/* Name and Username */}
+          <View style={styles.nameSection}>
+            <View style={styles.nameRow}>
+              <Text style={styles.displayName}>{user.display_name}</Text>
+              {user.is_premium && (
+                <Ionicons name="checkmark-circle" size={24} color="#6366f1" />
+              )}
+            </View>
+            <Text style={styles.username}>@{user.username}</Text>
+          </View>
+        </View>
+
+        {/* Info Section */}
+        <View style={styles.infoSection}>
+          {/* Location */}
+          {user.city && (
+            <View style={styles.infoRow}>
+              <Ionicons name="location" size={20} color="#6366f1" />
+              <Text style={styles.infoText}>{user.city}</Text>
+            </View>
+          )}
+
+          {/* Join Date */}
+          {user.created_at && (
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar" size={20} color="#6366f1" />
+              <Text style={styles.infoText}>
+                Joined {new Date(user.created_at).toLocaleDateString('en-US', {
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </Text>
+            </View>
+          )}
+
+          {/* Instagram */}
+          {user.instagram_handle && (
+            <View style={styles.infoRow}>
+              <Ionicons name="logo-instagram" size={20} color="#6366f1" />
+              <Text style={styles.infoText}>@{user.instagram_handle}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Bio */}
+        {user.bio && (
+          <View style={styles.bioSection}>
+            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.bioText}>{user.bio}</Text>
+          </View>
+        )}
+
+        {/* Photo Gallery */}
+        {user.photo_gallery && user.photo_gallery.length > 0 && (
+          <View style={styles.gallerySection}>
+            <Text style={styles.sectionTitle}>Photos</Text>
+            <View style={styles.galleryGrid}>
+              {user.photo_gallery.map((photo, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: photo }}
+                  style={styles.galleryPhoto}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.actionSection}>
+          <TouchableOpacity
+            style={styles.messageButton}
+            onPress={() => {
+              Alert.alert('Coming Soon', 'Messaging feature will be available soon!');
+            }}
+          >
+            <Ionicons name="chatbubble" size={20} color="#fff" />
+            <Text style={styles.messageButtonText}>Send Message</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    padding: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  placeholder: {
+    width: 32,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    marginTop: 20,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  content: {
+    flex: 1,
+  },
+  photoSection: {
+    alignItems: 'center',
+    paddingVertical: 30,
+    backgroundColor: '#fff',
+  },
+  profilePhoto: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  profilePhotoPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nameSection: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  displayName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  username: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 4,
+  },
+  infoSection: {
+    backgroundColor: '#fff',
+    marginTop: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+  },
+  bioSection: {
+    backgroundColor: '#fff',
+    marginTop: 12,
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  bioText: {
+    fontSize: 15,
+    color: '#666',
+    lineHeight: 22,
+  },
+  gallerySection: {
+    backgroundColor: '#fff',
+    marginTop: 12,
+    padding: 20,
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  galleryPhoto: {
+    width: '31%',
+    aspectRatio: 1,
+    borderRadius: 8,
+  },
+  actionSection: {
+    padding: 20,
+    marginBottom: 20,
+  },
+  messageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6366f1',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  messageButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

@@ -45,11 +45,26 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 
   const handleAddPhoto = async () => {
     try {
-      // Request permission
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      // Check current permission status first
+      const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
 
-      if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow access to your photos to upload a profile picture.');
+      let finalStatus = existingStatus;
+
+      // Request permission if not already granted
+      if (existingStatus !== 'granted') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your photos in Settings to upload a profile picture.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
         return;
       }
 
@@ -118,11 +133,26 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 
   const handleAddGalleryPhoto = async (index: number) => {
     try {
-      // Request permission
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      // Check current permission status first
+      const { status: existingStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
 
-      if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow access to your photos to upload a profile picture.');
+      let finalStatus = existingStatus;
+
+      // Request permission if not already granted
+      if (existingStatus !== 'granted') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your photos in Settings to upload gallery photos.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
         return;
       }
 
