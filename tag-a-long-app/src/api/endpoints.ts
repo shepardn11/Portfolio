@@ -54,7 +54,7 @@ export const profileAPI = {
 
   // Search users by display name or username
   searchUsers: async (query: string): Promise<User[]> => {
-    const response = await api.get('/profile/search', {
+    const response = await api.get('/profile/search-users', {
       params: { query },
     });
     return response.data.data;
