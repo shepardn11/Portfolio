@@ -49,7 +49,11 @@ app.use('/api/subscription', subscriptionRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    version: '2.0.1'
+  });
 });
 
 // 404 handler
