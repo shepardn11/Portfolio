@@ -7,9 +7,9 @@ const upload = require('../config/multer');
 
 const router = express.Router();
 
-// All specific routes MUST come before the catch-all /:username route
-router.get('/test-route-v3', (req, res) => {
-  res.json({ message: 'Routes working - v3', timestamp: Date.now() });
+// Test routes FIRST
+router.get('/test-route-v4', (req, res) => {
+  res.json({ message: 'Routes working - v4', timestamp: Date.now() });
 });
 
 router.get('/search-users', profileController.searchUsers);
@@ -20,7 +20,7 @@ router.get('/me', authenticateToken, profileController.getMyProfile);
 router.put('/me', authenticateToken, validate(updateProfileSchema), profileController.updateProfile);
 router.post('/me/photo', authenticateToken, upload.single('photo'), profileController.uploadProfilePhoto);
 
-// IMPORTANT: This catch-all route MUST be last
-router.get('/:username', profileController.getProfileByUsername);
+// TEMPORARILY DISABLED - Testing if this is causing the issue
+// router.get('/:username', profileController.getProfileByUsername);
 
 module.exports = router;
