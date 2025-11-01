@@ -47,7 +47,7 @@ app.use('/api/requests', requestsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 
-// Health check
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
