@@ -42,7 +42,6 @@ const getProfileById = async (req, res, next) => {
         profile_photo_url: true,
         instagram_handle: true,
         created_at: true,
-        is_premium: true,
       },
     });
 
@@ -185,7 +184,6 @@ const searchUsers = async (req, res, next) => {
         profile_photo_url: true,
         instagram_handle: true,
         created_at: true,
-        is_premium: true,
       },
       take: 20, // Limit results to 20
     });
