@@ -8,12 +8,11 @@ const {
   checkPremium,
 } = require('../controllers/subscriptionController');
 
-// Middleware to verify authentication (you should have this already)
-// Assuming you have an auth middleware that sets req.user
-const { authenticateUser } = require('../middleware/auth');
+// Middleware to verify authentication
+const { authenticateToken } = require('../middleware/auth');
 
 // Apply auth middleware to all subscription routes
-router.use(authenticateUser);
+router.use(authenticateToken);
 
 /**
  * POST /api/subscription/create-checkout
