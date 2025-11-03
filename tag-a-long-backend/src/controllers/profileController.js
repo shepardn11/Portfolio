@@ -237,11 +237,125 @@ const uploadProfilePhoto = async (req, res, next) => {
   }
 };
 
+const addGalleryPhoto = async (req, res, next) => {
+  try {
+    const { photo_url } = req.body;
+
+    if (!photo_url) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NO_PHOTO_URL',
+          message: 'Photo URL is required',
+        },
+      });
+    }
+
+    // Get current user
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { photo_gallery: true },
+    });
+
+    // Check if gallery is full (max 5 photos)
+    if (user.photo_gallery && user.photo_gallery.length >= 5) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'GALLERY_FULL',
+          message: 'Gallery is full. Maximum 5 photos allowed.',
+        },
+      });
+    }
+
+    // Add photo to gallery
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        photo_gallery: {
+          push: photo_url,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        display_name: true,
+        username: true,
+        bio: true,
+        city: true,
+        profile_photo_url: true,
+        photo_gallery: true,
+        instagram_handle: true,
+        created_at: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeGalleryPhoto = async (req, res, next) => {
+  try {
+    const { photo_url } = req.body;
+
+    if (!photo_url) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NO_PHOTO_URL',
+          message: 'Photo URL is required',
+        },
+      });
+    }
+
+    // Get current gallery
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { photo_gallery: true },
+    });
+
+    // Remove the photo from the array
+    const newGallery = (user.photo_gallery || []).filter(url => url !== photo_url);
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { photo_gallery: newGallery },
+      select: {
+        id: true,
+        email: true,
+        display_name: true,
+        username: true,
+        bio: true,
+        city: true,
+        profile_photo_url: true,
+        photo_gallery: true,
+        instagram_handle: true,
+        created_at: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      data: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getMyProfile,
   getProfileById,
   getProfileByUsername,
   updateProfile,
   uploadProfilePhoto,
+  addGalleryPhoto,
+  removeGalleryPhoto,
   searchUsers,
 };

@@ -15,6 +15,8 @@ router.get('/me', authenticateToken, profileController.getMyProfile);
 // PUT and POST routes
 router.put('/me', authenticateToken, validate(updateProfileSchema), profileController.updateProfile);
 router.post('/me/photo', authenticateToken, profileController.uploadProfilePhoto);
+router.post('/gallery', authenticateToken, profileController.addGalleryPhoto);
+router.delete('/gallery', authenticateToken, profileController.removeGalleryPhoto);
 
 // IMPORTANT: Catch-all username route MUST be last
 router.get('/:username', profileController.getProfileByUsername);
