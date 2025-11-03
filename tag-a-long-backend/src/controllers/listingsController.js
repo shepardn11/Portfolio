@@ -92,11 +92,11 @@ const createListing = async (req, res, next) => {
       time_text,
     } = req.body;
 
-    // Calculate expiration (24 hours from activity date, or 24 hours from now if no date)
+    // Calculate expiration (24 hours after activity date, or 24 hours from now if no date)
     const expires_at = new Date();
     if (date) {
       const activityDate = new Date(date);
-      expires_at.setTime(activityDate.getTime());
+      expires_at.setTime(activityDate.getTime() + (24 * 60 * 60 * 1000)); // Add 24 hours
     } else {
       expires_at.setHours(expires_at.getHours() + 24);
     }
