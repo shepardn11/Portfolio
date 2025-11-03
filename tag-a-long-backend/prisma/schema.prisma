@@ -37,18 +37,25 @@ model User {
 }
 
 model Listing {
-  id          String              @id @default(uuid())
-  user_id     String
-  photo_url   String
-  caption     String
-  time_text   String?
-  city        String
-  latitude    Float?
-  longitude   Float?
-  is_active   Boolean             @default(true)
-  view_count  Int                 @default(0)
-  created_at  DateTime            @default(now())
-  expires_at  DateTime
+  id               String              @id @default(uuid())
+  user_id          String
+  photo_url        String?
+  title            String
+  caption          String?
+  description      String?
+  category         String?
+  location         String?
+  date             DateTime?
+  time             String?
+  time_text        String?
+  max_participants Int?
+  city             String
+  latitude         Float?
+  longitude        Float?
+  is_active        Boolean             @default(true)
+  view_count       Int                 @default(0)
+  created_at       DateTime            @default(now())
+  expires_at       DateTime
 
   user        User                @relation(fields: [user_id], references: [id], onDelete: Cascade)
   requests    TagAlongRequest[]
@@ -56,6 +63,7 @@ model Listing {
   @@index([city, is_active, created_at])
   @@index([user_id, created_at])
   @@index([expires_at])
+  @@index([category])
   @@map("listings")
 }
 

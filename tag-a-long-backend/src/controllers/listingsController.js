@@ -43,11 +43,19 @@ const getFeed = async (req, res, next) => {
     // Format response
     const formattedListings = listings.map(listing => ({
       id: listing.id,
+      title: listing.title,
+      description: listing.description,
+      category: listing.category,
+      location: listing.location,
+      date: listing.date,
+      time: listing.time,
+      max_participants: listing.max_participants,
       photo_url: listing.photo_url,
       caption: listing.caption,
       time_text: listing.time_text,
       city: listing.city,
       created_at: listing.created_at,
+      expires_at: listing.expires_at,
       user: listing.user,
       has_requested: listing.requests.length > 0,
     }));
@@ -71,39 +79,42 @@ const getFeed = async (req, res, next) => {
 
 const createListing = async (req, res, next) => {
   try {
-    const { caption, time_text, photo_url } = req.body;
+    const {
+      title,
+      description,
+      category,
+      location,
+      date,
+      time,
+      max_participants,
+      photo_url,
+      caption,
+      time_text,
+    } = req.body;
 
-    if (!photo_url) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'NO_PHOTO',
-          message: 'Photo URL is required',
-        },
-      });
-    }
-
-    if (!caption || caption.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'NO_CAPTION',
-          message: 'Caption is required',
-        },
-      });
-    }
-
-    // Calculate expiration (24 hours from now)
+    // Calculate expiration (24 hours from activity date, or 24 hours from now if no date)
     const expires_at = new Date();
-    expires_at.setHours(expires_at.getHours() + 24);
+    if (date) {
+      const activityDate = new Date(date);
+      expires_at.setTime(activityDate.getTime());
+    } else {
+      expires_at.setHours(expires_at.getHours() + 24);
+    }
 
-    // Create listing
+    // Create listing with new structure
     const listing = await prisma.listing.create({
       data: {
         user_id: req.user.id,
-        photo_url,
-        caption: caption.trim(),
-        time_text: time_text || null,
+        title: title.trim(),
+        description: description?.trim() || null,
+        category: category || null,
+        location: location?.trim() || null,
+        date: date ? new Date(date) : null,
+        time: time || null,
+        max_participants: max_participants || null,
+        photo_url: photo_url || null,
+        caption: caption?.trim() || description?.trim() || null,
+        time_text: time_text || time || null,
         city: req.user.city,
         expires_at,
       },

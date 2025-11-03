@@ -32,8 +32,19 @@ const loginSchema = Joi.object({
 });
 
 const createListingSchema = Joi.object({
-  caption: Joi.string().min(10).max(200).required(),
-  time_text: Joi.string().max(100).allow(''),
+  // New structured fields
+  title: Joi.string().min(3).max(200).required(),
+  description: Joi.string().min(10).max(500).required(),
+  category: Joi.string().valid('sports', 'food', 'entertainment', 'outdoor', 'fitness', 'social', 'other').required(),
+  location: Joi.string().min(2).max(200).required(),
+  date: Joi.date().min('now').required(),
+  time: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
+  max_participants: Joi.number().integer().min(1).max(100).optional(),
+
+  // Legacy fields (optional for backwards compatibility)
+  caption: Joi.string().max(200).optional(),
+  time_text: Joi.string().max(100).optional(),
+  photo_url: Joi.string().uri().optional(),
 });
 
 const updateProfileSchema = Joi.object({
