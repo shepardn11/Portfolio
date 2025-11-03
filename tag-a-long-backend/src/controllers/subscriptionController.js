@@ -8,7 +8,7 @@ const supabase = require('../config/supabase');
  */
 exports.createCheckoutSession = async (req, res) => {
   try {
-    const { userId } = req.user; // Assuming you have auth middleware that sets req.user
+    const userId = req.user.id; // Get user ID from auth middleware
 
     // Get user profile from Supabase
     const { data: profile, error: profileError } = await supabase
@@ -95,7 +95,7 @@ exports.createCheckoutSession = async (req, res) => {
  */
 exports.cancelSubscription = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
     const { immediate = false } = req.body;
 
     // Get user's subscription
@@ -168,7 +168,7 @@ exports.cancelSubscription = async (req, res) => {
  */
 exports.getSubscriptionStatus = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
 
     const { data, error } = await supabase.rpc('get_user_plan', {
       user_uuid: userId
@@ -191,7 +191,7 @@ exports.getSubscriptionStatus = async (req, res) => {
  */
 exports.checkPremium = async (req, res) => {
   try {
-    const { userId } = req.user;
+    const userId = req.user.id;
 
     const { data: isPremium, error } = await supabase.rpc('is_premium_user', {
       user_uuid: userId
