@@ -71,17 +71,26 @@ const getFeed = async (req, res, next) => {
 
 const createListing = async (req, res, next) => {
   try {
-    const { caption, time_text } = req.body;
+    const { caption, time_text, photo_url } = req.body;
 
-    let photo_url = 'https://via.placeholder.com/1080x1080.jpg?text=Activity+Photo'; // Default placeholder
+    if (!photo_url) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NO_PHOTO',
+          message: 'Photo URL is required',
+        },
+      });
+    }
 
-    // Upload image to S3 if provided
-    if (req.file) {
-      try {
-        photo_url = await uploadToS3(req.file, 'listings');
-      } catch (error) {
-        console.error('S3 upload failed, using placeholder:', error.message);
-      }
+    if (!caption || caption.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NO_CAPTION',
+          message: 'Caption is required',
+        },
+      });
     }
 
     // Calculate expiration (24 hours from now)
@@ -93,7 +102,7 @@ const createListing = async (req, res, next) => {
       data: {
         user_id: req.user.id,
         photo_url,
-        caption,
+        caption: caption.trim(),
         time_text: time_text || null,
         city: req.user.city,
         expires_at,
@@ -112,6 +121,61 @@ const createListing = async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: listing,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMyListings = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+
+    // Build where clause
+    const where = {
+      user_id: req.user.id,
+    };
+
+    // Filter by status if provided
+    if (status === 'active') {
+      where.is_active = true;
+      where.expires_at = { gt: new Date() };
+    } else if (status === 'expired') {
+      where.expires_at = { lte: new Date() };
+    }
+
+    // Get listings
+    const listings = await prisma.listing.findMany({
+      where,
+      orderBy: { created_at: 'desc' },
+      include: {
+        user: {
+          select: {
+            username: true,
+            display_name: true,
+            profile_photo_url: true,
+          },
+        },
+        requests: {
+          select: {
+            id: true,
+            status: true,
+            requester: {
+              select: {
+                id: true,
+                username: true,
+                display_name: true,
+                profile_photo_url: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    res.json({
+      success: true,
+      data: listings,
     });
   } catch (error) {
     next(error);
@@ -163,5 +227,6 @@ const deleteListing = async (req, res, next) => {
 module.exports = {
   getFeed,
   createListing,
+  getMyListings,
   deleteListing,
 };

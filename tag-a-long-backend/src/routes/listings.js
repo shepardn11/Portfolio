@@ -9,12 +9,12 @@ const upload = require('../config/multer');
 const router = express.Router();
 
 router.get('/feed', authenticateToken, listingsController.getFeed);
+router.get('/my-listings', authenticateToken, listingsController.getMyListings);
 
 router.post(
   '/',
   authenticateToken,
   createListingLimiter,
-  upload.single('photo'),
   validate(createListingSchema),
   listingsController.createListing
 );
