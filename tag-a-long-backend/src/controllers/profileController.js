@@ -199,30 +199,38 @@ const searchUsers = async (req, res, next) => {
 
 const uploadProfilePhoto = async (req, res, next) => {
   try {
-    if (!req.file) {
+    const { photo_url } = req.body;
+
+    if (!photo_url) {
       return res.status(400).json({
         success: false,
         error: {
-          code: 'NO_PHOTO',
-          message: 'Photo is required',
+          code: 'NO_PHOTO_URL',
+          message: 'Photo URL is required',
         },
       });
     }
 
-    // Upload to S3
-    const profile_photo_url = await uploadToS3(req.file, 'profiles');
-
-    // Update user
-    await prisma.user.update({
+    // Update user with the photo URL (already uploaded to Supabase)
+    const user = await prisma.user.update({
       where: { id: req.user.id },
-      data: { profile_photo_url },
+      data: { profile_photo_url: photo_url },
+      select: {
+        id: true,
+        email: true,
+        display_name: true,
+        username: true,
+        bio: true,
+        city: true,
+        profile_photo_url: true,
+        instagram_handle: true,
+        created_at: true,
+      },
     });
 
     res.json({
       success: true,
-      data: {
-        profile_photo_url,
-      },
+      data: user,
     });
   } catch (error) {
     next(error);
