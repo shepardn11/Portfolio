@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Use local backend for development, Vercel for production
 const BASE_URL = __DEV__
   ? 'http://localhost:3000/api'
-  : 'https://tag-a-long-backend.vercel.app/api';
+  : 'https://tag-a-long-api.vercel.app/api';
 
 class APIClient {
   private client: AxiosInstance;

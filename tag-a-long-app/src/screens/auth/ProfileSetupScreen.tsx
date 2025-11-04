@@ -235,33 +235,36 @@ export default function ProfileSetupScreen({ navigation }: Props) {
         console.log('DEBUG: Profile updated successfully');
       }
 
-      // Handle premium subscription if requested
+      // Complete profile setup immediately - user can access app right away
+      completeSetup();
+
+      // Handle premium subscription if requested (asynchronously)
       if (wantsPremium) {
         console.log('DEBUG: User wants premium, creating checkout session...');
-        const checkoutData = await subscriptionAPI.createCheckout();
-        console.log('DEBUG: Checkout session created:', checkoutData);
+        try {
+          const checkoutData = await subscriptionAPI.createCheckout();
+          console.log('DEBUG: Checkout session created:', checkoutData);
 
-        if (checkoutData.url) {
-          // Open Stripe checkout in browser
-          const canOpen = await Linking.canOpenURL(checkoutData.url);
-          if (canOpen) {
-            await Linking.openURL(checkoutData.url);
-            // After opening Stripe checkout, complete the setup
-            // The webhook will update the subscription status
-            Alert.alert(
-              'Stripe Checkout',
-              'Complete your payment in the browser. Your premium status will be activated once payment is confirmed.',
-              [{ text: 'OK', onPress: completeSetup }]
-            );
-          } else {
-            throw new Error('Cannot open Stripe checkout URL');
+          if (checkoutData.url) {
+            // Open Stripe checkout in browser
+            const canOpen = await Linking.canOpenURL(checkoutData.url);
+            if (canOpen) {
+              await Linking.openURL(checkoutData.url);
+              // Show a non-blocking message
+              Alert.alert(
+                'Premium Checkout',
+                'Complete your payment in the browser to activate premium features. You can access the app now and your premium status will be updated once payment is confirmed.'
+              );
+            }
           }
-        } else {
-          throw new Error('No checkout URL returned');
+        } catch (error) {
+          console.error('DEBUG: Error creating checkout session:', error);
+          // Don't block the user - they can still use the app
+          Alert.alert(
+            'Payment Error',
+            'Could not open premium checkout. You can upgrade to premium later from your profile.'
+          );
         }
-      } else {
-        // No premium requested, complete setup normally
-        completeSetup();
       }
     } catch (error: any) {
       console.error('DEBUG: Error in handleComplete:', error);
