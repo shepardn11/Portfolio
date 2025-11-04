@@ -1,6 +1,7 @@
 // Subscription Controller - Handles Stripe subscription operations
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabase = require('../config/supabase');
+const prisma = require('../config/database');
 
 /**
  * Create Stripe Checkout Session for Premium Subscription
@@ -10,14 +11,16 @@ exports.createCheckoutSession = async (req, res) => {
   try {
     const userId = req.user.id; // Get user ID from auth middleware
 
-    // Get user profile from Supabase
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('email, username')
-      .eq('id', userId)
-      .single();
+    // Get user profile from Prisma
+    const profile = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        email: true,
+        username: true,
+      },
+    });
 
-    if (profileError || !profile) {
+    if (!profile) {
       return res.status(404).json({ error: 'User profile not found' });
     }
 
