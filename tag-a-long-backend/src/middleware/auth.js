@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const prisma = require('../config/database');
+const supabase = require('../config/supabase');
 
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -19,19 +19,13 @@ const authenticateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        display_name: true,
-        city: true,
-        is_active: true,
-      },
-    });
+    const { data: user, error: userError } = await supabase
+      .from('profiles')
+      .select('id, email, username, display_name, city, is_active')
+      .eq('id', decoded.userId)
+      .single();
 
-    if (!user || !user.is_active) {
+    if (userError || !user || !user.is_active) {
       return res.status(401).json({
         success: false,
         error: {
@@ -42,10 +36,10 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // Update last active timestamp
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { last_active: new Date() },
-    });
+    await supabase
+      .from('profiles')
+      .update({ last_active: new Date().toISOString() })
+      .eq('id', user.id);
 
     req.user = user;
     next();
