@@ -12,6 +12,7 @@ const getFeed = async (req, res, next) => {
       is_active: true,
       expires_at: { gt: new Date() },
       user_id: { not: req.user.id }, // Exclude own listings
+      photo_url: { not: null }, // Exclude listings without photos
     };
 
     // Get listings
