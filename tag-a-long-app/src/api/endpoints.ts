@@ -62,19 +62,19 @@ export const profileAPI = {
 
   // Update profile
   updateProfile: async (updates: Partial<User>) => {
-    const response = await api.put('/profile', updates);
+    const response = await api.put('/profile/me', updates);
     return response.data.data;
   },
 
   // Upload profile photo
   uploadPhoto: async (photo_url: string) => {
-    const response = await api.post('/profile/photo', { photo_url });
+    const response = await api.post('/profile/me/photo', { photo_url });
     return response.data.data;
   },
 
   // Delete profile photo
   deletePhoto: async () => {
-    const response = await api.delete('/profile/photo');
+    const response = await api.delete('/profile/me/photo');
     return response.data;
   },
 };
@@ -89,7 +89,7 @@ export const listingAPI = {
     const response = await api.get('/listings/feed', {
       params: { limit, offset },
     });
-    return response.data.data;
+    return response.data.data.listings;
   },
 
   // Get listing by ID

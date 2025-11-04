@@ -17,7 +17,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
 import { useAuthStore } from '../../store/authStore';
-import { profileAPI } from '../../api/endpoints';
+import { profileAPI, subscriptionAPI } from '../../api/endpoints';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';
@@ -99,15 +99,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 
         // Update profile via backend API using the photo endpoint
         console.log('DEBUG ProfileSetup: Updating profile via API...');
-        const response = await apiClient.getInstance().post('/profile/photo', {
-          photo_url: publicUrl,
-        });
-
-        if (!response.data.success) {
-          throw new Error('Failed to update profile with photo');
-        }
-
-        const updatedUser = response.data.data;
+        const updatedUser = await profileAPI.uploadPhoto(publicUrl);
         console.log('DEBUG ProfileSetup: Profile updated:', updatedUser);
 
         // Update local state
@@ -243,67 +235,39 @@ export default function ProfileSetupScreen({ navigation }: Props) {
         console.log('DEBUG: Profile updated successfully');
       }
 
-      // If user wants premium, create Stripe checkout session
+      // Handle premium subscription if requested
       if (wantsPremium) {
         console.log('DEBUG: User wants premium, creating checkout session...');
-        try {
-          console.log('DEBUG: Calling /subscription/create-checkout endpoint...');
-          const response = await apiClient.getInstance().post('/subscription/create-checkout');
-          console.log('DEBUG: Checkout response:', response.data);
+        const checkoutData = await subscriptionAPI.createCheckout();
+        console.log('DEBUG: Checkout session created:', checkoutData);
 
-          if (response.data.url) {
-            console.log('DEBUG: Got checkout URL:', response.data.url);
-
-            // Stop loading state
-            setIsLoading(false);
-
-            console.log('DEBUG: Opening Stripe checkout URL...');
-
-            // Open Stripe checkout URL - use window.open for web, Linking for mobile
-            try {
-              if (Platform.OS === 'web') {
-                console.log('DEBUG: Opening in web browser using window.open');
-                window.open(response.data.url, '_blank');
-                console.log('DEBUG: window.open called');
-              } else {
-                console.log('DEBUG: Opening in mobile browser using Linking');
-                const canOpen = await Linking.canOpenURL(response.data.url);
-                console.log('DEBUG: Can open URL?', canOpen);
-                if (canOpen) {
-                  await Linking.openURL(response.data.url);
-                  console.log('DEBUG: URL opened successfully');
-                } else {
-                  console.log('DEBUG: Cannot open URL');
-                  Alert.alert('Error', 'Cannot open payment page. Please try again later.');
-                }
-              }
-            } catch (linkError: any) {
-              console.error('DEBUG: Error opening URL:', linkError);
-              Alert.alert('Error', 'Could not open payment page: ' + linkError.message);
-            }
-
-            // Complete setup (user can return to app after payment)
-            console.log('DEBUG: Completing setup...');
-            completeSetup();
+        if (checkoutData.url) {
+          // Open Stripe checkout in browser
+          const canOpen = await Linking.canOpenURL(checkoutData.url);
+          if (canOpen) {
+            await Linking.openURL(checkoutData.url);
+            // After opening Stripe checkout, complete the setup
+            // The webhook will update the subscription status
+            Alert.alert(
+              'Stripe Checkout',
+              'Complete your payment in the browser. Your premium status will be activated once payment is confirmed.',
+              [{ text: 'OK', onPress: completeSetup }]
+            );
           } else {
-            throw new Error('No checkout URL received');
+            throw new Error('Cannot open Stripe checkout URL');
           }
-        } catch (error: any) {
-          console.error('Create checkout error:', error);
-          setIsLoading(false);
-          Alert.alert(
-            'Subscription Error',
-            'Could not create checkout session. You can upgrade later from your profile.',
-            [{ text: 'OK', onPress: () => completeSetup() }]
-          );
+        } else {
+          throw new Error('No checkout URL returned');
         }
       } else {
+        // No premium requested, complete setup normally
         completeSetup();
       }
     } catch (error: any) {
+      console.error('DEBUG: Error in handleComplete:', error);
       Alert.alert(
         'Error',
-        error.response?.data?.error?.message || 'Could not update profile'
+        error.response?.data?.error?.message || error.message || 'Could not update profile'
       );
       setIsLoading(false);
     }
@@ -462,9 +426,9 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                   color="#6366f1"
                 />
                 <View style={styles.premiumText}>
-                  <Text style={styles.premiumTitle}>Try Premium Free</Text>
+                  <Text style={styles.premiumTitle}>Premium Subscription ($4.99/month)</Text>
                   <Text style={styles.premiumSubtitle}>
-                    Get priority placement and exclusive features
+                    Get priority placement in feeds and exclusive features
                   </Text>
                 </View>
               </View>
