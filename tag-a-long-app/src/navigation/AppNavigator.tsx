@@ -14,24 +14,28 @@ import AuthNavigator from './AuthNavigator';
 // Import main screens (we'll create these)
 import FeedScreen from '../screens/home/FeedScreen';
 import CreateListingScreen from '../screens/home/CreateListingScreen';
+import ActivityDetailScreen from '../screens/home/ActivityDetailScreen';
 import SearchScreen from '../screens/search/SearchScreen';
 import UserProfileScreen from '../screens/user/UserProfileScreen';
 import MessagesScreen from '../screens/messages/MessagesScreen';
 import MyActivitiesScreen from '../screens/activities/MyActivitiesScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
-import { HomeStackParamList, SearchStackParamList } from '../types';
+import { HomeStackParamList, SearchStackParamList, ActivitiesStackParamList } from '../types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const SearchStack = createNativeStackNavigator<SearchStackParamList>();
+const ActivitiesStack = createNativeStackNavigator<ActivitiesStackParamList>();
 
 // Home Stack Navigator
 function HomeNavigator() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="Feed" component={FeedScreen} />
+      <HomeStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
       <HomeStack.Screen name="CreateActivity" component={CreateListingScreen} />
+      <HomeStack.Screen name="UserProfile" component={UserProfileScreen} />
     </HomeStack.Navigator>
   );
 }
@@ -43,6 +47,18 @@ function SearchNavigator() {
       <SearchStack.Screen name="SearchMain" component={SearchScreen} />
       <SearchStack.Screen name="UserProfile" component={UserProfileScreen} />
     </SearchStack.Navigator>
+  );
+}
+
+// Activities Stack Navigator
+function ActivitiesNavigator() {
+  return (
+    <ActivitiesStack.Navigator screenOptions={{ headerShown: false }}>
+      <ActivitiesStack.Screen name="MyActivitiesMain" component={MyActivitiesScreen} />
+      <ActivitiesStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
+      <ActivitiesStack.Screen name="CreateActivity" component={CreateListingScreen} />
+      <ActivitiesStack.Screen name="UserProfile" component={UserProfileScreen} />
+    </ActivitiesStack.Navigator>
   );
 }
 
@@ -95,7 +111,7 @@ function MainTabs() {
       />
       <Tab.Screen
         name="MyActivities"
-        component={MyActivitiesScreen}
+        component={ActivitiesNavigator}
         options={{ tabBarLabel: 'Activities' }}
       />
       <Tab.Screen

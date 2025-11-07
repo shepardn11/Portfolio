@@ -151,9 +151,9 @@ export const requestAPI = {
   },
 
   // Get received requests
-  getReceived: async (status?: string): Promise<TagAlongRequest[]> => {
+  getReceived: async (status?: string, listing_id?: string): Promise<any> => {
     const response = await api.get('/requests/received', {
-      params: { status },
+      params: { status, listing_id },
     });
     return response.data.data;
   },

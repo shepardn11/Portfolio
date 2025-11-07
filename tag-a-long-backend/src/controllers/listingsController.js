@@ -4,16 +4,18 @@ const { uploadToS3 } = require('../services/imageService');
 const getFeed = async (req, res, next) => {
   try {
     const { city, limit = 50, offset = 0, sort = 'recent' } = req.query;
-    const userCity = city || req.user.city;
 
     // Build where clause
     const where = {
-      city: userCity,
       is_active: true,
       expires_at: { gt: new Date() },
       user_id: { not: req.user.id }, // Exclude own listings
-      photo_url: { not: null }, // Exclude listings without photos
     };
+
+    // Optionally filter by city if provided
+    if (city) {
+      where.city = city;
+    }
 
     // Get listings
     const listings = await prisma.listing.findMany({
@@ -41,9 +43,101 @@ const getFeed = async (req, res, next) => {
     // Get total count for pagination
     const total = await prisma.listing.count({ where });
 
+    // Format response and filter out activities whose date/time has passed
+    const now = new Date();
+    const formattedListings = listings
+      .filter(listing => {
+        // Check if activity date/time has passed
+        if (listing.date) {
+          const activityDate = new Date(listing.date);
+
+          if (listing.time) {
+            // Has specific time - check date + time
+            const [hours, minutes] = listing.time.split(':');
+            activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+            return activityDate > now;
+          } else {
+            // No time - check if date has passed (end of day)
+            activityDate.setHours(23, 59, 59, 999);
+            return activityDate > now;
+          }
+        }
+        // No date specified - rely on expires_at (already filtered in query)
+        return true;
+      })
+      .map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        description: listing.description,
+        category: listing.category,
+        location: listing.location,
+        date: listing.date,
+        time: listing.time,
+        max_participants: listing.max_participants,
+        photo_url: listing.photo_url,
+        caption: listing.caption,
+        time_text: listing.time_text,
+        city: listing.city,
+        created_at: listing.created_at,
+        expires_at: listing.expires_at,
+        user: listing.user,
+        has_requested: listing.requests.length > 0,
+      }));
+
+    res.json({
+      success: true,
+      data: {
+        listings: formattedListings,
+        pagination: {
+          total,
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          has_more: parseInt(offset) + parseInt(limit) < total,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getListingById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Get listing by ID
+    const listing = await prisma.listing.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            display_name: true,
+            profile_photo_url: true,
+          },
+        },
+        requests: {
+          where: { requester_id: req.user.id },
+          select: { id: true, status: true },
+        },
+      },
+    });
+
+    if (!listing) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Listing not found',
+        },
+      });
+    }
+
     // Format response
-    const formattedListings = listings.map(listing => ({
+    const formattedListing = {
       id: listing.id,
+      user_id: listing.user_id,
       title: listing.title,
       description: listing.description,
       category: listing.category,
@@ -57,21 +151,16 @@ const getFeed = async (req, res, next) => {
       city: listing.city,
       created_at: listing.created_at,
       expires_at: listing.expires_at,
-      user: listing.user,
+      username: listing.user.username,
+      display_name: listing.user.display_name,
+      profile_photo_url: listing.user.profile_photo_url,
       has_requested: listing.requests.length > 0,
-    }));
+      request_status: listing.requests.length > 0 ? listing.requests[0].status : null,
+    };
 
     res.json({
       success: true,
-      data: {
-        listings: formattedListings,
-        pagination: {
-          total,
-          limit: parseInt(limit),
-          offset: parseInt(offset),
-          has_more: parseInt(offset) + parseInt(limit) < total,
-        },
-      },
+      data: formattedListing,
     });
   } catch (error) {
     next(error);
@@ -93,12 +182,24 @@ const createListing = async (req, res, next) => {
       time_text,
     } = req.body;
 
-    // Calculate expiration (24 hours after activity date, or 24 hours from now if no date)
-    const expires_at = new Date();
+    // Calculate expiration based on activity date/time
+    let expires_at;
     if (date) {
       const activityDate = new Date(date);
-      expires_at.setTime(activityDate.getTime() + (24 * 60 * 60 * 1000)); // Add 24 hours
+
+      // If time is provided, combine date + time for exact expiration
+      if (time) {
+        const [hours, minutes] = time.split(':');
+        activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        expires_at = activityDate;
+      } else {
+        // No time specified, expire at end of day (11:59 PM)
+        activityDate.setHours(23, 59, 59, 999);
+        expires_at = activityDate;
+      }
     } else {
+      // No date specified, expire 24 hours from now
+      expires_at = new Date();
       expires_at.setHours(expires_at.getHours() + 24);
     }
 
@@ -148,12 +249,13 @@ const getMyListings = async (req, res, next) => {
       user_id: req.user.id,
     };
 
-    // Filter by status if provided
-    if (status === 'active') {
+    // Filter by status if provided, otherwise show only active (non-expired) by default
+    if (status === 'expired') {
+      where.expires_at = { lte: new Date() };
+    } else {
+      // Default: show only active (non-expired) listings
       where.is_active = true;
       where.expires_at = { gt: new Date() };
-    } else if (status === 'expired') {
-      where.expires_at = { lte: new Date() };
     }
 
     // Get listings
@@ -185,9 +287,33 @@ const getMyListings = async (req, res, next) => {
       },
     });
 
+    // Filter out activities whose date/time has passed (for status !== 'expired')
+    const now = new Date();
+    const filteredListings = status === 'expired'
+      ? listings
+      : listings.filter(listing => {
+          // Check if activity date/time has passed
+          if (listing.date) {
+            const activityDate = new Date(listing.date);
+
+            if (listing.time) {
+              // Has specific time - check date + time
+              const [hours, minutes] = listing.time.split(':');
+              activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+              return activityDate > now;
+            } else {
+              // No time - check if date has passed (end of day)
+              activityDate.setHours(23, 59, 59, 999);
+              return activityDate > now;
+            }
+          }
+          // No date specified - rely on expires_at (already filtered in query)
+          return true;
+        });
+
     res.json({
       success: true,
-      data: listings,
+      data: filteredListings,
     });
   } catch (error) {
     next(error);
@@ -238,6 +364,7 @@ const deleteListing = async (req, res, next) => {
 
 module.exports = {
   getFeed,
+  getListingById,
   createListing,
   getMyListings,
   deleteListing,

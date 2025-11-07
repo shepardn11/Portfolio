@@ -1,21 +1,118 @@
 // Listing Card Component - Display activity listing
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
+  Dimensions,
+  Animated,
+  PanResponder,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityListing } from '../types';
 
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+
 interface ListingCardProps {
   listing: ActivityListing;
   onPress?: () => void;
+  pendingRequestCount?: number;
 }
 
-export default function ListingCard({ listing, onPress }: ListingCardProps) {
+export default function ListingCard({ listing, onPress, pendingRequestCount }: ListingCardProps) {
+  const pan = useRef(new Animated.ValueXY()).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  // Swipe gesture handler
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to horizontal swipes (not vertical scrolling)
+        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 20;
+        return isHorizontalSwipe;
+      },
+      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 20;
+        return isHorizontalSwipe;
+      },
+      onPanResponderGrant: () => {
+        // Reset to current position when gesture starts
+        pan.setOffset({
+          x: pan.x._value,
+          y: 0,
+        });
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Only allow right swipes
+        if (gestureState.dx > 0) {
+          pan.setValue({ x: gestureState.dx, y: 0 });
+          // Fade out as user swipes
+          const newOpacity = 1 - gestureState.dx / (SCREEN_WIDTH * 0.5);
+          opacity.setValue(Math.max(0.3, newOpacity));
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        pan.flattenOffset();
+
+        // If swiped more than 30% of screen width, navigate
+        if (gestureState.dx > SCREEN_WIDTH * 0.3) {
+          // Animate card off screen
+          Animated.parallel([
+            Animated.timing(pan, {
+              toValue: { x: SCREEN_WIDTH, y: 0 },
+              duration: 200,
+              useNativeDriver: false,
+            }),
+            Animated.timing(opacity, {
+              toValue: 0,
+              duration: 200,
+              useNativeDriver: false,
+            }),
+          ]).start(() => {
+            // Trigger navigation
+            if (onPress) onPress();
+            // Reset position after navigation
+            pan.setValue({ x: 0, y: 0 });
+            opacity.setValue(1);
+          });
+        } else {
+          // Snap back to original position
+          Animated.parallel([
+            Animated.spring(pan, {
+              toValue: { x: 0, y: 0 },
+              useNativeDriver: false,
+              friction: 8,
+            }),
+            Animated.timing(opacity, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: false,
+            }),
+          ]).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        // Snap back if gesture is interrupted
+        pan.flattenOffset();
+        Animated.parallel([
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: false,
+          }),
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      },
+    })
+  ).current;
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -60,226 +157,271 @@ export default function ListingCard({ listing, onPress }: ListingCardProps) {
     return colors[category] || '#6b7280';
   };
 
+  const animatedCardStyle = {
+    transform: [{ translateX: pan.x }],
+    opacity: opacity,
+  };
+
+  const handleTap = () => {
+    // Simple tap navigation as fallback
+    if (onPress) {
+      onPress();
+    }
+  };
+
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress}
-      activeOpacity={0.7}
+    <Animated.View
+      style={[styles.card, animatedCardStyle]}
+      {...panResponder.panHandlers}
     >
-      {/* Premium Badge */}
-      {listing.is_premium && (
-        <View style={styles.premiumBadge}>
-          <Ionicons name="star" size={14} color="#fbbf24" />
-          <Text style={styles.premiumText}>Premium</Text>
+      {/* Tap overlay for easier navigation */}
+      <TouchableOpacity
+        style={styles.tapOverlay}
+        onPress={handleTap}
+        activeOpacity={1}
+      />
+
+      {/* Large Featured Image - Use photo_url from listing, or fall back to profile photo */}
+      {(listing.photo_url || listing.profile_photo_url) ? (
+        <Image
+          source={{ uri: listing.photo_url || listing.profile_photo_url }}
+          style={styles.featuredImage}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={[styles.featuredImage, styles.placeholderImage]}>
+          <Ionicons name="image-outline" size={80} color="#999" />
         </View>
       )}
 
-      {/* Header */}
-      <View style={styles.header}>
-        {/* Profile Photo */}
-        <View style={styles.profileSection}>
+      {/* Gradient Overlay for Text Readability */}
+      <View style={styles.gradientOverlay} />
+
+      {/* Category Badge - Top Right */}
+      <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(listing.category) }]}>
+        <Ionicons
+          name={getCategoryIcon(listing.category)}
+          size={14}
+          color="#fff"
+        />
+        <Text style={styles.categoryText}>
+          {listing.category}
+        </Text>
+      </View>
+
+      {/* Request Badge - Top Left */}
+      {pendingRequestCount && pendingRequestCount > 0 && (
+        <View style={styles.requestBadge}>
+          <Ionicons name="notifications" size={16} color="#fff" />
+          <Text style={styles.requestBadgeText}>{String(pendingRequestCount)}</Text>
+        </View>
+      )}
+
+      {/* Content Overlay - Bottom */}
+      <View style={styles.contentOverlay}>
+        {/* Title */}
+        <Text style={styles.title} numberOfLines={2}>{listing.title}</Text>
+
+        {/* Info Grid */}
+        <View style={styles.infoGrid}>
+          {/* Date & Time */}
+          <View style={styles.infoItem}>
+            <Ionicons name="calendar" size={18} color="#fff" />
+            <Text style={styles.infoText} numberOfLines={1}>
+              {formatDate(listing.date)}
+            </Text>
+          </View>
+
+          {listing.time && (
+            <View style={styles.infoItem}>
+              <Ionicons name="time" size={18} color="#fff" />
+              <Text style={styles.infoText} numberOfLines={1}>
+                {formatTime(listing.time)}
+              </Text>
+            </View>
+          )}
+
+          {/* Location */}
+          <View style={[styles.infoItem, styles.infoItemFull]}>
+            <Ionicons name="location" size={18} color="#fff" />
+            <Text style={styles.infoText} numberOfLines={1}>
+              {listing.location}
+            </Text>
+          </View>
+        </View>
+
+        {/* User Info */}
+        <View style={styles.userBar}>
           {listing.profile_photo_url ? (
             <Image
               source={{ uri: listing.profile_photo_url }}
-              style={styles.profilePhoto}
+              style={styles.smallProfilePhoto}
             />
           ) : (
-            <View style={[styles.profilePhoto, styles.profilePhotoPlaceholder]}>
-              <Ionicons name="person" size={20} color="#999" />
+            <View style={[styles.smallProfilePhoto, styles.profilePhotoPlaceholder]}>
+              <Ionicons name="person" size={16} color="#fff" />
             </View>
           )}
-          <View style={styles.userInfo}>
-            <Text style={styles.displayName}>{listing.display_name || listing.username}</Text>
-            <Text style={styles.username}>@{listing.username}</Text>
-          </View>
-        </View>
-
-        {/* Category Badge */}
-        <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(listing.category) + '20' }]}>
-          <Ionicons
-            name={getCategoryIcon(listing.category)}
-            size={16}
-            color={getCategoryColor(listing.category)}
-          />
-          <Text style={[styles.categoryText, { color: getCategoryColor(listing.category) }]}>
-            {listing.category}
-          </Text>
+          <Text style={styles.userName}>{listing.display_name || listing.username}</Text>
         </View>
       </View>
-
-      {/* Title */}
-      <Text style={styles.title}>{listing.title}</Text>
-
-      {/* Description */}
-      {listing.description && (
-        <Text style={styles.description} numberOfLines={2}>
-          {listing.description}
-        </Text>
-      )}
-
-      {/* Details */}
-      <View style={styles.details}>
-        {/* Date & Time */}
-        <View style={styles.detailRow}>
-          <Ionicons name="calendar-outline" size={16} color="#666" />
-          <Text style={styles.detailText}>
-            {formatDate(listing.date)}
-            {listing.time && ` at ${formatTime(listing.time)}`}
-          </Text>
-        </View>
-
-        {/* Location */}
-        <View style={styles.detailRow}>
-          <Ionicons name="location-outline" size={16} color="#666" />
-          <Text style={styles.detailText} numberOfLines={1}>
-            {listing.location}
-          </Text>
-        </View>
-
-        {/* Participants */}
-        {listing.max_participants && (
-          <View style={styles.detailRow}>
-            <Ionicons name="people-outline" size={16} color="#666" />
-            <Text style={styles.detailText}>
-              Max {listing.max_participants} people
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.status}>{listing.status}</Text>
-        <Text style={styles.timestamp}>
-          {new Date(listing.created_at).toLocaleDateString()}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    backgroundColor: '#000',
+    borderRadius: 20,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    minHeight: SCREEN_HEIGHT * 0.75,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  premiumBadge: {
+  tapOverlay: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 1,
   },
-  premiumText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#d97706',
-    marginLeft: 4,
+  featuredImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  profilePhoto: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
-  },
-  profilePhotoPlaceholder: {
+  placeholderImage: {
     backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  userInfo: {
-    flex: 1,
-  },
-  displayName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
-  },
-  username: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
+  gradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '50%',
+    backgroundColor: '#000',
+    opacity: 0.6,
   },
   categoryBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 2,
   },
   categoryText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#fff',
+    marginLeft: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  requestBadge: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 2,
+  },
+  requestBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fff',
     marginLeft: 4,
-    textTransform: 'capitalize',
+  },
+  contentOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    zIndex: 2,
   },
   title: {
-    fontSize: 18,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
+    marginBottom: 16,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 16,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginRight: 8,
     marginBottom: 8,
   },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  details: {
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 6,
+  infoItemFull: {
     flex: 1,
+    minWidth: '100%',
   },
-  footer: {
+  infoText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+    marginLeft: 6,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  userBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
   },
-  status: {
-    fontSize: 12,
+  smallProfilePhoto: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  profilePhotoPlaceholder: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userName: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#10b981',
-    textTransform: 'capitalize',
-  },
-  timestamp: {
-    fontSize: 12,
-    color: '#999',
+    color: '#fff',
+    flex: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

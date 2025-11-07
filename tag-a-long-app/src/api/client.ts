@@ -1,11 +1,26 @@
 // API Client - Connects to Tag-A-Long Backend
 import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 // Use local backend for development, Vercel for production
-const BASE_URL = __DEV__
-  ? 'http://localhost:3000/api'
-  : 'https://tag-a-long-api.vercel.app/api';
+// On web: use localhost
+// On native (Expo Go): use computer's local IP address
+const getBaseURL = () => {
+  if (!__DEV__) {
+    return 'https://tag-a-long-api.vercel.app/api';
+  }
+
+  // Development mode
+  if (Platform.OS === 'web') {
+    return 'http://localhost:3000/api';
+  }
+
+  // Native (iOS/Android) - use your computer's local IP
+  return 'http://10.34.109.242:3000/api';
+};
+
+const BASE_URL = getBaseURL();
 
 class APIClient {
   private client: AxiosInstance;
@@ -14,7 +29,7 @@ class APIClient {
   constructor() {
     this.client = axios.create({
       baseURL: BASE_URL,
-      timeout: 10000,
+      timeout: 30000, // Increased to 30 seconds for image uploads
       headers: {
         'Content-Type': 'application/json',
       },

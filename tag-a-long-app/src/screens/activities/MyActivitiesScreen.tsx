@@ -10,13 +10,17 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityListing } from '../../types';
+import { ActivityListing, ActivitiesStackParamList } from '../../types';
 import { listingAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
 
+type MyActivitiesScreenNavigationProp = NativeStackNavigationProp<ActivitiesStackParamList, 'MyActivitiesMain'>;
+
 export default function MyActivitiesScreen() {
+  const navigation = useNavigation<MyActivitiesScreenNavigationProp>();
   const [listings, setListings] = useState<ActivityListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -94,15 +98,20 @@ export default function MyActivitiesScreen() {
         <FlatList
           data={listings}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ListingCard
-              listing={item}
-              onPress={() => {
-                // Navigate to detail screen
-                // navigation.navigate('ActivityDetail', { activityId: item.id });
-              }}
-            />
-          )}
+          renderItem={({ item }) => {
+            // Count pending requests for this listing
+            const pendingCount = (item as any).requests?.filter((r: any) => r.status === 'pending').length || 0;
+
+            return (
+              <ListingCard
+                listing={item}
+                onPress={() => {
+                  navigation.navigate('ActivityDetail', { activityId: item.id });
+                }}
+                pendingRequestCount={pendingCount}
+              />
+            );
+          }}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={renderEmptyState}
           refreshControl={

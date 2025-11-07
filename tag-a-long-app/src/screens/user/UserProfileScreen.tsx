@@ -13,16 +13,16 @@ import {
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { SearchStackParamList, User } from '../../types';
+import { SearchStackParamList, HomeStackParamList, ActivitiesStackParamList, User } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
 import { profileAPI } from '../../api/endpoints';
 
 type UserProfileScreenNavigationProp = NativeStackNavigationProp<
-  SearchStackParamList,
+  SearchStackParamList | HomeStackParamList | ActivitiesStackParamList,
   'UserProfile'
 >;
 
-type UserProfileScreenRouteProp = RouteProp<SearchStackParamList, 'UserProfile'>;
+type UserProfileScreenRouteProp = RouteProp<SearchStackParamList | HomeStackParamList | ActivitiesStackParamList, 'UserProfile'>;
 
 interface Props {
   navigation: UserProfileScreenNavigationProp;
@@ -30,20 +30,45 @@ interface Props {
 }
 
 export default function UserProfileScreen({ navigation, route }: Props) {
-  const { user: initialUser } = route.params;
-  const [user, setUser] = useState<User>(initialUser);
-  const [isLoading, setIsLoading] = useState(false);
+  const routeParams = route.params as { user?: User; userId?: string };
+  const [user, setUser] = useState<User | null>(routeParams.user || null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUserProfile = async () => {
-    // Function kept for potential refresh functionality
+  useEffect(() => {
+    console.log('UserProfileScreen mounted with params:', routeParams);
+    // If we have a user object, use it directly
+    if (routeParams.user) {
+      console.log('Using provided user object');
+      setUser(routeParams.user);
+      setIsLoading(false);
+    }
+    // If we have a userId but no user object, fetch the user
+    else if (routeParams.userId) {
+      console.log('UserProfileScreen: Fetching user with ID:', routeParams.userId);
+      fetchUserProfile(routeParams.userId);
+    } else {
+      console.error('No user or userId provided');
+      setError('No user information provided');
+      setIsLoading(false);
+    }
+  }, [route.params]);
+
+  const fetchUserProfile = async (userId?: string) => {
     try {
       setIsLoading(true);
       setError(null);
-      const userData = await profileAPI.getUserById(initialUser.id);
+      const id = userId || routeParams.user?.id || routeParams.userId;
+      console.log('fetchUserProfile: Using ID:', id);
+      if (!id) {
+        throw new Error('No user ID provided');
+      }
+      const userData = await profileAPI.getUserById(id);
+      console.log('fetchUserProfile: Got user data:', userData);
       setUser(userData);
     } catch (err: any) {
       console.error('Fetch user profile error:', err);
+      console.error('Error response:', err.response?.data);
       setError(err.response?.data?.error?.message || 'Could not load profile');
     } finally {
       setIsLoading(false);
@@ -54,7 +79,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
     navigation.goBack();
   };
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -86,7 +111,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
           <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
           <Text style={styles.errorTitle}>Oops!</Text>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
+          <TouchableOpacity style={styles.retryButton} onPress={() => fetchUserProfile()}>
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
         </View>

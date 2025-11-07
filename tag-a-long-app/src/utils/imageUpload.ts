@@ -32,26 +32,33 @@ export const uploadImage = async (
     console.log('DEBUG: User ID:', userId);
     console.log('DEBUG: Bucket:', bucketName);
 
-    // Fetch the image as a blob
-    console.log('DEBUG: Fetching image as blob...');
+    // For React Native, we need to use arrayBuffer instead of blob
+    console.log('DEBUG: Fetching image as arrayBuffer...');
     const response = await fetch(uri);
-    const blob = await response.blob();
-    console.log('DEBUG: Blob size:', blob.size, 'type:', blob.type);
+    const arrayBuffer = await response.arrayBuffer();
+    console.log('DEBUG: ArrayBuffer size:', arrayBuffer.byteLength);
 
-    // Extract extension from MIME type (e.g., "image/png" -> "png")
-    const fileExt = blob.type.split('/')[1] || 'jpg';
+    // Convert ArrayBuffer to Uint8Array for Supabase
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    // Determine file extension from URI or default to jpg
+    const uriParts = uri.split('.');
+    const fileExt = uriParts[uriParts.length - 1].toLowerCase() || 'jpg';
+
+    // Determine content type
+    const contentType = fileExt === 'png' ? 'image/png' : 'image/jpeg';
 
     // Generate unique filename
     const fileName = `${userId}/${Date.now()}.${fileExt}`;
     console.log('DEBUG: File name:', fileName);
+    console.log('DEBUG: Content type:', contentType);
 
     // Upload to Supabase Storage
-    // Using anon key, which is allowed for authenticated users via RLS policies
-    console.log('DEBUG: Uploading to Supabase Storage with anon key...');
+    console.log('DEBUG: Uploading to Supabase Storage...');
     const { data, error } = await supabase.storage
       .from(bucketName)
-      .upload(fileName, blob, {
-        contentType: blob.type,
+      .upload(fileName, uint8Array, {
+        contentType: contentType,
         upsert: false,
       });
 

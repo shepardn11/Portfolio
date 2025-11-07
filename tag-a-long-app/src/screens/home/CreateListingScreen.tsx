@@ -11,12 +11,16 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';
+import { useAuthStore } from '../../store/authStore';
+import { uploadImage } from '../../utils/imageUpload';
 
 type CreateListingScreenNavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
@@ -28,17 +32,86 @@ interface Props {
 }
 
 export default function CreateListingScreen({ navigation }: Props) {
+  const { user } = useAuthStore();
+
+  // Initialize with tomorrow's date to avoid past date issues
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+    return tomorrow;
+  };
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
+  const [date, setDate] = useState(getTomorrowDate());
+  const [time, setTime] = useState(() => {
+    const defaultTime = new Date();
+    defaultTime.setHours(12, 0, 0, 0);
+    return defaultTime;
+  });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [maxParticipants, setMaxParticipants] = useState('');
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
+  const [photoUri, setPhotoUri] = useState<string | null>(null); // Photo for the activity
   const [isLoading, setIsLoading] = useState(false);
+
+  // Image Picker Functions
+  const pickImage = async () => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'We need camera roll permissions to add photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 5],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setPhotoUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Could not select image');
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'We need camera permissions to take photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 5],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setPhotoUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Could not take photo');
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoUri(null);
+  };
 
   // Categories for activity listings
   const categories = [
@@ -81,6 +154,47 @@ export default function CreateListingScreen({ navigation }: Props) {
     });
   };
 
+  // Helper functions for date quick select
+  const isToday = (checkDate: Date) => {
+    const today = new Date();
+    return checkDate.toDateString() === today.toDateString();
+  };
+
+  const isTomorrow = (checkDate: Date) => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return checkDate.toDateString() === tomorrow.toDateString();
+  };
+
+  const isThisWeekend = (checkDate: Date) => {
+    const nextSat = getNextSaturday();
+    const nextSun = new Date(nextSat);
+    nextSun.setDate(nextSat.getDate() + 1);
+    return checkDate.toDateString() === nextSat.toDateString() ||
+           checkDate.toDateString() === nextSun.toDateString();
+  };
+
+  const getNextSaturday = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
+    let daysUntilSaturday;
+
+    if (dayOfWeek === 6) {
+      // Today is Saturday, get next Saturday
+      daysUntilSaturday = 7;
+    } else if (dayOfWeek === 0) {
+      // Today is Sunday, get next Saturday (6 days)
+      daysUntilSaturday = 6;
+    } else {
+      // Any other day
+      daysUntilSaturday = 6 - dayOfWeek;
+    }
+
+    const saturday = new Date(today);
+    saturday.setDate(today.getDate() + daysUntilSaturday);
+    return saturday;
+  };
+
   const handleCreateListing = async () => {
     // Validation
     if (!title.trim()) {
@@ -108,6 +222,11 @@ export default function CreateListingScreen({ navigation }: Props) {
       return;
     }
 
+    if (description.trim().length < 10) {
+      Alert.alert('Error', 'Description must be at least 10 characters long');
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -115,6 +234,33 @@ export default function CreateListingScreen({ navigation }: Props) {
       // Combine date and time into a single Date object for the 'date' field
       const combinedDateTime = new Date(date);
       combinedDateTime.setHours(time.getHours(), time.getMinutes(), 0, 0);
+
+      // Validate that the combined date-time is in the future
+      if (combinedDateTime <= new Date()) {
+        Alert.alert('Error', 'Please select a date and time in the future');
+        setIsLoading(false);
+        return;
+      }
+
+      // Upload photo if one was selected, otherwise use profile photo
+      let uploadedPhotoUrl = user?.profile_photo_url || null;
+
+      if (photoUri && user?.id) {
+        try {
+          console.log('Uploading activity photo...');
+          uploadedPhotoUrl = await uploadImage(photoUri, user.id, 'listing-photos');
+          console.log('Photo uploaded successfully:', uploadedPhotoUrl);
+        } catch (uploadError) {
+          console.error('Photo upload failed:', uploadError);
+          Alert.alert(
+            'Photo Upload Failed',
+            'Could not upload photo. Using your profile picture instead.',
+            [{ text: 'OK' }]
+          );
+          // Fall back to profile photo
+          uploadedPhotoUrl = user?.profile_photo_url || null;
+        }
+      }
 
       // Format time properly as HH:mm
       const hours = time.getHours().toString().padStart(2, '0');
@@ -128,6 +274,7 @@ export default function CreateListingScreen({ navigation }: Props) {
         location: location.trim(),
         date: combinedDateTime.toISOString(), // Send as ISO string for Joi date validation
         time: activityTime,
+        photo_url: uploadedPhotoUrl, // Use uploaded photo or profile photo
       };
 
       // Only add max_participants if it's a valid number
@@ -218,6 +365,46 @@ export default function CreateListingScreen({ navigation }: Props) {
             </View>
           </View>
 
+          {/* Photo Upload */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Activity Photo (Optional)</Text>
+            <Text style={styles.sublabel}>
+              Add a photo or we'll use your profile picture
+            </Text>
+
+            {photoUri ? (
+              <View style={styles.photoPreview}>
+                <Image source={{ uri: photoUri }} style={styles.previewImage} />
+                <TouchableOpacity
+                  style={styles.removePhotoButton}
+                  onPress={removePhoto}
+                  disabled={isLoading}
+                >
+                  <Ionicons name="close-circle" size={28} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.photoButtons}>
+                <TouchableOpacity
+                  style={styles.photoButton}
+                  onPress={takePhoto}
+                  disabled={isLoading}
+                >
+                  <Ionicons name="camera" size={24} color="#6366f1" />
+                  <Text style={styles.photoButtonText}>Take Photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.photoButton}
+                  onPress={pickImage}
+                  disabled={isLoading}
+                >
+                  <Ionicons name="images" size={24} color="#6366f1" />
+                  <Text style={styles.photoButtonText}>Choose from Library</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+
           {/* Location Input */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Location *</Text>
@@ -227,31 +414,99 @@ export default function CreateListingScreen({ navigation }: Props) {
               value={location}
               onChangeText={setLocation}
               editable={!isLoading}
+              autoComplete="off"
+              autoCorrect={true}
             />
           </View>
 
-          {/* Date and Time */}
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-              <Text style={styles.label}>Date *</Text>
+          {/* Date and Time - Improved Layout */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>When is this happening? *</Text>
+
+            {/* Date Picker - Quick Select Options */}
+            <View style={styles.dateTimeContainer}>
+              <Text style={styles.quickSelectLabel}>Quick Select</Text>
+              <View style={styles.quickDateButtons}>
+                <TouchableOpacity
+                  style={[
+                    styles.quickDateButton,
+                    styles.quickDateButtonLeft,
+                    isToday(date) && styles.quickDateButtonActive,
+                  ]}
+                  onPress={() => {
+                    const today = new Date();
+                    today.setHours(12, 0, 0, 0);
+                    setDate(today);
+                  }}
+                  disabled={isLoading}
+                >
+                  <Text style={[
+                    styles.quickDateButtonText,
+                    isToday(date) && styles.quickDateButtonTextActive,
+                  ]}>Today</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.quickDateButton,
+                    styles.quickDateButtonMiddle,
+                    isTomorrow(date) && styles.quickDateButtonActive,
+                  ]}
+                  onPress={() => {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(12, 0, 0, 0);
+                    setDate(tomorrow);
+                  }}
+                  disabled={isLoading}
+                >
+                  <Text style={[
+                    styles.quickDateButtonText,
+                    isTomorrow(date) && styles.quickDateButtonTextActive,
+                  ]}>Tomorrow</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.quickDateButton,
+                    isThisWeekend(date) && styles.quickDateButtonActive,
+                  ]}
+                  onPress={() => {
+                    const weekend = getNextSaturday();
+                    weekend.setHours(12, 0, 0, 0);
+                    setDate(weekend);
+                  }}
+                  disabled={isLoading}
+                >
+                  <Text style={[
+                    styles.quickDateButtonText,
+                    isThisWeekend(date) && styles.quickDateButtonTextActive,
+                  ]}>This Weekend</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Custom Date Button */}
               {Platform.OS === 'web' ? (
                 <input
                   type="date"
                   style={{
                     backgroundColor: '#f5f5f5',
                     borderRadius: 10,
-                    padding: 15,
+                    padding: 16,
                     fontSize: 16,
                     borderWidth: 1,
                     borderColor: '#e0e0e0',
                     borderStyle: 'solid',
                     width: '100%',
+                    fontFamily: 'system-ui',
+                    marginTop: 12,
                   }}
                   value={date.toISOString().split('T')[0]}
                   min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => {
                     if (e.target.value) {
                       const newDate = new Date(e.target.value);
+                      newDate.setHours(12, 0, 0, 0);
                       if (!isNaN(newDate.getTime())) {
                         setDate(newDate);
                       }
@@ -261,30 +516,37 @@ export default function CreateListingScreen({ navigation }: Props) {
                 />
               ) : (
                 <TouchableOpacity
-                  style={styles.dateTimeButton}
+                  style={styles.customDateButton}
                   onPress={() => setShowDatePicker(true)}
                   disabled={isLoading}
                 >
-                  <Ionicons name="calendar-outline" size={20} color="#666" />
-                  <Text style={styles.dateTimeText}>{formatDate(date)}</Text>
+                  <Ionicons name="calendar-outline" size={20} color="#6366f1" />
+                  <Text style={styles.customDateButtonText}>Pick Custom Date</Text>
                 </TouchableOpacity>
               )}
+
+              {/* Selected Date Display */}
+              <View style={styles.selectedDateDisplay}>
+                <Ionicons name="calendar" size={20} color="#6366f1" />
+                <Text style={styles.selectedDateText}>{formatDate(date)}</Text>
+              </View>
             </View>
 
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>Time *</Text>
+            {/* Time Picker */}
+            <View style={styles.dateTimeContainer}>
               {Platform.OS === 'web' ? (
                 <input
                   type="time"
                   style={{
                     backgroundColor: '#f5f5f5',
                     borderRadius: 10,
-                    padding: 15,
+                    padding: 16,
                     fontSize: 16,
                     borderWidth: 1,
                     borderColor: '#e0e0e0',
                     borderStyle: 'solid',
                     width: '100%',
+                    fontFamily: 'system-ui',
                   }}
                   value={time.toTimeString().slice(0, 5)}
                   onChange={(e) => {
@@ -303,12 +565,18 @@ export default function CreateListingScreen({ navigation }: Props) {
                 />
               ) : (
                 <TouchableOpacity
-                  style={styles.dateTimeButton}
+                  style={styles.dateTimeButtonLarge}
                   onPress={() => setShowTimePicker(true)}
                   disabled={isLoading}
                 >
-                  <Ionicons name="time-outline" size={20} color="#666" />
-                  <Text style={styles.dateTimeText}>{formatTime(time)}</Text>
+                  <View style={styles.dateTimeIconContainer}>
+                    <Ionicons name="time" size={24} color="#6366f1" />
+                  </View>
+                  <View style={styles.dateTimeTextContainer}>
+                    <Text style={styles.dateTimeLabel}>Time</Text>
+                    <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
                 </TouchableOpacity>
               )}
             </View>
@@ -339,7 +607,7 @@ export default function CreateListingScreen({ navigation }: Props) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Description *</Text>
             <Text style={styles.sublabel}>
-              Tell people what you're doing and who you're looking for
+              Tell people what you're doing and who you're looking for (minimum 10 characters)
             </Text>
             <TextInput
               style={[styles.input, styles.textArea]}
@@ -352,7 +620,14 @@ export default function CreateListingScreen({ navigation }: Props) {
               textAlignVertical="top"
               editable={!isLoading}
             />
-            <Text style={styles.charCount}>{description.length}/500</Text>
+            <View style={styles.charCountContainer}>
+              <Text style={[
+                styles.charCount,
+                description.length > 0 && description.length < 10 && styles.charCountWarning
+              ]}>
+                {description.length < 10 ? `${description.length}/10 minimum` : `${description.length}/500`}
+              </Text>
+            </View>
           </View>
 
           {/* Max Participants (Optional) */}
@@ -460,11 +735,17 @@ const styles = StyleSheet.create({
     height: 100,
     paddingTop: 15,
   },
+  charCountContainer: {
+    marginTop: 5,
+  },
   charCount: {
     fontSize: 12,
     color: '#999',
     textAlign: 'right',
-    marginTop: 5,
+  },
+  charCountWarning: {
+    color: '#ef4444',
+    fontWeight: '600',
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -492,19 +773,114 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-  dateTimeButton: {
+  dateTimeContainer: {
+    marginBottom: 20,
+  },
+  quickSelectLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 10,
+    fontWeight: '500',
+  },
+  quickDateButtons: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  quickDateButton: {
+    flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 10,
-    padding: 15,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    alignItems: 'center',
+  },
+  quickDateButtonLeft: {
+    marginRight: 4,
+  },
+  quickDateButtonMiddle: {
+    marginHorizontal: 4,
+  },
+  quickDateButtonActive: {
+    backgroundColor: '#6366f1',
+    borderColor: '#6366f1',
+  },
+  quickDateButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+  },
+  quickDateButtonTextActive: {
+    color: '#fff',
+  },
+  customDateButton: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 14,
     borderWidth: 1,
+    borderColor: '#6366f1',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  customDateButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6366f1',
+    marginLeft: 8,
+  },
+  selectedDateDisplay: {
+    backgroundColor: '#f0f0ff',
+    borderRadius: 10,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedDateText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#6366f1',
+    marginLeft: 8,
+  },
+  dateTimeButtonLarge: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 2,
     borderColor: '#e0e0e0',
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  dateTimeText: {
-    fontSize: 16,
+  dateTimeIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f0f0ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  dateTimeTextContainer: {
+    flex: 1,
+  },
+  dateTimeLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 2,
+    fontWeight: '500',
+  },
+  dateTimeValue: {
+    fontSize: 17,
     color: '#333',
-    marginLeft: 10,
+    fontWeight: '600',
   },
   tagButton: {
     backgroundColor: '#f5f5f5',
@@ -544,5 +920,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  photoButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  photoButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0f0ff',
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#6366f1',
+  },
+  photoButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6366f1',
+    marginLeft: 8,
+  },
+  photoPreview: {
+    position: 'relative',
+    marginTop: 10,
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  removePhotoButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 14,
   },
 });

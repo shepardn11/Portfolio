@@ -114,8 +114,7 @@ export default function FeedScreen({ navigation }: Props) {
             <ListingCard
               listing={item}
               onPress={() => {
-                // Navigate to detail screen (we'll create this later)
-                // navigation.navigate('ActivityDetail', { activityId: item.id });
+                navigation.navigate('ActivityDetail', { activityId: item.id });
               }}
             />
           )}
@@ -129,6 +128,8 @@ export default function FeedScreen({ navigation }: Props) {
               tintColor="#6366f1"
             />
           }
+          showsVerticalScrollIndicator={false}
+          decelerationRate="normal"
         />
       )}
     </SafeAreaView>

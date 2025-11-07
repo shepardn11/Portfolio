@@ -139,6 +139,7 @@ const getReceivedRequests = async (req, res, next) => {
         },
         requester: {
           select: {
+            id: true,
             username: true,
             display_name: true,
             profile_photo_url: true,

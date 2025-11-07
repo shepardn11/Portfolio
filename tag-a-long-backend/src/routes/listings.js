@@ -10,6 +10,7 @@ const router = express.Router();
 
 router.get('/feed', authenticateToken, listingsController.getFeed);
 router.get('/my-listings', authenticateToken, listingsController.getMyListings);
+router.get('/:id', authenticateToken, listingsController.getListingById);
 
 router.post(
   '/',

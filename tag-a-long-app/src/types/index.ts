@@ -24,7 +24,8 @@ export interface ActivityListing {
   date: string;
   time?: string;
   max_participants?: number;
-  photos: string[];
+  photo_url?: string; // Primary listing photo
+  photos?: string[];  // Additional photos gallery
   status: 'active' | 'completed' | 'cancelled';
   created_at: string;
 
@@ -137,6 +138,7 @@ export type ActivitiesStackParamList = {
   MyActivitiesMain: undefined;
   ActivityDetail: { activityId: string };
   CreateActivity: undefined;
+  UserProfile: { userId: string };
 };
 
 export type ProfileStackParamList = {
