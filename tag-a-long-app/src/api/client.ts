@@ -7,6 +7,11 @@ import { Platform } from 'react-native';
 // On web: use localhost
 // On native (Expo Go): use computer's local IP address
 const getBaseURL = () => {
+  // Always use production Vercel backend for now
+  // This allows testing from anywhere without local backend running
+  return 'https://tag-a-long-api.vercel.app/api';
+
+  /* Uncomment this for local development:
   if (!__DEV__) {
     return 'https://tag-a-long-api.vercel.app/api';
   }
@@ -17,7 +22,8 @@ const getBaseURL = () => {
   }
 
   // Native (iOS/Android) - use your computer's local IP
-  return 'http://10.34.109.242:3000/api';
+  return 'http://10.20.3.37:3000/api';
+  */
 };
 
 const BASE_URL = getBaseURL();
