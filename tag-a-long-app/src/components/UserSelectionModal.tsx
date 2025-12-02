@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api from '../services/api';
+import { profileAPI } from '../api/endpoints';
 
 interface User {
   id: string;
@@ -55,10 +55,8 @@ export default function UserSelectionModal({
 
     setLoading(true);
     try {
-      const response = await api.get(`/users/search?q=${encodeURIComponent(searchQuery)}`);
-      if (response.data.success) {
-        setUsers(response.data.data);
-      }
+      const results = await profileAPI.searchUsers(searchQuery);
+      setUsers(results);
     } catch (error) {
       console.error('Error searching users:', error);
     } finally {
