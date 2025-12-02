@@ -12,6 +12,7 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Modal,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../types';
@@ -62,6 +63,12 @@ export default function CreateListingScreen({ navigation }: Props) {
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [tempDate, setTempDate] = useState(getTomorrowDate());
+  const [tempTime, setTempTime] = useState(() => {
+    const defaultTime = new Date();
+    defaultTime.setHours(12, 0, 0, 0);
+    return defaultTime;
+  });
   const [maxParticipants, setMaxParticipants] = useState('');
   const [taggedUsers, setTaggedUsers] = useState<User[]>([]);
   const [showUserModal, setShowUserModal] = useState(false);
@@ -134,29 +141,63 @@ export default function CreateListingScreen({ navigation }: Props) {
   ];
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    // On Android, event.type can be 'set', 'dismissed', or 'neutralButtonPressed'
-    if (event.type === 'dismissed') {
-      setShowDatePicker(false);
-      return;
-    }
+    if (Platform.OS === 'android') {
+      // On Android, event.type can be 'set', 'dismissed', or 'neutralButtonPressed'
+      if (event.type === 'dismissed') {
+        setShowDatePicker(false);
+        return;
+      }
 
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDate(selectedDate);
+      setShowDatePicker(false);
+      if (selectedDate) {
+        setDate(selectedDate);
+      }
+    } else {
+      // On iOS, update temp date as user scrolls
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
     }
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
-    // On Android, event.type can be 'set', 'dismissed', or 'neutralButtonPressed'
-    if (event.type === 'dismissed') {
-      setShowTimePicker(false);
-      return;
-    }
+    if (Platform.OS === 'android') {
+      // On Android, event.type can be 'set', 'dismissed', or 'neutralButtonPressed'
+      if (event.type === 'dismissed') {
+        setShowTimePicker(false);
+        return;
+      }
 
-    setShowTimePicker(false);
-    if (selectedTime) {
-      setTime(selectedTime);
+      setShowTimePicker(false);
+      if (selectedTime) {
+        setTime(selectedTime);
+      }
+    } else {
+      // On iOS, update temp time as user scrolls
+      if (selectedTime) {
+        setTempTime(selectedTime);
+      }
     }
+  };
+
+  const confirmDate = () => {
+    setDate(tempDate);
+    setShowDatePicker(false);
+  };
+
+  const confirmTime = () => {
+    setTime(tempTime);
+    setShowTimePicker(false);
+  };
+
+  const cancelDatePicker = () => {
+    setTempDate(date);
+    setShowDatePicker(false);
+  };
+
+  const cancelTimePicker = () => {
+    setTempTime(time);
+    setShowTimePicker(false);
   };
 
   const formatDate = (date: Date) => {
@@ -485,7 +526,10 @@ export default function CreateListingScreen({ navigation }: Props) {
               ) : (
                 <TouchableOpacity
                   style={styles.dateTimeButton}
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => {
+                    setTempDate(date);
+                    setShowDatePicker(true);
+                  }}
                   disabled={isLoading}
                 >
                   <Ionicons name="calendar-outline" size={24} color="#6366f1" />
@@ -534,7 +578,10 @@ export default function CreateListingScreen({ navigation }: Props) {
               ) : (
                 <TouchableOpacity
                   style={styles.dateTimeButton}
-                  onPress={() => setShowTimePicker(true)}
+                  onPress={() => {
+                    setTempTime(time);
+                    setShowTimePicker(true);
+                  }}
                   disabled={isLoading}
                 >
                   <Ionicons name="time-outline" size={24} color="#6366f1" />
@@ -547,8 +594,69 @@ export default function CreateListingScreen({ navigation }: Props) {
             </View>
           </View>
 
-          {/* Date Picker - Mobile Only */}
-          {Platform.OS !== 'web' && showDatePicker && (
+          {/* Date Picker - iOS Modal with buttons */}
+          {Platform.OS === 'ios' && showDatePicker && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              visible={showDatePicker}
+              onRequestClose={cancelDatePicker}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.pickerContainer}>
+                  <View style={styles.pickerHeader}>
+                    <TouchableOpacity onPress={cancelDatePicker}>
+                      <Text style={styles.pickerButton}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={confirmDate}>
+                      <Text style={[styles.pickerButton, styles.pickerButtonDone]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={handleDateChange}
+                    minimumDate={new Date()}
+                    style={styles.picker}
+                  />
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          {/* Time Picker - iOS Modal with buttons */}
+          {Platform.OS === 'ios' && showTimePicker && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              visible={showTimePicker}
+              onRequestClose={cancelTimePicker}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.pickerContainer}>
+                  <View style={styles.pickerHeader}>
+                    <TouchableOpacity onPress={cancelTimePicker}>
+                      <Text style={styles.pickerButton}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={confirmTime}>
+                      <Text style={[styles.pickerButton, styles.pickerButtonDone]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={tempTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={handleTimeChange}
+                    style={styles.picker}
+                  />
+                </View>
+              </View>
+            </Modal>
+          )}
+
+          {/* Date Picker - Android */}
+          {Platform.OS === 'android' && showDatePicker && (
             <DateTimePicker
               value={date}
               mode="date"
@@ -558,8 +666,8 @@ export default function CreateListingScreen({ navigation }: Props) {
             />
           )}
 
-          {/* Time Picker - Mobile Only */}
-          {Platform.OS !== 'web' && showTimePicker && (
+          {/* Time Picker - Android */}
+          {Platform.OS === 'android' && showTimePicker && (
             <DateTimePicker
               value={time}
               mode="time"
@@ -908,5 +1016,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#6366f1',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  pickerContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 40,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  pickerButton: {
+    fontSize: 17,
+    color: '#6366f1',
+  },
+  pickerButtonDone: {
+    fontWeight: '600',
+  },
+  picker: {
+    height: 200,
   },
 });
