@@ -22,9 +22,7 @@ const getFeed = async (req, res, next) => {
       where,
       take: parseInt(limit),
       skip: parseInt(offset),
-      orderBy: sort === 'recent'
-        ? { created_at: 'desc' }
-        : { time_text: 'asc' },
+      orderBy: { date: 'asc' }, // Sort by date ascending (soonest first)
       include: {
         user: {
           select: {
