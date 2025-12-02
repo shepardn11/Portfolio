@@ -179,13 +179,13 @@ export const requestAPI = {
 
   // Accept request
   accept: async (requestId: string) => {
-    const response = await api.post(`/requests/${requestId}/accept`);
+    const response = await api.put(`/requests/${requestId}/accept`);
     return response.data.data;
   },
 
   // Decline request
   decline: async (requestId: string) => {
-    const response = await api.post(`/requests/${requestId}/decline`);
+    const response = await api.put(`/requests/${requestId}/reject`);
     return response.data.data;
   },
 

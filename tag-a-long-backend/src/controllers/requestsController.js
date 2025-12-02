@@ -310,7 +310,12 @@ const rejectRequest = async (req, res, next) => {
     const request = await prisma.tagAlongRequest.findUnique({
       where: { id },
       include: {
-        listing: true,
+        listing: {
+          include: {
+            user: true,
+          },
+        },
+        requester: true,
       },
     });
 
@@ -335,7 +340,7 @@ const rejectRequest = async (req, res, next) => {
       });
     }
 
-    // Update request (no notification sent for soft rejection)
+    // Update request
     const updatedRequest = await prisma.tagAlongRequest.update({
       where: { id },
       data: {
@@ -343,6 +348,35 @@ const rejectRequest = async (req, res, next) => {
         responded_at: new Date(),
       },
     });
+
+    // Create in-app notification
+    const notification = await prisma.notification.create({
+      data: {
+        user_id: request.requester_id,
+        type: 'request_rejected',
+        title: `Request declined`,
+        body: `${request.listing.user.display_name} declined your request to join their activity`,
+        data: JSON.stringify({
+          request_id: request.id,
+          listing_id: request.listing_id,
+          poster_username: request.listing.user.username,
+        }),
+      },
+    });
+
+    // Send push notification
+    try {
+      await sendToMultipleDevices(request.requester_id, {
+        title: notification.title,
+        body: notification.body,
+        data: {
+          request_id: request.id,
+          listing_id: request.listing_id,
+        },
+      });
+    } catch (error) {
+      console.error('Error sending push notification:', error);
+    }
 
     res.json({
       success: true,
