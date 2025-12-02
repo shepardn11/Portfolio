@@ -77,6 +77,7 @@ function ActivitiesNavigator() {
 // Bottom Tab Navigator
 function MainTabs() {
   const [unreadCount, setUnreadCount] = React.useState(0);
+  const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0);
 
   // Fetch unread message count
   const fetchUnreadCount = async () => {
@@ -93,10 +94,25 @@ function MainTabs() {
     }
   };
 
-  // Fetch unread count on mount and periodically
+  // Fetch pending request count
+  const fetchPendingRequests = async () => {
+    try {
+      const { requestAPI } = await import('../api/endpoints');
+      const data = await requestAPI.getReceived('pending');
+      setPendingRequestsCount(data.requests?.length || 0);
+    } catch (error) {
+      console.error('Error fetching pending requests:', error);
+    }
+  };
+
+  // Fetch counts on mount and periodically
   React.useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // Every 30 seconds
+    fetchPendingRequests();
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+      fetchPendingRequests();
+    }, 30000); // Every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -131,8 +147,9 @@ function MainTabs() {
       })}
       screenListeners={{
         state: () => {
-          // Refresh unread count when navigating between tabs
+          // Refresh counts when navigating between tabs
           fetchUnreadCount();
+          fetchPendingRequests();
         },
       }}
     >
@@ -167,7 +184,20 @@ function MainTabs() {
       <Tab.Screen
         name="MyActivities"
         component={ActivitiesNavigator}
-        options={{ tabBarLabel: 'Activities' }}
+        options={{
+          tabBarLabel: 'Activities',
+          tabBarBadge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: '#ff3b30',
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: '600',
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+            marginTop: 2,
+          },
+        }}
       />
       <Tab.Screen
         name="Profile"
