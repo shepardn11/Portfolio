@@ -76,6 +76,30 @@ function ActivitiesNavigator() {
 
 // Bottom Tab Navigator
 function MainTabs() {
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  // Fetch unread message count
+  const fetchUnreadCount = async () => {
+    try {
+      const { messageAPI } = await import('../api/endpoints');
+      const conversations = await messageAPI.getConversations();
+      const totalUnread = conversations.reduce(
+        (sum: number, conv: any) => sum + conv.unread_count,
+        0
+      );
+      setUnreadCount(totalUnread);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Fetch unread count on mount and periodically
+  React.useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000); // Every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -105,6 +129,12 @@ function MainTabs() {
         },
         headerShown: false,
       })}
+      screenListeners={{
+        state: () => {
+          // Refresh unread count when navigating between tabs
+          fetchUnreadCount();
+        },
+      }}
     >
       <Tab.Screen
         name="Home"
@@ -119,7 +149,20 @@ function MainTabs() {
       <Tab.Screen
         name="Messages"
         component={MessagesNavigator}
-        options={{ tabBarLabel: 'Messages' }}
+        options={{
+          tabBarLabel: 'Messages',
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: '#ff3b30',
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: '600',
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+            marginTop: 2,
+          },
+        }}
       />
       <Tab.Screen
         name="MyActivities"
