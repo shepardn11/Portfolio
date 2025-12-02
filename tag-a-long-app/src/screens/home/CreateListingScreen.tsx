@@ -21,6 +21,7 @@ import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { uploadImage } from '../../utils/imageUpload';
+import UserSelectionModal from '../../components/UserSelectionModal';
 
 type CreateListingScreenNavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
@@ -29,6 +30,13 @@ type CreateListingScreenNavigationProp = NativeStackNavigationProp<
 
 interface Props {
   navigation: CreateListingScreenNavigationProp;
+}
+
+interface User {
+  id: string;
+  username: string;
+  display_name: string;
+  profile_photo_url?: string;
 }
 
 export default function CreateListingScreen({ navigation }: Props) {
@@ -55,7 +63,8 @@ export default function CreateListingScreen({ navigation }: Props) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [maxParticipants, setMaxParticipants] = useState('');
-  const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
+  const [taggedUsers, setTaggedUsers] = useState<User[]>([]);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null); // Photo for the activity
   const [isLoading, setIsLoading] = useState(false);
 
@@ -280,6 +289,11 @@ export default function CreateListingScreen({ navigation }: Props) {
       // Only add max_participants if it's a valid number
       if (maxParticipants && !isNaN(parseInt(maxParticipants))) {
         listingData.max_participants = parseInt(maxParticipants);
+      }
+
+      // Add tagged users if any
+      if (taggedUsers.length > 0) {
+        listingData.tagged_users = taggedUsers.map(u => u.id);
       }
 
       console.log('Creating listing with data:', JSON.stringify(listingData, null, 2));
@@ -643,17 +657,36 @@ export default function CreateListingScreen({ navigation }: Props) {
             />
           </View>
 
-          {/* Tagged Users (Future feature - placeholder) */}
+          {/* Tagged Users */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Tag Friends (Optional)</Text>
             <TouchableOpacity
               style={styles.tagButton}
-              disabled={true}
+              onPress={() => setShowUserModal(true)}
+              disabled={isLoading}
             >
-              <Ionicons name="person-add-outline" size={20} color="#999" />
-              <Text style={styles.tagButtonText}>Tag people joining you</Text>
+              <Ionicons name="person-add-outline" size={20} color="#007AFF" />
+              <Text style={[styles.tagButtonText, { color: '#007AFF' }]}>Tag people joining you</Text>
             </TouchableOpacity>
-            <Text style={styles.comingSoon}>Coming soon!</Text>
+            {taggedUsers.length > 0 && (
+              <View style={styles.taggedUsersContainer}>
+                {taggedUsers.map((user) => (
+                  <View key={user.id} style={styles.taggedUserChip}>
+                    {user.profile_photo_url ? (
+                      <Image
+                        source={{ uri: user.profile_photo_url }}
+                        style={styles.taggedUserAvatar}
+                      />
+                    ) : (
+                      <View style={styles.taggedUserAvatarPlaceholder}>
+                        <Ionicons name="person" size={12} color="#999" />
+                      </View>
+                    )}
+                    <Text style={styles.taggedUserName}>{user.display_name}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
 
           {/* Create Button */}
@@ -673,6 +706,14 @@ export default function CreateListingScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* User Selection Modal */}
+      <UserSelectionModal
+        visible={showUserModal}
+        onClose={() => setShowUserModal(false)}
+        onSelectUsers={setTaggedUsers}
+        selectedUsers={taggedUsers}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -958,5 +999,38 @@ const styles = StyleSheet.create({
     right: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 14,
+  },
+  taggedUsersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    gap: 8,
+  },
+  taggedUserChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0ff',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  taggedUserAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  taggedUserAvatarPlaceholder: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e0e0e0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  taggedUserName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6366f1',
   },
 });

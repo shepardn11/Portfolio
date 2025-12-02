@@ -24,6 +24,7 @@ export interface ActivityListing {
   date: string;
   time?: string;
   max_participants?: number;
+  tagged_users?: User[]; // Users tagged as joining this activity
   photo_url?: string; // Primary listing photo
   photos?: string[];  // Additional photos gallery
   status: 'active' | 'completed' | 'cancelled';

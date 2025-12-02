@@ -43,6 +43,24 @@ const getFeed = async (req, res, next) => {
     // Get total count for pagination
     const total = await prisma.listing.count({ where });
 
+    // Get all unique tagged user IDs
+    const allTaggedUserIds = [...new Set(listings.flatMap(l => l.tagged_users || []))];
+
+    // Fetch tagged user details
+    const taggedUsersMap = new Map();
+    if (allTaggedUserIds.length > 0) {
+      const taggedUsers = await prisma.user.findMany({
+        where: { id: { in: allTaggedUserIds } },
+        select: {
+          id: true,
+          username: true,
+          display_name: true,
+          profile_photo_url: true,
+        },
+      });
+      taggedUsers.forEach(user => taggedUsersMap.set(user.id, user));
+    }
+
     // Format response and filter out activities whose date/time has passed
     const now = new Date();
     const formattedListings = listings
@@ -82,6 +100,9 @@ const getFeed = async (req, res, next) => {
         expires_at: listing.expires_at,
         user: listing.user,
         has_requested: listing.requests.length > 0,
+        tagged_users: (listing.tagged_users || [])
+          .map(userId => taggedUsersMap.get(userId))
+          .filter(Boolean),
       }));
 
     res.json({
@@ -134,6 +155,20 @@ const getListingById = async (req, res, next) => {
       });
     }
 
+    // Fetch tagged user details
+    let taggedUsers = [];
+    if (listing.tagged_users && listing.tagged_users.length > 0) {
+      taggedUsers = await prisma.user.findMany({
+        where: { id: { in: listing.tagged_users } },
+        select: {
+          id: true,
+          username: true,
+          display_name: true,
+          profile_photo_url: true,
+        },
+      });
+    }
+
     // Format response
     const formattedListing = {
       id: listing.id,
@@ -156,6 +191,7 @@ const getListingById = async (req, res, next) => {
       profile_photo_url: listing.user.profile_photo_url,
       has_requested: listing.requests.length > 0,
       request_status: listing.requests.length > 0 ? listing.requests[0].status : null,
+      tagged_users: taggedUsers,
     };
 
     res.json({
@@ -180,6 +216,7 @@ const createListing = async (req, res, next) => {
       photo_url,
       caption,
       time_text,
+      tagged_users,
     } = req.body;
 
     // Calculate expiration based on activity date/time
@@ -214,6 +251,7 @@ const createListing = async (req, res, next) => {
         date: date ? new Date(date) : null,
         time: time || null,
         max_participants: max_participants || null,
+        tagged_users: tagged_users || [],
         photo_url: photo_url || null,
         caption: caption?.trim() || description?.trim() || null,
         time_text: time_text || time || null,

@@ -40,6 +40,7 @@ const createListingSchema = Joi.object({
   date: Joi.date().min('now').required(),
   time: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
   max_participants: Joi.number().integer().min(1).max(100).optional(),
+  tagged_users: Joi.array().items(Joi.string().uuid()).optional(),
 
   // Legacy fields (optional for backwards compatibility)
   caption: Joi.string().max(200).optional(),

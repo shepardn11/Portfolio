@@ -49,6 +49,7 @@ model Listing {
   time             String?
   time_text        String?
   max_participants Int?
+  tagged_users     String[]            @default([])
   city             String
   latitude         Float?
   longitude        Float?

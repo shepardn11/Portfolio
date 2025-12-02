@@ -368,11 +368,37 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             </View>
           )}
 
-          {/* Participants Section - TODO: Add when we have participants data */}
-          {/* <View style={styles.participantsSection}>
-            <Text style={styles.sectionTitle}>Who's joining</Text>
-            <Text style={styles.comingSoon}>Coming soon!</Text>
-          </View> */}
+          {/* Tagged Users Section - Who's joining */}
+          {listing.tagged_users && listing.tagged_users.length > 0 && (
+            <View style={styles.participantsSection}>
+              <Text style={styles.sectionTitle}>Who's joining ({listing.tagged_users.length})</Text>
+              <View style={styles.participantsList}>
+                {listing.tagged_users.map((participant) => (
+                  <TouchableOpacity
+                    key={participant.id}
+                    style={styles.participantCard}
+                    onPress={() => navigation.navigate('UserProfile', { userId: participant.id })}
+                  >
+                    {participant.profile_photo_url ? (
+                      <Image
+                        source={{ uri: participant.profile_photo_url }}
+                        style={styles.participantPhoto}
+                      />
+                    ) : (
+                      <View style={[styles.participantPhoto, styles.participantPhotoPlaceholder]}>
+                        <Ionicons name="person" size={20} color="#999" />
+                      </View>
+                    )}
+                    <View style={styles.participantInfo}>
+                      <Text style={styles.participantName}>{participant.display_name}</Text>
+                      <Text style={styles.participantUsername}>@{participant.username}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#999" />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -631,6 +657,45 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  participantsSection: {
+    marginBottom: 24,
+  },
+  participantsList: {
+    gap: 12,
+  },
+  participantCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  participantPhoto: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  participantPhotoPlaceholder: {
+    backgroundColor: '#e5e7eb',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  participantInfo: {
+    flex: 1,
+  },
+  participantName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 2,
+  },
+  participantUsername: {
+    fontSize: 14,
+    color: '#6b7280',
   },
   bottomBar: {
     position: 'absolute',
