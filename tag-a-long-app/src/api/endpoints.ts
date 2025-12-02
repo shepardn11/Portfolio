@@ -294,6 +294,46 @@ export const safetyAPI = {
 };
 
 // ============================================================================
+// MESSAGE ENDPOINTS
+// ============================================================================
+
+export const messageAPI = {
+  // Get all conversations
+  getConversations: async () => {
+    const response = await api.get('/messages/conversations');
+    return response.data.data;
+  },
+
+  // Get or create conversation with a user
+  getOrCreateConversation: async (otherUserId: string) => {
+    const response = await api.post('/messages/conversations', {
+      other_user_id: otherUserId,
+    });
+    return response.data.data;
+  },
+
+  // Get messages in a conversation
+  getMessages: async (conversationId: string, limit = 50, offset = 0) => {
+    const response = await api.get(
+      `/messages/conversations/${conversationId}/messages`,
+      {
+        params: { limit, offset },
+      }
+    );
+    return response.data.data;
+  },
+
+  // Send a message
+  sendMessage: async (conversationId: string, content: string) => {
+    const response = await api.post('/messages/messages', {
+      conversation_id: conversationId,
+      content,
+    });
+    return response.data.data;
+  },
+};
+
+// ============================================================================
 // SUBSCRIPTION ENDPOINTS
 // ============================================================================
 

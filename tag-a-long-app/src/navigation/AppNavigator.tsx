@@ -18,14 +18,16 @@ import ActivityDetailScreen from '../screens/home/ActivityDetailScreen';
 import SearchScreen from '../screens/search/SearchScreen';
 import UserProfileScreen from '../screens/user/UserProfileScreen';
 import MessagesScreen from '../screens/messages/MessagesScreen';
+import ChatScreen from '../screens/messages/ChatScreen';
 import MyActivitiesScreen from '../screens/activities/MyActivitiesScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
-import { HomeStackParamList, SearchStackParamList, ActivitiesStackParamList } from '../types';
+import { HomeStackParamList, SearchStackParamList, ActivitiesStackParamList, MessagesStackParamList } from '../types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const SearchStack = createNativeStackNavigator<SearchStackParamList>();
+const MessagesStack = createNativeStackNavigator<MessagesStackParamList>();
 const ActivitiesStack = createNativeStackNavigator<ActivitiesStackParamList>();
 
 // Home Stack Navigator
@@ -47,6 +49,16 @@ function SearchNavigator() {
       <SearchStack.Screen name="SearchMain" component={SearchScreen} />
       <SearchStack.Screen name="UserProfile" component={UserProfileScreen} />
     </SearchStack.Navigator>
+  );
+}
+
+// Messages Stack Navigator
+function MessagesNavigator() {
+  return (
+    <MessagesStack.Navigator screenOptions={{ headerShown: false }}>
+      <MessagesStack.Screen name="MessagesList" component={MessagesScreen} />
+      <MessagesStack.Screen name="Chat" component={ChatScreen} />
+    </MessagesStack.Navigator>
   );
 }
 
@@ -106,7 +118,7 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Messages"
-        component={MessagesScreen}
+        component={MessagesNavigator}
         options={{ tabBarLabel: 'Messages' }}
       />
       <Tab.Screen

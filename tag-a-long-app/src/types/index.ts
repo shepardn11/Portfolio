@@ -132,7 +132,15 @@ export type SearchStackParamList = {
 
 export type MessagesStackParamList = {
   MessagesList: undefined;
-  Chat: { conversationId: string; userId: string; userName: string };
+  Chat: {
+    conversationId: string;
+    otherUser: {
+      id: string;
+      username: string;
+      display_name: string;
+      profile_photo_url?: string;
+    };
+  };
 };
 
 export type ActivitiesStackParamList = {
