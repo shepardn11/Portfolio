@@ -438,31 +438,101 @@ export default function CreateListingScreen({ navigation }: Props) {
             <Text style={styles.label}>When is this happening? *</Text>
 
             <View style={styles.dateTimeRow}>
-              {/* Date Button */}
-              <TouchableOpacity
-                style={styles.dateTimeButton}
-                onPress={() => setShowDatePicker(true)}
-                disabled={isLoading}
-              >
-                <Ionicons name="calendar-outline" size={24} color="#6366f1" />
-                <View style={styles.buttonTextContainer}>
-                  <Text style={styles.buttonLabel}>Date</Text>
-                  <Text style={styles.buttonValue}>{formatDate(date)}</Text>
+              {/* Date Button/Picker */}
+              {Platform.OS === 'web' ? (
+                <View style={styles.dateTimeButton}>
+                  <Ionicons name="calendar-outline" size={24} color="#6366f1" />
+                  <View style={styles.buttonTextContainer}>
+                    <Text style={styles.buttonLabel}>Date</Text>
+                    <input
+                      type="date"
+                      style={{
+                        fontSize: 15,
+                        fontWeight: '600',
+                        color: '#333',
+                        border: 'none',
+                        outline: 'none',
+                        backgroundColor: 'transparent',
+                        fontFamily: 'system-ui',
+                        cursor: 'pointer',
+                      }}
+                      value={date.toISOString().split('T')[0]}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const newDate = new Date(e.target.value);
+                          newDate.setHours(12, 0, 0, 0);
+                          if (!isNaN(newDate.getTime())) {
+                            setDate(newDate);
+                          }
+                        }
+                      }}
+                      disabled={isLoading}
+                    />
+                  </View>
                 </View>
-              </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.dateTimeButton}
+                  onPress={() => setShowDatePicker(true)}
+                  disabled={isLoading}
+                >
+                  <Ionicons name="calendar-outline" size={24} color="#6366f1" />
+                  <View style={styles.buttonTextContainer}>
+                    <Text style={styles.buttonLabel}>Date</Text>
+                    <Text style={styles.buttonValue}>{formatDate(date)}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
 
-              {/* Time Button */}
-              <TouchableOpacity
-                style={styles.dateTimeButton}
-                onPress={() => setShowTimePicker(true)}
-                disabled={isLoading}
-              >
-                <Ionicons name="time-outline" size={24} color="#6366f1" />
-                <View style={styles.buttonTextContainer}>
-                  <Text style={styles.buttonLabel}>Time</Text>
-                  <Text style={styles.buttonValue}>{formatTime(time)}</Text>
+              {/* Time Button/Picker */}
+              {Platform.OS === 'web' ? (
+                <View style={styles.dateTimeButton}>
+                  <Ionicons name="time-outline" size={24} color="#6366f1" />
+                  <View style={styles.buttonTextContainer}>
+                    <Text style={styles.buttonLabel}>Time</Text>
+                    <input
+                      type="time"
+                      style={{
+                        fontSize: 15,
+                        fontWeight: '600',
+                        color: '#333',
+                        border: 'none',
+                        outline: 'none',
+                        backgroundColor: 'transparent',
+                        fontFamily: 'system-ui',
+                        cursor: 'pointer',
+                      }}
+                      value={time.toTimeString().slice(0, 5)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const [hours, minutes] = e.target.value.split(':');
+                          if (hours && minutes) {
+                            const newTime = new Date();
+                            newTime.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+                            if (!isNaN(newTime.getTime())) {
+                              setTime(newTime);
+                            }
+                          }
+                        }
+                      }}
+                      disabled={isLoading}
+                    />
+                  </View>
                 </View>
-              </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.dateTimeButton}
+                  onPress={() => setShowTimePicker(true)}
+                  disabled={isLoading}
+                >
+                  <Ionicons name="time-outline" size={24} color="#6366f1" />
+                  <View style={styles.buttonTextContainer}>
+                    <Text style={styles.buttonLabel}>Time</Text>
+                    <Text style={styles.buttonValue}>{formatTime(time)}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
