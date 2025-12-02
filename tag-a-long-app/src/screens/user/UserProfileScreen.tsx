@@ -15,7 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SearchStackParamList, HomeStackParamList, ActivitiesStackParamList, User } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
-import { profileAPI } from '../../api/endpoints';
+import { profileAPI, messageAPI } from '../../api/endpoints';
 
 type UserProfileScreenNavigationProp = NativeStackNavigationProp<
   SearchStackParamList | HomeStackParamList | ActivitiesStackParamList,
@@ -34,6 +34,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
   const [user, setUser] = useState<User | null>(routeParams.user || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
 
   useEffect(() => {
     console.log('UserProfileScreen mounted with params:', routeParams);
@@ -77,6 +78,40 @@ export default function UserProfileScreen({ navigation, route }: Props) {
 
   const handleBack = () => {
     navigation.goBack();
+  };
+
+  const handleSendMessage = async () => {
+    if (!user) return;
+
+    try {
+      setIsStartingConversation(true);
+
+      // Get or create conversation with this user
+      const conversation = await messageAPI.getOrCreateConversation(user.id);
+
+      // Navigate to the main navigator's Messages tab, then to Chat
+      // @ts-ignore - navigation types might not include this
+      navigation.navigate('Main', {
+        screen: 'Messages',
+        params: {
+          screen: 'Chat',
+          params: {
+            conversationId: conversation.id,
+            otherUser: {
+              id: user.id,
+              username: user.username,
+              display_name: user.display_name,
+              profile_photo_url: user.profile_photo_url,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      Alert.alert('Error', 'Could not start conversation. Please try again.');
+    } finally {
+      setIsStartingConversation(false);
+    }
   };
 
   if (isLoading || !user) {
@@ -217,12 +252,17 @@ export default function UserProfileScreen({ navigation, route }: Props) {
         <View style={styles.actionSection}>
           <TouchableOpacity
             style={styles.messageButton}
-            onPress={() => {
-              Alert.alert('Coming Soon', 'Messaging feature will be available soon!');
-            }}
+            onPress={handleSendMessage}
+            disabled={isStartingConversation}
           >
-            <Ionicons name="chatbubble" size={20} color="#fff" />
-            <Text style={styles.messageButtonText}>Send Message</Text>
+            {isStartingConversation ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="chatbubble" size={20} color="#fff" />
+                <Text style={styles.messageButtonText}>Send Message</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
