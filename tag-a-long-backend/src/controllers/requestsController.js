@@ -264,17 +264,39 @@ const acceptRequest = async (req, res, next) => {
       },
     });
 
+    // Create or get conversation between the two users
+    const [participant1, participant2] = [request.listing.user_id, request.requester_id].sort();
+
+    let conversation = await prisma.conversation.findUnique({
+      where: {
+        participant1_participant2: {
+          participant1,
+          participant2,
+        },
+      },
+    });
+
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: {
+          participant1,
+          participant2,
+        },
+      });
+    }
+
     // Create in-app notification
     const notification = await prisma.notification.create({
       data: {
         user_id: request.requester_id,
         type: 'request_accepted',
         title: `You're in! ${request.listing.user.display_name} accepted your request`,
-        body: 'Check the listing for details',
+        body: 'Check your messages to chat about the activity',
         data: JSON.stringify({
           request_id: request.id,
           listing_id: request.listing_id,
           poster_username: request.listing.user.username,
+          conversation_id: conversation.id,
         }),
       },
     });

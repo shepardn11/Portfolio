@@ -30,6 +30,9 @@ model User {
   requests          TagAlongRequest[]   @relation("Requester")
   notifications     Notification[]
   fcm_tokens        FcmToken[]
+  conversations1    Conversation[]      @relation("ConversationUser1")
+  conversations2    Conversation[]      @relation("ConversationUser2")
+  messages          Message[]
 
   @@index([city])
   @@index([username])
@@ -112,4 +115,37 @@ model FcmToken {
 
   @@unique([user_id, token])
   @@map("fcm_tokens")
+}
+
+model Conversation {
+  id           String    @id @default(uuid())
+  participant1 String
+  participant2 String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  user1        User      @relation("ConversationUser1", fields: [participant1], references: [id], onDelete: Cascade)
+  user2        User      @relation("ConversationUser2", fields: [participant2], references: [id], onDelete: Cascade)
+  messages     Message[]
+
+  @@unique([participant1, participant2])
+  @@index([participant1])
+  @@index([participant2])
+  @@map("conversations")
+}
+
+model Message {
+  id              String       @id @default(uuid())
+  conversation_id String
+  sender_id       String
+  content         String
+  is_read         Boolean      @default(false)
+  created_at      DateTime     @default(now())
+
+  conversation    Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender          User         @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id, created_at])
+  @@index([sender_id])
+  @@map("messages")
 }

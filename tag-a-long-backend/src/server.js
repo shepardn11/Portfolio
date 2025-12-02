@@ -13,6 +13,7 @@ const profileRoutes = require('./routes/profile');
 const listingsRoutes = require('./routes/listings');
 const requestsRoutes = require('./routes/requests');
 const notificationsRoutes = require('./routes/notifications');
+const messagesRoutes = require('./routes/messages');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 
@@ -45,6 +46,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/listings', listingsRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/messages', messagesRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 
 // Health check endpoint
