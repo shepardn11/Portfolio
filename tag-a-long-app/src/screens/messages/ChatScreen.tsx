@@ -162,7 +162,12 @@ export default function ChatScreen({ route, navigation }: any) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              // Navigate to MessagesList instead of goBack to ensure we stay in Messages tab
+              if (navigation.canGoBack()) {
+                navigation.navigate('MessagesList');
+              }
+            }}
             style={styles.backButton}
           >
             <Ionicons name="chevron-back" size={28} color="#000" />
