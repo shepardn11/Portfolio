@@ -190,6 +190,7 @@ const searchUsers = async (req, res, next) => {
         bio: true,
         city: true,
         profile_photo_url: true,
+        photo_gallery: true,
         instagram_handle: true,
         created_at: true,
       },
