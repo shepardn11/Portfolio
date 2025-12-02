@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   galleryPhotoContainer: {
-    width: '30%',
+    width: '48%',
     aspectRatio: 1,
     borderRadius: 10,
     overflow: 'hidden',
