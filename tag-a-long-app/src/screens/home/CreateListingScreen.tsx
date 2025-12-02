@@ -137,6 +137,8 @@ export default function CreateListingScreen({ navigation }: Props) {
     setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);
+      // Auto-open time picker after date is selected
+      setTimeout(() => setShowTimePicker(true), 300);
     }
   };
 
@@ -433,166 +435,94 @@ export default function CreateListingScreen({ navigation }: Props) {
             />
           </View>
 
-          {/* Date and Time - Improved Layout */}
+          {/* Date and Time - Simplified with Presets */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>When is this happening? *</Text>
+            <Text style={styles.sublabel}>Choose a time or set your own</Text>
 
-            {/* Date Picker - Quick Select Options */}
-            <View style={styles.dateTimeContainer}>
-              <Text style={styles.quickSelectLabel}>Quick Select</Text>
-              <View style={styles.quickDateButtons}>
-                <TouchableOpacity
-                  style={[
-                    styles.quickDateButton,
-                    styles.quickDateButtonLeft,
-                    isToday(date) && styles.quickDateButtonActive,
-                  ]}
-                  onPress={() => {
-                    const today = new Date();
-                    today.setHours(12, 0, 0, 0);
-                    setDate(today);
-                  }}
-                  disabled={isLoading}
-                >
-                  <Text style={[
-                    styles.quickDateButtonText,
-                    isToday(date) && styles.quickDateButtonTextActive,
-                  ]}>Today</Text>
-                </TouchableOpacity>
+            {/* Preset Options */}
+            <View style={styles.presetContainer}>
+              <TouchableOpacity
+                style={styles.presetButton}
+                onPress={() => {
+                  const today = new Date();
+                  today.setHours(18, 0, 0, 0); // 6 PM
+                  setDate(today);
+                  setTime(today);
+                }}
+                disabled={isLoading}
+              >
+                <Ionicons name="sunny" size={20} color="#6366f1" />
+                <Text style={styles.presetButtonText}>Today Evening</Text>
+                <Text style={styles.presetButtonSubtext}>6:00 PM</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[
-                    styles.quickDateButton,
-                    styles.quickDateButtonMiddle,
-                    isTomorrow(date) && styles.quickDateButtonActive,
-                  ]}
-                  onPress={() => {
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    tomorrow.setHours(12, 0, 0, 0);
-                    setDate(tomorrow);
-                  }}
-                  disabled={isLoading}
-                >
-                  <Text style={[
-                    styles.quickDateButtonText,
-                    isTomorrow(date) && styles.quickDateButtonTextActive,
-                  ]}>Tomorrow</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.presetButton}
+                onPress={() => {
+                  const tomorrow = new Date();
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  tomorrow.setHours(10, 0, 0, 0); // 10 AM
+                  setDate(tomorrow);
+                  setTime(tomorrow);
+                }}
+                disabled={isLoading}
+              >
+                <Ionicons name="cafe" size={20} color="#6366f1" />
+                <Text style={styles.presetButtonText}>Tomorrow Morning</Text>
+                <Text style={styles.presetButtonSubtext}>10:00 AM</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[
-                    styles.quickDateButton,
-                    isThisWeekend(date) && styles.quickDateButtonActive,
-                  ]}
-                  onPress={() => {
-                    const weekend = getNextSaturday();
-                    weekend.setHours(12, 0, 0, 0);
-                    setDate(weekend);
-                  }}
-                  disabled={isLoading}
-                >
-                  <Text style={[
-                    styles.quickDateButtonText,
-                    isThisWeekend(date) && styles.quickDateButtonTextActive,
-                  ]}>This Weekend</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={styles.presetButton}
+                onPress={() => {
+                  const tomorrow = new Date();
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  tomorrow.setHours(18, 0, 0, 0); // 6 PM
+                  setDate(tomorrow);
+                  setTime(tomorrow);
+                }}
+                disabled={isLoading}
+              >
+                <Ionicons name="moon" size={20} color="#6366f1" />
+                <Text style={styles.presetButtonText}>Tomorrow Evening</Text>
+                <Text style={styles.presetButtonSubtext}>6:00 PM</Text>
+              </TouchableOpacity>
 
-              {/* Custom Date Button */}
-              {Platform.OS === 'web' ? (
-                <input
-                  type="date"
-                  style={{
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: 10,
-                    padding: 16,
-                    fontSize: 16,
-                    borderWidth: 1,
-                    borderColor: '#e0e0e0',
-                    borderStyle: 'solid',
-                    width: '100%',
-                    fontFamily: 'system-ui',
-                    marginTop: 12,
-                  }}
-                  value={date.toISOString().split('T')[0]}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      const newDate = new Date(e.target.value);
-                      newDate.setHours(12, 0, 0, 0);
-                      if (!isNaN(newDate.getTime())) {
-                        setDate(newDate);
-                      }
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-              ) : (
-                <TouchableOpacity
-                  style={styles.customDateButton}
-                  onPress={() => setShowDatePicker(true)}
-                  disabled={isLoading}
-                >
-                  <Ionicons name="calendar-outline" size={20} color="#6366f1" />
-                  <Text style={styles.customDateButtonText}>Pick Custom Date</Text>
-                </TouchableOpacity>
-              )}
-
-              {/* Selected Date Display */}
-              <View style={styles.selectedDateDisplay}>
+              <TouchableOpacity
+                style={styles.presetButton}
+                onPress={() => {
+                  const weekend = getNextSaturday();
+                  weekend.setHours(10, 0, 0, 0); // 10 AM
+                  setDate(weekend);
+                  setTime(weekend);
+                }}
+                disabled={isLoading}
+              >
                 <Ionicons name="calendar" size={20} color="#6366f1" />
-                <Text style={styles.selectedDateText}>{formatDate(date)}</Text>
-              </View>
+                <Text style={styles.presetButtonText}>This Weekend</Text>
+                <Text style={styles.presetButtonSubtext}>Sat 10:00 AM</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Time Picker */}
-            <View style={styles.dateTimeContainer}>
-              {Platform.OS === 'web' ? (
-                <input
-                  type="time"
-                  style={{
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: 10,
-                    padding: 16,
-                    fontSize: 16,
-                    borderWidth: 1,
-                    borderColor: '#e0e0e0',
-                    borderStyle: 'solid',
-                    width: '100%',
-                    fontFamily: 'system-ui',
-                  }}
-                  value={time.toTimeString().slice(0, 5)}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      const [hours, minutes] = e.target.value.split(':');
-                      if (hours && minutes) {
-                        const newTime = new Date();
-                        newTime.setHours(parseInt(hours, 10), parseInt(minutes, 10));
-                        if (!isNaN(newTime.getTime())) {
-                          setTime(newTime);
-                        }
-                      }
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-              ) : (
-                <TouchableOpacity
-                  style={styles.dateTimeButtonLarge}
-                  onPress={() => setShowTimePicker(true)}
-                  disabled={isLoading}
-                >
-                  <View style={styles.dateTimeIconContainer}>
-                    <Ionicons name="time" size={24} color="#6366f1" />
-                  </View>
-                  <View style={styles.dateTimeTextContainer}>
-                    <Text style={styles.dateTimeLabel}>Time</Text>
-                    <Text style={styles.dateTimeValue}>{formatTime(time)}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
-                </TouchableOpacity>
-              )}
+            {/* Custom Date/Time Option */}
+            <TouchableOpacity
+              style={styles.customButton}
+              onPress={() => {
+                setShowDatePicker(true);
+              }}
+              disabled={isLoading}
+            >
+              <Ionicons name="options" size={20} color="#666" />
+              <Text style={styles.customButtonText}>Choose Custom Date & Time</Text>
+            </TouchableOpacity>
+
+            {/* Selected Date/Time Display */}
+            <View style={styles.selectedDateTimeDisplay}>
+              <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+              <Text style={styles.selectedDateTimeText}>
+                {formatDate(date)} at {formatTime(time)}
+              </Text>
             </View>
           </View>
 
@@ -814,114 +744,63 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-  dateTimeContainer: {
-    marginBottom: 20,
-  },
-  quickSelectLabel: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 10,
-    fontWeight: '500',
-  },
-  quickDateButtons: {
+  presetContainer: {
     flexDirection: 'row',
-    marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 15,
   },
-  quickDateButton: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
+  presetButton: {
+    width: '48%',
+    backgroundColor: '#f0f0ff',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-  },
-  quickDateButtonLeft: {
-    marginRight: 4,
-  },
-  quickDateButtonMiddle: {
-    marginHorizontal: 4,
-  },
-  quickDateButtonActive: {
-    backgroundColor: '#6366f1',
+    borderWidth: 2,
     borderColor: '#6366f1',
   },
-  quickDateButtonText: {
-    fontSize: 13,
+  presetButtonText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#6366f1',
+    marginTop: 6,
   },
-  quickDateButtonTextActive: {
-    color: '#fff',
+  presetButtonSubtext: {
+    fontSize: 12,
+    color: '#6366f1',
+    marginTop: 2,
+    opacity: 0.8,
   },
-  customDateButton: {
-    backgroundColor: '#fff',
+  customButton: {
+    backgroundColor: '#f5f5f5',
     borderRadius: 10,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#6366f1',
+    borderColor: '#e0e0e0',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
-  customDateButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#6366f1',
-    marginLeft: 8,
-  },
-  selectedDateDisplay: {
-    backgroundColor: '#f0f0ff',
-    borderRadius: 10,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectedDateText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#6366f1',
-    marginLeft: 8,
-  },
-  dateTimeButtonLarge: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  dateTimeIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#f0f0ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  dateTimeTextContainer: {
-    flex: 1,
-  },
-  dateTimeLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
+  customButtonText: {
+    fontSize: 14,
     fontWeight: '500',
+    color: '#666',
+    marginLeft: 8,
   },
-  dateTimeValue: {
-    fontSize: 17,
-    color: '#333',
+  selectedDateTimeDisplay: {
+    backgroundColor: '#ecfdf5',
+    borderRadius: 10,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedDateTimeText: {
+    fontSize: 15,
     fontWeight: '600',
+    color: '#10b981',
+    marginLeft: 8,
   },
   tagButton: {
     backgroundColor: '#f5f5f5',
