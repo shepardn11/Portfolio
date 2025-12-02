@@ -137,8 +137,6 @@ export default function CreateListingScreen({ navigation }: Props) {
     setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);
-      // Auto-open time picker after date is selected
-      setTimeout(() => setShowTimePicker(true), 300);
     }
   };
 
@@ -435,94 +433,36 @@ export default function CreateListingScreen({ navigation }: Props) {
             />
           </View>
 
-          {/* Date and Time - Simplified with Presets */}
+          {/* Date and Time - Simple 2 Button Approach */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>When is this happening? *</Text>
-            <Text style={styles.sublabel}>Choose a time or set your own</Text>
 
-            {/* Preset Options */}
-            <View style={styles.presetContainer}>
+            <View style={styles.dateTimeRow}>
+              {/* Date Button */}
               <TouchableOpacity
-                style={styles.presetButton}
-                onPress={() => {
-                  const today = new Date();
-                  today.setHours(18, 0, 0, 0); // 6 PM
-                  setDate(today);
-                  setTime(today);
-                }}
+                style={styles.dateTimeButton}
+                onPress={() => setShowDatePicker(true)}
                 disabled={isLoading}
               >
-                <Ionicons name="sunny" size={20} color="#6366f1" />
-                <Text style={styles.presetButtonText}>Today Evening</Text>
-                <Text style={styles.presetButtonSubtext}>6:00 PM</Text>
+                <Ionicons name="calendar-outline" size={24} color="#6366f1" />
+                <View style={styles.buttonTextContainer}>
+                  <Text style={styles.buttonLabel}>Date</Text>
+                  <Text style={styles.buttonValue}>{formatDate(date)}</Text>
+                </View>
               </TouchableOpacity>
 
+              {/* Time Button */}
               <TouchableOpacity
-                style={styles.presetButton}
-                onPress={() => {
-                  const tomorrow = new Date();
-                  tomorrow.setDate(tomorrow.getDate() + 1);
-                  tomorrow.setHours(10, 0, 0, 0); // 10 AM
-                  setDate(tomorrow);
-                  setTime(tomorrow);
-                }}
+                style={styles.dateTimeButton}
+                onPress={() => setShowTimePicker(true)}
                 disabled={isLoading}
               >
-                <Ionicons name="cafe" size={20} color="#6366f1" />
-                <Text style={styles.presetButtonText}>Tomorrow Morning</Text>
-                <Text style={styles.presetButtonSubtext}>10:00 AM</Text>
+                <Ionicons name="time-outline" size={24} color="#6366f1" />
+                <View style={styles.buttonTextContainer}>
+                  <Text style={styles.buttonLabel}>Time</Text>
+                  <Text style={styles.buttonValue}>{formatTime(time)}</Text>
+                </View>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.presetButton}
-                onPress={() => {
-                  const tomorrow = new Date();
-                  tomorrow.setDate(tomorrow.getDate() + 1);
-                  tomorrow.setHours(18, 0, 0, 0); // 6 PM
-                  setDate(tomorrow);
-                  setTime(tomorrow);
-                }}
-                disabled={isLoading}
-              >
-                <Ionicons name="moon" size={20} color="#6366f1" />
-                <Text style={styles.presetButtonText}>Tomorrow Evening</Text>
-                <Text style={styles.presetButtonSubtext}>6:00 PM</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.presetButton}
-                onPress={() => {
-                  const weekend = getNextSaturday();
-                  weekend.setHours(10, 0, 0, 0); // 10 AM
-                  setDate(weekend);
-                  setTime(weekend);
-                }}
-                disabled={isLoading}
-              >
-                <Ionicons name="calendar" size={20} color="#6366f1" />
-                <Text style={styles.presetButtonText}>This Weekend</Text>
-                <Text style={styles.presetButtonSubtext}>Sat 10:00 AM</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Custom Date/Time Option */}
-            <TouchableOpacity
-              style={styles.customButton}
-              onPress={() => {
-                setShowDatePicker(true);
-              }}
-              disabled={isLoading}
-            >
-              <Ionicons name="options" size={20} color="#666" />
-              <Text style={styles.customButtonText}>Choose Custom Date & Time</Text>
-            </TouchableOpacity>
-
-            {/* Selected Date/Time Display */}
-            <View style={styles.selectedDateTimeDisplay}>
-              <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-              <Text style={styles.selectedDateTimeText}>
-                {formatDate(date)} at {formatTime(time)}
-              </Text>
             </View>
           </View>
 
@@ -744,63 +684,39 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
-  presetContainer: {
+  dateTimeRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 15,
+    gap: 12,
   },
-  presetButton: {
-    width: '48%',
-    backgroundColor: '#f0f0ff',
+  dateTimeButton: {
+    flex: 1,
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#6366f1',
-  },
-  presetButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#6366f1',
-    marginTop: 6,
-  },
-  presetButtonSubtext: {
-    fontSize: 12,
-    color: '#6366f1',
-    marginTop: 2,
-    opacity: 0.8,
-  },
-  customButton: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: 1,
     borderColor: '#e0e0e0',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  customButtonText: {
-    fontSize: 14,
+  buttonTextContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  buttonLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 4,
     fontWeight: '500',
-    color: '#666',
-    marginLeft: 8,
   },
-  selectedDateTimeDisplay: {
-    backgroundColor: '#ecfdf5',
-    borderRadius: 10,
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  selectedDateTimeText: {
+  buttonValue: {
     fontSize: 15,
+    color: '#333',
     fontWeight: '600',
-    color: '#10b981',
-    marginLeft: 8,
   },
   tagButton: {
     backgroundColor: '#f5f5f5',
