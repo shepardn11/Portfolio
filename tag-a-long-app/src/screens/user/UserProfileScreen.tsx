@@ -202,11 +202,12 @@ export default function UserProfileScreen({ navigation, route }: Props) {
             <Text style={styles.sectionTitle}>Photos</Text>
             <View style={styles.galleryGrid}>
               {user.photo_gallery.map((photo, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: photo }}
-                  style={styles.galleryPhoto}
-                />
+                <View key={index} style={styles.galleryPhotoContainer}>
+                  <Image
+                    source={{ uri: photo }}
+                    style={styles.galleryPhoto}
+                  />
+                </View>
               ))}
             </View>
           </View>
@@ -375,12 +376,20 @@ const styles = StyleSheet.create({
   galleryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 10,
+  },
+  galleryPhotoContainer: {
+    width: '30%',
+    aspectRatio: 1,
+    borderRadius: 10,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   galleryPhoto: {
-    width: '31%',
-    aspectRatio: 1,
-    borderRadius: 8,
+    width: '100%',
+    height: '100%',
   },
   actionSection: {
     padding: 20,
