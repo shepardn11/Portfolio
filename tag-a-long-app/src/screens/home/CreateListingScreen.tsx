@@ -552,7 +552,7 @@ export default function CreateListingScreen({ navigation }: Props) {
             <DateTimePicker
               value={date}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
+              display="spinner"
               onChange={handleDateChange}
               minimumDate={new Date()}
             />
@@ -563,7 +563,7 @@ export default function CreateListingScreen({ navigation }: Props) {
             <DateTimePicker
               value={time}
               mode="time"
-              display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
+              display="spinner"
               onChange={handleTimeChange}
             />
           )}
