@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { HomeStackParamList, ActivityListing } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
 import { listingAPI } from '../../api/endpoints';
@@ -48,6 +49,13 @@ export default function FeedScreen({ navigation }: Props) {
   useEffect(() => {
     fetchListings();
   }, []);
+
+  // Refresh feed when screen comes into focus (e.g., after creating an activity)
+  useFocusEffect(
+    useCallback(() => {
+      fetchListings();
+    }, [])
+  );
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
