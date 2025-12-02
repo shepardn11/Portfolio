@@ -134,6 +134,12 @@ export default function CreateListingScreen({ navigation }: Props) {
   ];
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
+    // On Android, event.type can be 'set', 'dismissed', or 'neutralButtonPressed'
+    if (event.type === 'dismissed') {
+      setShowDatePicker(false);
+      return;
+    }
+
     setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);
@@ -141,6 +147,12 @@ export default function CreateListingScreen({ navigation }: Props) {
   };
 
   const handleTimeChange = (event: any, selectedTime?: Date) => {
+    // On Android, event.type can be 'set', 'dismissed', or 'neutralButtonPressed'
+    if (event.type === 'dismissed') {
+      setShowTimePicker(false);
+      return;
+    }
+
     setShowTimePicker(false);
     if (selectedTime) {
       setTime(selectedTime);
