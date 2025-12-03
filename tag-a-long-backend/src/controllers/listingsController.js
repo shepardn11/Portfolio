@@ -217,7 +217,7 @@ const createListing = async (req, res, next) => {
       tagged_users,
     } = req.body;
 
-    // Calculate expiration based on activity date/time
+    // Calculate expiration based on activity date/time (with 10-minute grace period)
     let expires_at;
     if (date) {
       const activityDate = new Date(date);
@@ -226,10 +226,13 @@ const createListing = async (req, res, next) => {
       if (time) {
         const [hours, minutes] = time.split(':');
         activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+        // Add 10-minute grace period
+        activityDate.setMinutes(activityDate.getMinutes() + 10);
         expires_at = activityDate;
       } else {
-        // No time specified, expire at end of day (11:59 PM)
+        // No time specified, expire at end of day (11:59 PM) + 10 minutes
         activityDate.setHours(23, 59, 59, 999);
+        activityDate.setMinutes(activityDate.getMinutes() + 10);
         expires_at = activityDate;
       }
     } else {
