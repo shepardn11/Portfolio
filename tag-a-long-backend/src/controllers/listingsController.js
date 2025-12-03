@@ -68,13 +68,15 @@ const getFeed = async (req, res, next) => {
           const activityDate = new Date(listing.date);
 
           if (listing.time) {
-            // Has specific time - check date + time
+            // Has specific time - check date + time + 10min grace period
             const [hours, minutes] = listing.time.split(':');
             activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+            activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
             return activityDate > now;
           } else {
-            // No time - check if date has passed (end of day)
+            // No time - check if date has passed (end of day + 10min grace period)
             activityDate.setHours(23, 59, 59, 999);
+            activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
             return activityDate > now;
           }
         }
@@ -336,13 +338,15 @@ const getMyListings = async (req, res, next) => {
             const activityDate = new Date(listing.date);
 
             if (listing.time) {
-              // Has specific time - check date + time
+              // Has specific time - check date + time + 10min grace period
               const [hours, minutes] = listing.time.split(':');
               activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+              activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
               return activityDate > now;
             } else {
-              // No time - check if date has passed (end of day)
+              // No time - check if date has passed (end of day + 10min grace period)
               activityDate.setHours(23, 59, 59, 999);
+              activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
               return activityDate > now;
             }
           }
