@@ -394,9 +394,10 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 
           {/* Form */}
           <View style={styles.form}>
+            <Text style={styles.sectionTitle}>Bio (Optional)</Text>
             <TextInput
               style={[styles.input, styles.bioInput]}
-              placeholder="Bio (Optional - tell others about yourself)"
+              placeholder="Tell others about yourself"
               value={bio}
               onChangeText={setBio}
               multiline
