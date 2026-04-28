@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   galleryPhotoBox: {
-    width: '30%',
+    width: '48%',
     aspectRatio: 1,
     marginBottom: 10,
     borderRadius: 10,
