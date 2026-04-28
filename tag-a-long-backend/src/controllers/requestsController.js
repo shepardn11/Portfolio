@@ -112,7 +112,7 @@ const getReceivedRequests = async (req, res, next) => {
   try {
     const { status, listing_id } = req.query;
 
-    const graceDate = new Date(Date.now() - 10 * 60 * 1000);
+    const graceDate = new Date(Date.now() - 30 * 60 * 1000);
 
     const where = {
       listing: {

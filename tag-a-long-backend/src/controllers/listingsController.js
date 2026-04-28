@@ -89,11 +89,11 @@ const getFeed = async (req, res, next) => {
           if (listing.time) {
             const [hours, minutes] = listing.time.split(':');
             activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-            activityDate.setMinutes(activityDate.getMinutes() + 10);
+            activityDate.setMinutes(activityDate.getMinutes() + 30);
             return activityDate > now;
           } else {
             activityDate.setHours(23, 59, 59, 999);
-            activityDate.setMinutes(activityDate.getMinutes() + 10);
+            activityDate.setMinutes(activityDate.getMinutes() + 30);
             return activityDate > now;
           }
         }
@@ -247,12 +247,12 @@ const createListing = async (req, res, next) => {
         const [hours, minutes] = time.split(':');
         activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
         // Add 10-minute grace period
-        activityDate.setMinutes(activityDate.getMinutes() + 10);
+        activityDate.setMinutes(activityDate.getMinutes() + 30);
         expires_at = activityDate;
       } else {
         // No time specified, expire at end of day (11:59 PM) + 10 minutes
         activityDate.setHours(23, 59, 59, 999);
-        activityDate.setMinutes(activityDate.getMinutes() + 10);
+        activityDate.setMinutes(activityDate.getMinutes() + 30);
         expires_at = activityDate;
       }
     } else {
@@ -361,12 +361,12 @@ const getMyListings = async (req, res, next) => {
               // Has specific time - check date + time + 10min grace period
               const [hours, minutes] = listing.time.split(':');
               activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-              activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
+              activityDate.setMinutes(activityDate.getMinutes() + 30); // Add grace period
               return activityDate > now;
             } else {
               // No time - check if date has passed (end of day + 10min grace period)
               activityDate.setHours(23, 59, 59, 999);
-              activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
+              activityDate.setMinutes(activityDate.getMinutes() + 30); // Add grace period
               return activityDate > now;
             }
           }
