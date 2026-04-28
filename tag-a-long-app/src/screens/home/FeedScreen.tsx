@@ -51,7 +51,7 @@ export default function FeedScreen({ navigation }: Props) {
 
     Alert.alert(
       'Location Required',
-      'Tag-A-Long needs your location to show you activities happening nearby.',
+      'Tag A Long needs your location to show you activities happening nearby.',
       [
         {
           text: 'Enable Location',
@@ -128,7 +128,7 @@ export default function FeedScreen({ navigation }: Props) {
   const renderHeader = () => (
     <View>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tag-A-Long</Text>
+        <Text style={styles.headerTitle}>Tag A Long</Text>
         <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
           <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
         </TouchableOpacity>
