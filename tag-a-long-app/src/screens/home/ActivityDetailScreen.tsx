@@ -393,14 +393,6 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             </View>
           )}
 
-          {/* Delete Activity - Only for owner */}
-          {isOwnActivity && (
-            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteActivity}>
-              <Ionicons name="trash-outline" size={18} color="#ef4444" />
-              <Text style={styles.deleteButtonText}>Delete Activity</Text>
-            </TouchableOpacity>
-          )}
-
           {/* Tagged Users Section - Who's joining */}
           {listing.tagged_users && listing.tagged_users.length > 0 && (
             <View style={styles.participantsSection}>
@@ -431,6 +423,13 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                 ))}
               </View>
             </View>
+          )}
+          {/* Delete Activity - Only for owner */}
+          {isOwnActivity && (
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteActivity}>
+              <Ionicons name="trash-outline" size={18} color="#888" />
+              <Text style={styles.deleteButtonText}>Delete Activity</Text>
+            </TouchableOpacity>
           )}
         </View>
       </ScrollView>
@@ -687,13 +686,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fafafa',
     marginBottom: 24,
   },
   deleteButtonText: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#ef4444',
+    fontWeight: '500',
+    color: '#888',
   },
   description: {
     fontSize: 16,
