@@ -112,9 +112,16 @@ const getReceivedRequests = async (req, res, next) => {
   try {
     const { status, listing_id } = req.query;
 
+    const graceDate = new Date(Date.now() - 10 * 60 * 1000);
+
     const where = {
       listing: {
         user_id: req.user.id,
+        is_active: true,
+        OR: [
+          { date: null },
+          { date: { gte: graceDate } },
+        ],
       },
     };
 
