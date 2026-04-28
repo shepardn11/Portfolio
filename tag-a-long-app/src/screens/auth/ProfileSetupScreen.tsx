@@ -201,10 +201,22 @@ export default function ProfileSetupScreen({ navigation }: Props) {
     }
   };
 
-  const handleRemoveGalleryPhoto = (index: number) => {
+  const handleRemoveGalleryPhoto = async (index: number) => {
+    const photoUrl = galleryPhotos[index];
     const newGalleryPhotos = [...galleryPhotos];
     newGalleryPhotos[index] = null;
     setGalleryPhotos(newGalleryPhotos);
+
+    if (photoUrl) {
+      try {
+        await apiClient.getInstance().delete('/profile/gallery', { data: { photo_url: photoUrl } });
+        if (user) {
+          updateUser({ ...user, photo_gallery: (user.photo_gallery || []).filter(u => u !== photoUrl) });
+        }
+      } catch (error) {
+        console.error('Failed to remove gallery photo from backend:', error);
+      }
+    }
   };
 
   const handleComplete = async () => {
