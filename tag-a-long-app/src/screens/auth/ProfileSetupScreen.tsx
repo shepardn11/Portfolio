@@ -208,6 +208,17 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   };
 
   const handleComplete = async () => {
+    if (!profilePhoto) {
+      Alert.alert('Profile Photo Required', 'Please add a profile photo to continue.');
+      return;
+    }
+
+    const hasGalleryPhoto = galleryPhotos.some(p => p !== null);
+    if (!hasGalleryPhoto) {
+      Alert.alert('Gallery Photo Required', 'Please add at least one gallery photo to continue.');
+      return;
+    }
+
     console.log('DEBUG: handleComplete called');
     console.log('DEBUG: wantsPremium:', wantsPremium);
     try {
@@ -307,7 +318,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 
           {/* Profile Photo Section */}
           <View style={styles.photosSection}>
-            <Text style={styles.sectionTitle}>Profile Photo (Optional)</Text>
+            <Text style={styles.sectionTitle}>Profile Photo</Text>
             <View style={styles.photoContainer}>
               <TouchableOpacity
                 style={styles.largePhotoBox}
@@ -350,7 +361,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
 
           {/* Photo Gallery Section */}
           <View style={styles.photosSection}>
-            <Text style={styles.sectionTitle}>Photo Gallery (Optional - up to 5 photos)</Text>
+            <Text style={styles.sectionTitle}>Photo Gallery (up to 5 photos)</Text>
             <View style={styles.galleryGrid}>
               {galleryPhotos.map((photo, index) => {
                 console.log(`DEBUG ProfileSetup: Rendering gallery slot ${index}, photo:`, photo);
