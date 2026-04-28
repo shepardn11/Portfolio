@@ -1,4 +1,4 @@
-// Profile Setup Screen - Complete profile after signup
+﻿// Profile Setup Screen - Complete profile after signup
 import React, { useState } from 'react';
 import {
   View,
@@ -317,7 +317,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                 {(() => {
                   console.log('DEBUG ProfileSetup: Rendering profile photo, profilePhoto:', profilePhoto, 'isUploadingPhoto:', isUploadingPhoto);
                   if (isUploadingPhoto) {
-                    return <ActivityIndicator size="large" color="#6366f1" />;
+                    return <ActivityIndicator size="large" color="#B8860B" />;
                   } else if (profilePhoto) {
                     return (
                       <View style={{ width: '100%', height: '100%' }}>
@@ -362,7 +362,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                     disabled={isLoading || uploadingGalleryIndex !== null}
                   >
                     {uploadingGalleryIndex === index ? (
-                      <ActivityIndicator size="small" color="#6366f1" />
+                      <ActivityIndicator size="small" color="#B8860B" />
                     ) : photo ? (
                       <View style={{ width: '100%', height: '100%' }}>
                         <Image
@@ -426,7 +426,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                 <Ionicons
                   name={wantsPremium ? 'checkbox' : 'square-outline'}
                   size={24}
-                  color="#6366f1"
+                  color="#B8860B"
                 />
                 <View style={styles.premiumText}>
                   <Text style={styles.premiumTitle}>Premium Subscription ($4.99/month)</Text>
@@ -475,7 +475,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingTop: 55,
+    paddingBottom: 30,
   },
   header: {
     alignItems: 'center',
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#6366f1',
+    color: '#B8860B',
     marginBottom: 8,
   },
   subtitle: {
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
   largePhotoImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   photoPlaceholder: {
     width: '100%',
@@ -556,7 +557,7 @@ const styles = StyleSheet.create({
   galleryPhotoImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   galleryPhotoPlaceholder: {
     width: '100%',
@@ -618,7 +619,7 @@ const styles = StyleSheet.create({
   premiumTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6366f1',
+    color: '#B8860B',
     marginBottom: 2,
   },
   premiumSubtitle: {
@@ -626,7 +627,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   completeButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     borderRadius: 10,
     padding: 16,
     alignItems: 'center',
