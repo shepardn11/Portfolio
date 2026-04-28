@@ -1,19 +1,35 @@
 const prisma = require('../config/database');
 const { uploadToS3 } = require('../services/imageService');
 
+const haversineDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 3959; // miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 const getFeed = async (req, res, next) => {
   try {
-    const { city, limit = 50, offset = 0, sort = 'recent' } = req.query;
+    const { city, lat, lng, radius = 50, limit = 50, offset = 0 } = req.query;
+    const userLat = lat ? parseFloat(lat) : null;
+    const userLng = lng ? parseFloat(lng) : null;
+    const radiusMiles = parseFloat(radius);
 
     // Build where clause
     const where = {
       is_active: true,
       expires_at: { gt: new Date() },
-      user_id: { not: req.user.id }, // Exclude own listings
+      user_id: { not: req.user.id },
     };
 
-    // Optionally filter by city if provided
-    if (city) {
+    // City fallback if no coordinates
+    if (!userLat && city) {
       where.city = city;
     }
 
@@ -63,24 +79,32 @@ const getFeed = async (req, res, next) => {
     const now = new Date();
     const formattedListings = listings
       .filter(listing => {
-        // Check if activity date/time has passed
+        // Radius filter — if user sent coordinates, filter by distance
+        if (userLat !== null && userLng !== null) {
+          if (listing.latitude !== null && listing.longitude !== null) {
+            const dist = haversineDistance(userLat, userLng, listing.latitude, listing.longitude);
+            if (dist > radiusMiles) return false;
+          }
+          // Listing has no coordinates — fall back to city match
+          else if (city && listing.city !== city) {
+            return false;
+          }
+        }
+
+        // Filter expired by date/time
         if (listing.date) {
           const activityDate = new Date(listing.date);
-
           if (listing.time) {
-            // Has specific time - check date + time + 10min grace period
             const [hours, minutes] = listing.time.split(':');
             activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-            activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
+            activityDate.setMinutes(activityDate.getMinutes() + 10);
             return activityDate > now;
           } else {
-            // No time - check if date has passed (end of day + 10min grace period)
             activityDate.setHours(23, 59, 59, 999);
-            activityDate.setMinutes(activityDate.getMinutes() + 10); // Add grace period
+            activityDate.setMinutes(activityDate.getMinutes() + 10);
             return activityDate > now;
           }
         }
-        // No date specified - rely on expires_at (already filtered in query)
         return true;
       })
       .map(listing => ({
@@ -217,6 +241,8 @@ const createListing = async (req, res, next) => {
       caption,
       time_text,
       tagged_users,
+      latitude,
+      longitude,
     } = req.body;
 
     // Calculate expiration based on activity date/time (with 10-minute grace period)
@@ -259,6 +285,8 @@ const createListing = async (req, res, next) => {
         caption: caption?.trim() || description?.trim() || null,
         time_text: time_text || time || null,
         city: req.user.city,
+        latitude: latitude ? parseFloat(latitude) : null,
+        longitude: longitude ? parseFloat(longitude) : null,
         expires_at,
       },
       include: {
