@@ -107,7 +107,7 @@ export default function FeedScreen({ navigation }: Props) {
   }, [userCoords, radius, user?.city]);
 
   useEffect(() => {
-    if (!isLoading) fetchListings();
+    fetchListings();
   }, [radius, userCoords]);
 
   useEffect(() => {
