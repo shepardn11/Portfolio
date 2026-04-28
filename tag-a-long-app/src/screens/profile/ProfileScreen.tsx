@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   galleryGrid: {
     flexDirection: 'column',
-    gap: 0,
+    gap: 12,
   },
   galleryPhotoContainer: {
     width: '100%',
