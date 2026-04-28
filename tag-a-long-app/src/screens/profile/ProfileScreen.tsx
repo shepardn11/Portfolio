@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   const { user, logout, setUser, updateUser } = useAuthStore();
   const [editVisible, setEditVisible] = useState(false);
   const [editBio, setEditBio] = useState('');
+  const [editCity, setEditCity] = useState('');
   const [editGallery, setEditGallery] = useState<(string | null)[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
@@ -49,6 +50,7 @@ export default function ProfileScreen() {
 
   const openEdit = () => {
     setEditBio(user?.bio || '');
+    setEditCity(user?.city || '');
     const gallery = user?.photo_gallery || [];
     // Pad to 5 slots
     const padded: (string | null)[] = [...gallery];
@@ -137,7 +139,7 @@ export default function ProfileScreen() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const updatedUser = await profileAPI.updateProfile({ bio: editBio.trim() });
+      const updatedUser = await profileAPI.updateProfile({ bio: editBio.trim(), city: editCity.trim() });
       updateUser(updatedUser);
       setEditVisible(false);
     } catch (e) {
@@ -270,6 +272,16 @@ export default function ProfileScreen() {
               />
               <Text style={styles.charCount}>{editBio.length}/150</Text>
 
+              {/* City */}
+              <Text style={styles.modalSectionTitle}>City</Text>
+              <TextInput
+                style={styles.cityInput}
+                value={editCity}
+                onChangeText={setEditCity}
+                placeholder="Your city"
+                maxLength={100}
+              />
+
               {/* Gallery */}
               <Text style={styles.modalSectionTitle}>Photo Gallery</Text>
               <View style={styles.editGalleryGrid}>
@@ -383,6 +395,10 @@ const styles = StyleSheet.create({
     fontSize: 15, color: '#333', minHeight: 90, backgroundColor: '#fafafa',
   },
   charCount: { fontSize: 12, color: '#aaa', textAlign: 'right', marginTop: 4 },
+  cityInput: {
+    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 10, padding: 12,
+    fontSize: 15, color: '#333', backgroundColor: '#fafafa',
+  },
 
   editGalleryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10 },
   editGalleryBox: { width: '48%', aspectRatio: 1, borderRadius: 10, overflow: 'hidden', backgroundColor: '#f5f5f5' },
