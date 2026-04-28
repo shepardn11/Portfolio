@@ -440,13 +440,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.skipButton}
-              onPress={handleSkip}
-              disabled={isLoading}
-            >
-              <Text style={styles.skipButtonText}>Skip for Now</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
