@@ -86,15 +86,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await apiClient.setAuthToken(token);
         await AsyncStorage.setItem('user', JSON.stringify(user));
 
-        console.log('DEBUG: Setting auth state after signup - isAuthenticated: false, profileSetupComplete: false');
-        set({
+          set({
           user,
           token,
           isAuthenticated: false, // Keep false to stay in auth flow for profile setup
           profileSetupComplete: false,
           error: null,
         });
-        console.log('DEBUG: Auth state set. User should now navigate to ProfileSetup');
       } else {
         throw new Error(response.error?.message || 'Signup failed');
       }
@@ -114,9 +112,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   // Logout action
   logout: async () => {
     try {
+      // Invalidate the token server-side before clearing locally
+      await apiClient.getInstance().post('/auth/logout').catch(() => {});
       await apiClient.clearAuthToken();
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('profileSetupComplete');
+      await AsyncStorage.multiRemove(['user', 'profileSetupComplete']);
       set({
         user: null,
         token: null,
@@ -137,7 +136,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const token = await AsyncStorage.getItem('auth_token');
       const userStr = await AsyncStorage.getItem('user');
 
-      console.log('DEBUG: loadUser - token exists:', !!token, 'user exists:', !!userStr);
 
       if (token && userStr) {
         const user = JSON.parse(userStr);
@@ -146,14 +144,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const setupComplete = await AsyncStorage.getItem('profileSetupComplete');
         const isSetupComplete = setupComplete === 'true';
 
-        console.log('DEBUG: loadUser - profileSetupComplete from storage:', setupComplete, 'isSetupComplete:', isSetupComplete);
-
-        // Optionally, verify token is still valid by fetching fresh user data
         try {
           const freshUser = await profileAPI.getMyProfile();
           await AsyncStorage.setItem('user', JSON.stringify(freshUser));
 
-          console.log('DEBUG: loadUser - Setting isAuthenticated:', isSetupComplete);
           set({
             user: freshUser,
             token,
@@ -162,8 +156,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isLoading: false,
           });
         } catch (error) {
-          console.log('DEBUG: loadUser - Token invalid, clearing auth');
-          // Token invalid, clear auth
+          // Token invalid or expired, clear auth
           await apiClient.clearAuthToken();
           set({
             user: null,
@@ -174,7 +167,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           });
         }
       } else {
-        console.log('DEBUG: loadUser - No token/user found, staying logged out');
         set({
           user: null,
           token: null,

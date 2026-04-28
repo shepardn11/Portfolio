@@ -55,12 +55,13 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Default error
+  // Default error — never expose raw internal messages in production
+  const isProd = process.env.NODE_ENV === 'production';
   res.status(err.status || 500).json({
     success: false,
     error: {
-      code: err.code || 'INTERNAL_SERVER_ERROR',
-      message: err.message || 'Something went wrong',
+      code: 'INTERNAL_SERVER_ERROR',
+      message: isProd ? 'Something went wrong' : (err.message || 'Something went wrong'),
     },
   });
 };

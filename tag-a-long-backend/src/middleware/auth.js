@@ -28,6 +28,8 @@ const authenticateToken = async (req, res, next) => {
         display_name: true,
         city: true,
         is_active: true,
+        last_active: true,
+        token_version: true,
       },
     });
 
@@ -41,11 +43,25 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // Update last active timestamp
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { last_active: new Date() },
-    });
+    // Reject tokens issued before the user logged out (token invalidation)
+    if (decoded.tokenVersion !== undefined && decoded.tokenVersion !== user.token_version) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_REVOKED',
+          message: 'Token has been revoked',
+        },
+      });
+    }
+
+    // Only update last_active if it's been more than 5 minutes
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    if (!user.last_active || user.last_active < fiveMinutesAgo) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { last_active: new Date() },
+      });
+    }
 
     req.user = user;
     next();

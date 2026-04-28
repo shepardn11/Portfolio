@@ -153,6 +153,37 @@ export default function ProfileScreen() {
     await logout();
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            Alert.prompt(
+              'Confirm Password',
+              'Enter your password to confirm account deletion.',
+              async (password) => {
+                if (!password) return;
+                try {
+                  await apiClient.getInstance().delete('/auth/account', { data: { password } });
+                  await logout();
+                } catch (e: any) {
+                  const msg = e.response?.data?.error?.message || 'Could not delete account.';
+                  Alert.alert('Error', msg);
+                }
+              },
+              'secure-text'
+            );
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -216,6 +247,11 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={18} color="#888" />
           <Text style={styles.logoutButtonText}>Log Out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
+          <Ionicons name="trash-outline" size={16} color="#ef4444" />
+          <Text style={styles.deleteAccountText}>Delete Account</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -364,6 +400,11 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e0e0e0', backgroundColor: '#fafafa',
   },
   logoutButtonText: { color: '#888', fontSize: 15, fontWeight: '500' },
+  deleteAccountButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    marginHorizontal: 20, marginTop: 12, paddingVertical: 12,
+  },
+  deleteAccountText: { color: '#ef4444', fontSize: 14, fontWeight: '500' },
 
   // Modal
   modalContainer: { flex: 1, backgroundColor: '#fff' },

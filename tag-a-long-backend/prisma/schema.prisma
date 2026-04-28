@@ -23,11 +23,13 @@ model User {
   instagram_handle  String?
   date_of_birth     DateTime
   is_active         Boolean             @default(true)
+  token_version     Int                 @default(0)
   created_at        DateTime            @default(now())
   last_active       DateTime            @default(now())
 
   listings          Listing[]
   requests          TagAlongRequest[]   @relation("Requester")
+  password_reset    PasswordResetToken?
   notifications     Notification[]
   fcm_tokens        FcmToken[]
   conversations1    Conversation[]      @relation("ConversationUser1")
@@ -148,4 +150,16 @@ model Message {
   @@index([conversation_id, created_at])
   @@index([sender_id])
   @@map("messages")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  token_hash String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }

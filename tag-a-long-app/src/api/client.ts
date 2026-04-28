@@ -47,10 +47,11 @@ class APIClient {
       (response) => response,
       async (error) => {
         if (error.response?.status === 401) {
-          // Token expired or invalid - clear auth and redirect to login
-          await AsyncStorage.removeItem('auth_token');
-          await AsyncStorage.removeItem('user');
-          // You can emit an event here to trigger navigation to login
+          // Token expired or revoked — clear everything and navigate to login
+          this.authToken = null;
+          await AsyncStorage.multiRemove(['auth_token', 'user', 'profileSetupComplete']);
+          const { navigateToAuth } = await import('../navigation/navigationRef');
+          navigateToAuth();
         }
         return Promise.reject(error);
       }

@@ -21,17 +21,30 @@ const getFeed = async (req, res, next) => {
     const userLng = lng ? parseFloat(lng) : null;
     const radiusMiles = parseFloat(radius);
 
-    // Build where clause — no city filter, radius handles locality
+    // Build where clause — add bounding box pre-filter when coordinates provided
     const where = {
       is_active: true,
       expires_at: { gt: new Date() },
       user_id: { not: req.user.id },
     };
 
+    if (userLat !== null && userLng !== null) {
+      // Rough bounding box: 1 degree lat ≈ 69 miles, 1 degree lng ≈ 69*cos(lat) miles
+      const latDelta = radiusMiles / 69;
+      const lngDelta = radiusMiles / (69 * Math.cos((userLat * Math.PI) / 180));
+      where.OR = [
+        { latitude: null }, // include listings without coords
+        {
+          latitude: { gte: userLat - latDelta, lte: userLat + latDelta },
+          longitude: { gte: userLng - lngDelta, lte: userLng + lngDelta },
+        },
+      ];
+    }
+
     // Get listings
     const listings = await prisma.listing.findMany({
       where,
-      take: parseInt(limit),
+      take: parseInt(limit) * 3, // fetch extra to account for JS-level filtering
       skip: parseInt(offset),
       orderBy: { date: 'asc' }, // Sort by date ascending (soonest first)
       include: {
@@ -49,8 +62,8 @@ const getFeed = async (req, res, next) => {
       },
     });
 
-    // Get total count for pagination
-    const total = await prisma.listing.count({ where });
+    // Get total count for pagination (will be refined after JS filter below)
+    const dbTotal = await prisma.listing.count({ where });
 
     // Get all unique tagged user IDs
     const allTaggedUserIds = [...new Set(listings.flatMap(l => l.tagged_users || []))];
@@ -121,15 +134,18 @@ const getFeed = async (req, res, next) => {
           .filter(Boolean),
       }));
 
+    // Trim to requested limit after JS filtering
+    const limitedListings = formattedListings.slice(0, parseInt(limit));
+
     res.json({
       success: true,
       data: {
-        listings: formattedListings,
+        listings: limitedListings,
         pagination: {
-          total,
+          total: formattedListings.length,
           limit: parseInt(limit),
           offset: parseInt(offset),
-          has_more: parseInt(offset) + parseInt(limit) < total,
+          has_more: formattedListings.length > parseInt(limit),
         },
       },
     });

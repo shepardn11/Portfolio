@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, MainTabParamList } from '../types';
 import { useAuthStore } from '../store/authStore';
+import { navigationRef } from './navigationRef';
 import { ActivityIndicator, View } from 'react-native';
 
 // Navigators
@@ -221,8 +222,6 @@ export default function AppNavigator() {
     loadUser();
   }, []);
 
-  console.log('DEBUG: AppNavigator rendering - isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
-
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -232,7 +231,7 @@ export default function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           <RootStack.Screen name="Main" component={MainTabs} />

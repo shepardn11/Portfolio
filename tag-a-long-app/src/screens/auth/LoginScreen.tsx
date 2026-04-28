@@ -36,13 +36,8 @@ export default function LoginScreen({ navigation }: Props) {
     }
 
     try {
-      console.log('Attempting login with:', email);
       await login({ email, password });
-      console.log('Login successful!');
-      // Navigation happens automatically via AppNavigator when isAuthenticated becomes true
     } catch (error: any) {
-      console.error('Login error:', error);
-      console.error('Error response:', error.response?.data);
       const errorMsg = error.response?.data?.error?.message ||
                        error.message ||
                        'Invalid credentials. Please check your email and password.';
@@ -93,6 +88,10 @@ export default function LoginScreen({ navigation }: Props) {
             ) : (
               <Text style={styles.loginButtonText}>Log In</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.forgotPassword} onPress={() => navigation.navigate('ForgotPassword')} disabled={isLoading}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
 
           {/* Sign Up Link */}
@@ -176,4 +175,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  forgotPassword: { alignItems: 'center', marginTop: 12 },
+  forgotPasswordText: { color: '#B8860B', fontSize: 14 },
 });
