@@ -13,7 +13,7 @@ const signupSchema = Joi.object({
   username: Joi.string()
     .min(3)
     .max(50)
-    .pattern(/^[a-zA-Z0-9_]+$/)
+    .pattern(/^[a-zA-Z0-9_ ]+$/)
     .required(),
   bio: Joi.string().max(150).allow(''),
   date_of_birth: Joi.date()
