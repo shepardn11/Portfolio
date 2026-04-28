@@ -16,11 +16,10 @@ import { HomeStackParamList, ActivityListing } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
 import { listingAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
+import { useAuthStore } from '../../store/authStore';
 
-type FeedScreenNavigationProp = NativeStackNavigationProp<
-  HomeStackParamList,
-  'Feed'
->;
+
+type FeedScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Feed'>;
 
 interface Props {
   navigation: FeedScreenNavigationProp;
@@ -31,11 +30,12 @@ export default function FeedScreen({ navigation }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthStore();
 
   const fetchListings = async () => {
     try {
       setError(null);
-      const data = await listingAPI.getFeed(20, 0);
+      const data = await listingAPI.getFeed(20, 0, user?.city);
       setListings(data);
     } catch (err: any) {
       console.error('Fetch listings error:', err);
@@ -50,7 +50,6 @@ export default function FeedScreen({ navigation }: Props) {
     fetchListings();
   }, []);
 
-  // Refresh feed when screen comes into focus (e.g., after creating an activity)
   useFocusEffect(
     useCallback(() => {
       fetchListings();
@@ -66,9 +65,7 @@ export default function FeedScreen({ navigation }: Props) {
     <View style={styles.emptyState}>
       <Ionicons name="calendar-outline" size={64} color="#ccc" />
       <Text style={styles.emptyTitle}>No Activities Yet</Text>
-      <Text style={styles.emptySubtitle}>
-        Be the first to create an activity!
-      </Text>
+      <Text style={styles.emptySubtitle}>Be the first to create an activity!</Text>
       <TouchableOpacity
         style={styles.createFirstButton}
         onPress={() => navigation.navigate('CreateActivity')}
@@ -84,10 +81,7 @@ export default function FeedScreen({ navigation }: Props) {
       <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
       <Text style={styles.errorTitle}>Oops!</Text>
       <Text style={styles.errorText}>{error}</Text>
-      <TouchableOpacity
-        style={styles.retryButton}
-        onPress={fetchListings}
-      >
+      <TouchableOpacity style={styles.retryButton} onPress={fetchListings}>
         <Text style={styles.retryButtonText}>Try Again</Text>
       </TouchableOpacity>
     </View>
@@ -95,35 +89,45 @@ export default function FeedScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tag-A-Long</Text>
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => navigation.navigate('CreateActivity')}
-        >
-          <Ionicons name="add-circle-sharp" size={28} color="#6366f1" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Loading activities...</Text>
-        </View>
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Tag-A-Long</Text>
+            <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+              <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#B8860B" />
+            <Text style={styles.loadingText}>Loading activities...</Text>
+          </View>
+        </>
       ) : error ? (
-        renderError()
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Tag-A-Long</Text>
+            <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+              <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+            </TouchableOpacity>
+          </View>
+          {renderError()}
+        </>
       ) : (
         <FlatList
           data={listings}
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>Tag-A-Long</Text>
+              <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+                <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+              </TouchableOpacity>
+            </View>
+          }
           renderItem={({ item }) => (
             <ListingCard
               listing={item}
-              onPress={() => {
-                navigation.navigate('ActivityDetail', { activityId: item.id });
-              }}
+              onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -132,8 +136,8 @@ export default function FeedScreen({ navigation }: Props) {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={['#6366f1']}
-              tintColor="#6366f1"
+              colors={['#B8860B']}
+              tintColor="#B8860B"
             />
           }
           showsVerticalScrollIndicator={false}
@@ -162,7 +166,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#6366f1',
+    color: '#B8860B',
   },
   createButton: {
     padding: 5,
@@ -202,7 +206,7 @@ const styles = StyleSheet.create({
   createFirstButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
@@ -233,7 +237,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,

@@ -85,9 +85,9 @@ export const profileAPI = {
 
 export const listingAPI = {
   // Get feed (with premium priority)
-  getFeed: async (limit = 20, offset = 0): Promise<ActivityListing[]> => {
+  getFeed: async (limit = 20, offset = 0, city?: string): Promise<ActivityListing[]> => {
     const response = await api.get('/listings/feed', {
-      params: { limit, offset },
+      params: { limit, offset, ...(city ? { city } : {}) },
     });
     return response.data.data.listings;
   },
