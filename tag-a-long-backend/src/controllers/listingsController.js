@@ -21,17 +21,12 @@ const getFeed = async (req, res, next) => {
     const userLng = lng ? parseFloat(lng) : null;
     const radiusMiles = parseFloat(radius);
 
-    // Build where clause
+    // Build where clause — no city filter, radius handles locality
     const where = {
       is_active: true,
       expires_at: { gt: new Date() },
       user_id: { not: req.user.id },
     };
-
-    // City fallback if no coordinates
-    if (!userLat && city) {
-      where.city = city;
-    }
 
     // Get listings
     const listings = await prisma.listing.findMany({
@@ -85,10 +80,7 @@ const getFeed = async (req, res, next) => {
             const dist = haversineDistance(userLat, userLng, listing.latitude, listing.longitude);
             if (dist > radiusMiles) return false;
           }
-          // Listing has no coordinates — fall back to city match
-          else if (city && listing.city !== city) {
-            return false;
-          }
+          // Listing has no coordinates — include it regardless
         }
 
         // Filter expired by date/time
