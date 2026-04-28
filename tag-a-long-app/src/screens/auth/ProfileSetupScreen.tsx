@@ -407,15 +407,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             />
             <Text style={styles.characterCount}>{bio.length}/150</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Instagram Handle (Optional)"
-              value={instagramHandle}
-              onChangeText={setInstagramHandle}
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
-
             {/* Premium Subscription Option */}
             <TouchableOpacity
               style={styles.premiumOption}
