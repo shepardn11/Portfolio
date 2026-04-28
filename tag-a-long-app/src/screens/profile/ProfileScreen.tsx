@@ -1,5 +1,5 @@
 // Profile Screen - User profile and settings
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,27 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
+import { profileAPI } from '../../api/endpoints';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, setUser } = useAuthStore();
+
+  useFocusEffect(
+    useCallback(() => {
+      const refreshProfile = async () => {
+        try {
+          const freshUser = await profileAPI.getMyProfile();
+          setUser(freshUser);
+        } catch (error) {
+          console.error('Error refreshing profile:', error);
+        }
+      };
+      refreshProfile();
+    }, [setUser])
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -24,36 +40,45 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
       </View>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {user && (
-          <View style={styles.userInfo}>
-            {/* Profile Photo */}
-            <View style={styles.photoContainer}>
-              {user.profile_photo_url ? (
-                <Image
-                  source={{ uri: user.profile_photo_url }}
-                  style={styles.profilePhoto}
-                />
-              ) : (
-                <View style={styles.photoPlaceholder}>
-                  <Ionicons name="person" size={48} color="#999" />
-                </View>
+          <>
+            {/* Hero Section */}
+            <View style={styles.heroSection}>
+              <View style={styles.photoContainer}>
+                {user.profile_photo_url ? (
+                  <Image source={{ uri: user.profile_photo_url }} style={styles.profilePhoto} />
+                ) : (
+                  <View style={styles.photoPlaceholder}>
+                    <Ionicons name="person" size={52} color="#ccc" />
+                  </View>
+                )}
+              </View>
+
+              <Text style={styles.displayName}>{user.display_name || user.username}</Text>
+
+              <View style={styles.metaRow}>
+                {user.city && (
+                  <View style={styles.metaItem}>
+                    <Ionicons name="location-outline" size={14} color="#888" />
+                    <Text style={styles.metaText}>{user.city}</Text>
+                  </View>
+                )}
+                {user.instagram_handle && (
+                  <View style={styles.metaItem}>
+                    <Ionicons name="logo-instagram" size={14} color="#888" />
+                    <Text style={styles.metaText}>@{user.instagram_handle}</Text>
+                  </View>
+                )}
+              </View>
+
+              {user.bio && (
+                <Text style={styles.bio}>{user.bio}</Text>
               )}
             </View>
 
-            <Text style={styles.username}>@{user.username}</Text>
-            {user.display_name && (
-              <Text style={styles.displayName}>{user.display_name}</Text>
-            )}
-            {user.city && (
-              <Text style={styles.city}>{user.city}</Text>
-            )}
-            {user.bio && (
-              <Text style={styles.bio}>{user.bio}</Text>
-            )}
-            {user.instagram_handle && (
-              <Text style={styles.instagram}>Instagram: @{user.instagram_handle}</Text>
-            )}
+            {/* Divider */}
+            <View style={styles.divider} />
 
             {/* Photo Gallery */}
             {user.photo_gallery && user.photo_gallery.length > 0 && (
@@ -62,19 +87,17 @@ export default function ProfileScreen() {
                 <View style={styles.galleryGrid}>
                   {user.photo_gallery.map((photoUrl: string, index: number) => (
                     <View key={index} style={styles.galleryPhotoContainer}>
-                      <Image
-                        source={{ uri: photoUrl }}
-                        style={styles.galleryPhoto}
-                      />
+                      <Image source={{ uri: photoUrl }} style={styles.galleryPhoto} resizeMode="cover" />
                     </View>
                   ))}
                 </View>
               </View>
             )}
-          </View>
+          </>
         )}
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={18} color="#888" />
           <Text style={styles.logoutButtonText}>Log Out</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -88,115 +111,133 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#B8860B',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  userInfo: {
+  heroSection: {
     alignItems: 'center',
-    marginVertical: 30,
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    paddingBottom: 28,
   },
   photoContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   profilePhoto: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     borderWidth: 3,
-    borderColor: '#6366f1',
+    borderColor: '#B8860B',
   },
   photoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#e0e0e0',
   },
-  username: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#6366f1',
-    marginBottom: 8,
-  },
   displayName: {
-    fontSize: 18,
-    color: '#333',
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#1a1a1a',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
-  city: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 4,
+  username: {
+    fontSize: 15,
+    color: '#B8860B',
+    fontWeight: '500',
+    marginBottom: 12,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 14,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 13,
+    color: '#888',
   },
   bio: {
     fontSize: 15,
-    color: '#333',
+    color: '#444',
     textAlign: 'center',
-    marginTop: 12,
-    marginHorizontal: 20,
-    lineHeight: 20,
+    lineHeight: 22,
+    maxWidth: 300,
   },
-  instagram: {
-    fontSize: 15,
-    color: '#6366f1',
-    marginTop: 8,
+  divider: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
   },
   gallerySection: {
-    marginTop: 30,
-    width: '100%',
-    paddingHorizontal: 20,
+    paddingTop: 24,
   },
   galleryTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 15,
-    textAlign: 'center',
+    color: '#1a1a1a',
+    marginBottom: 14,
+    letterSpacing: 0.2,
+    paddingHorizontal: 20,
   },
   galleryGrid: {
     flexDirection: 'column',
-    gap: 12,
+    gap: 0,
   },
   galleryPhotoContainer: {
     width: '100%',
     aspectRatio: 1,
-    borderRadius: 12,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    backgroundColor: '#f5f5f5',
   },
   galleryPhoto: {
     width: '100%',
     height: '100%',
   },
   logoutButton: {
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 30,
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 36,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    backgroundColor: '#fafafa',
   },
   logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#888',
+    fontSize: 15,
+    fontWeight: '500',
   },
 });
