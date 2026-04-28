@@ -1,4 +1,4 @@
-// User Profile Screen - View another user's profile
+﻿// User Profile Screen - View another user's profile
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -125,7 +125,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
           <View style={styles.placeholder} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color="#B8860B" />
           <Text style={styles.loadingText}>Loading profile...</Text>
         </View>
       </SafeAreaView>
@@ -184,7 +184,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
             <View style={styles.nameRow}>
               <Text style={styles.displayName}>{user.display_name}</Text>
               {user.is_premium && (
-                <Ionicons name="checkmark-circle" size={24} color="#6366f1" />
+                <Ionicons name="checkmark-circle" size={24} color="#B8860B" />
               )}
             </View>
             <Text style={styles.username}>@{user.username}</Text>
@@ -196,7 +196,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
           {/* Location */}
           {user.city && (
             <View style={styles.infoRow}>
-              <Ionicons name="location" size={20} color="#6366f1" />
+              <Ionicons name="location" size={20} color="#B8860B" />
               <Text style={styles.infoText}>{user.city}</Text>
             </View>
           )}
@@ -204,7 +204,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
           {/* Join Date */}
           {user.created_at && (
             <View style={styles.infoRow}>
-              <Ionicons name="calendar" size={20} color="#6366f1" />
+              <Ionicons name="calendar" size={20} color="#B8860B" />
               <Text style={styles.infoText}>
                 Joined {new Date(user.created_at).toLocaleDateString('en-US', {
                   month: 'long',
@@ -217,7 +217,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
           {/* Instagram */}
           {user.instagram_handle && (
             <View style={styles.infoRow}>
-              <Ionicons name="logo-instagram" size={20} color="#6366f1" />
+              <Ionicons name="logo-instagram" size={20} color="#B8860B" />
               <Text style={styles.infoText}>@{user.instagram_handle}</Text>
             </View>
           )}
@@ -234,7 +234,7 @@ export default function UserProfileScreen({ navigation, route }: Props) {
         {/* Photo Gallery */}
         {user.photo_gallery && user.photo_gallery.length > 0 && (
           <View style={styles.gallerySection}>
-            <Text style={styles.sectionTitle}>Photos</Text>
+            <Text style={[styles.sectionTitle, { paddingHorizontal: 20 }]}>Photos</Text>
             <View style={styles.galleryGrid}>
               {user.photo_gallery.map((photo, index) => (
                 <View key={index} style={styles.galleryPhotoContainer}>
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   gallerySection: {
     backgroundColor: '#fff',
     marginTop: 12,
-    padding: 20,
+    paddingTop: 20,
   },
   galleryGrid: {
     flexDirection: 'column',
@@ -420,10 +420,7 @@ const styles = StyleSheet.create({
   galleryPhotoContainer: {
     width: '100%',
     aspectRatio: 1,
-    borderRadius: 12,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   galleryPhoto: {
     width: '100%',
@@ -437,7 +434,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
