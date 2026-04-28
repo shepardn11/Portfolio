@@ -292,6 +292,15 @@ const acceptRequest = async (req, res, next) => {
       });
     }
 
+    // Send automated acceptance message in the conversation
+    await prisma.message.create({
+      data: {
+        conversation_id: conversation.id,
+        sender_id: request.listing.user_id,
+        content: `You have been accepted to tag along to "${request.listing.title || 'this activity'}"! Feel free to message me with any questions.`,
+      },
+    });
+
     // Create in-app notification
     const notification = await prisma.notification.create({
       data: {
