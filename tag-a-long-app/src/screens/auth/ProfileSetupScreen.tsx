@@ -422,7 +422,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             {/* Premium Subscription Option */}
             <TouchableOpacity
               style={styles.premiumOption}
-              onPress={() => setWantsPremium(!wantsPremium)}
+              onPress={() => Alert.alert('Coming Soon', 'Premium subscriptions are not available yet. Stay tuned!')}
               disabled={isLoading}
             >
               <View style={styles.premiumContent}>
