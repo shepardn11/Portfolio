@@ -1,4 +1,4 @@
-// Signup Screen
+﻿// Signup Screen
 import React, { useState } from 'react';
 import {
   View,
@@ -131,7 +131,7 @@ export default function SignupScreen({ navigation }: Props) {
 
             <TextInput
               style={styles.input}
-              placeholder="Display Name *"
+              placeholder="Name *"
               value={displayName}
               onChangeText={setDisplayName}
               editable={!isLoading}
@@ -150,7 +150,7 @@ export default function SignupScreen({ navigation }: Props) {
             />
             <View style={styles.requirementsContainer}>
               <Text style={styles.requirementText}>• At least 3 characters</Text>
-              <Text style={styles.requirementText}>• Lowercase letters only</Text>
+              <Text style={styles.requirementText}>• Letters, numbers, spaces, and underscores only</Text>
             </View>
 
             <TextInput
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#6366f1',
+    color: '#B8860B',
     marginBottom: 10,
   },
   subtitle: {
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   signupButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     borderRadius: 10,
     padding: 16,
     alignItems: 'center',
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loginLink: {
-    color: '#6366f1',
+    color: '#B8860B',
     fontSize: 14,
     fontWeight: '600',
   },
