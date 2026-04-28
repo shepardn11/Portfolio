@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   listContent: {
-    padding: 16,
+    paddingTop: 0,
     flexGrow: 1,
   },
   emptyState: {

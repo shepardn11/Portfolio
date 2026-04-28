@@ -1,5 +1,5 @@
 // Listing Card Component - Display activity listing
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,11 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
-  Animated,
-  PanResponder,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityListing } from '../types';
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ListingCardProps {
   listing: ActivityListing;
@@ -22,96 +20,6 @@ interface ListingCardProps {
 }
 
 export default function ListingCard({ listing, onPress, pendingRequestCount }: ListingCardProps) {
-  const pan = useRef(new Animated.ValueXY()).current;
-  const opacity = useRef(new Animated.Value(1)).current;
-
-  // Swipe gesture handler
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onStartShouldSetPanResponderCapture: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only respond to horizontal swipes (not vertical scrolling)
-        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 20;
-        return isHorizontalSwipe;
-      },
-      onMoveShouldSetPanResponderCapture: (_, gestureState) => {
-        const isHorizontalSwipe = Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 20;
-        return isHorizontalSwipe;
-      },
-      onPanResponderGrant: () => {
-        // Reset to current position when gesture starts
-        pan.setOffset({
-          x: pan.x._value,
-          y: 0,
-        });
-      },
-      onPanResponderMove: (_, gestureState) => {
-        // Only allow right swipes
-        if (gestureState.dx > 0) {
-          pan.setValue({ x: gestureState.dx, y: 0 });
-          // Fade out as user swipes
-          const newOpacity = 1 - gestureState.dx / (SCREEN_WIDTH * 0.5);
-          opacity.setValue(Math.max(0.3, newOpacity));
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        pan.flattenOffset();
-
-        // If swiped more than 30% of screen width, navigate
-        if (gestureState.dx > SCREEN_WIDTH * 0.3) {
-          // Animate card off screen
-          Animated.parallel([
-            Animated.timing(pan, {
-              toValue: { x: SCREEN_WIDTH, y: 0 },
-              duration: 200,
-              useNativeDriver: false,
-            }),
-            Animated.timing(opacity, {
-              toValue: 0,
-              duration: 200,
-              useNativeDriver: false,
-            }),
-          ]).start(() => {
-            // Trigger navigation
-            if (onPress) onPress();
-            // Reset position after navigation
-            pan.setValue({ x: 0, y: 0 });
-            opacity.setValue(1);
-          });
-        } else {
-          // Snap back to original position
-          Animated.parallel([
-            Animated.spring(pan, {
-              toValue: { x: 0, y: 0 },
-              useNativeDriver: false,
-              friction: 8,
-            }),
-            Animated.timing(opacity, {
-              toValue: 1,
-              duration: 200,
-              useNativeDriver: false,
-            }),
-          ]).start();
-        }
-      },
-      onPanResponderTerminate: () => {
-        // Snap back if gesture is interrupted
-        pan.flattenOffset();
-        Animated.parallel([
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: false,
-          }),
-          Animated.timing(opacity, {
-            toValue: 1,
-            duration: 200,
-            useNativeDriver: false,
-          }),
-        ]).start();
-      },
-    })
-  ).current;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -157,29 +65,12 @@ export default function ListingCard({ listing, onPress, pendingRequestCount }: L
     return colors[category] || '#6b7280';
   };
 
-  const animatedCardStyle = {
-    transform: [{ translateX: pan.x }],
-    opacity: opacity,
-  };
-
-  const handleTap = () => {
-    // Simple tap navigation as fallback
-    if (onPress) {
-      onPress();
-    }
-  };
-
   return (
-    <Animated.View
-      style={[styles.card, animatedCardStyle]}
-      {...panResponder.panHandlers}
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.95}
     >
-      {/* Tap overlay for easier navigation */}
-      <TouchableOpacity
-        style={styles.tapOverlay}
-        onPress={handleTap}
-        activeOpacity={1}
-      />
 
       {/* Large Featured Image - Use photo_url from listing, or fall back to profile photo */}
       {(listing.photo_url || listing.profile_photo_url) ? (
@@ -265,31 +156,17 @@ export default function ListingCard({ listing, onPress, pendingRequestCount }: L
           <Text style={styles.userName}>{listing.display_name || listing.username}</Text>
         </View>
       </View>
-    </Animated.View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#000',
-    borderRadius: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    minHeight: SCREEN_HEIGHT * 0.75,
+    minHeight: SCREEN_HEIGHT * 0.65,
     overflow: 'hidden',
     position: 'relative',
-  },
-  tapOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
   },
   featuredImage: {
     width: '100%',
