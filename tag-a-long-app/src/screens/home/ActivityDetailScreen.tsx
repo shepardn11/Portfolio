@@ -132,6 +132,28 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
     }
   };
 
+  const handleDeleteActivity = () => {
+    Alert.alert(
+      'Delete Activity',
+      'Are you sure you want to delete this activity? This cannot be undone.',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await listingAPI.delete(activityId);
+              navigation.goBack();
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.error?.message || 'Could not delete activity');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -369,6 +391,14 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               <Text style={styles.sectionTitle}>About this activity</Text>
               <Text style={styles.description}>{listing.description}</Text>
             </View>
+          )}
+
+          {/* Delete Activity - Only for owner */}
+          {isOwnActivity && (
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteActivity}>
+              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+              <Text style={styles.deleteButtonText}>Delete Activity</Text>
+            </TouchableOpacity>
           )}
 
           {/* Tagged Users Section - Who's joining */}
@@ -648,6 +678,22 @@ const styles = StyleSheet.create({
   },
   descriptionSection: {
     marginBottom: 24,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ef4444',
+    marginBottom: 24,
+  },
+  deleteButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ef4444',
   },
   description: {
     fontSize: 16,
