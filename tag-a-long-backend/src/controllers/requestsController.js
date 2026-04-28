@@ -297,7 +297,7 @@ const acceptRequest = async (req, res, next) => {
       data: {
         conversation_id: conversation.id,
         sender_id: request.listing.user_id,
-        content: `You have been accepted to tag along to "${request.listing.title || 'this activity'}"! Feel free to message me with any questions.`,
+        content: `You have been accepted to tag along to "${request.listing.title || 'this activity'}"! Feel free to message with any questions.`,
       },
     });
 
