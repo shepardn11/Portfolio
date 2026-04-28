@@ -84,7 +84,7 @@ export default function MyActivitiesScreen() {
         <>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>My Activities</Text>
-            <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+            <TouchableOpacity style={styles.headerCreateButton} onPress={() => navigation.navigate('CreateActivity')}>
               <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
             </TouchableOpacity>
           </View>
@@ -97,7 +97,7 @@ export default function MyActivitiesScreen() {
         <>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>My Activities</Text>
-            <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+            <TouchableOpacity style={styles.headerCreateButton} onPress={() => navigation.navigate('CreateActivity')}>
               <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
             </TouchableOpacity>
           </View>
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
     backgroundColor: '#fff',
   },
-  createButton: {
+  headerCreateButton: {
     padding: 5,
   },
   headerTitle: {
