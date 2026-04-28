@@ -17,6 +17,7 @@ import { ActivityListing, ActivitiesStackParamList } from '../../types';
 import { listingAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
 
+
 type MyActivitiesScreenNavigationProp = NativeStackNavigationProp<ActivitiesStackParamList, 'MyActivitiesMain'>;
 
 export default function MyActivitiesScreen() {
@@ -30,13 +31,10 @@ export default function MyActivitiesScreen() {
   const fetchMyListings = async () => {
     try {
       setError(null);
-      console.log('Fetching my listings...');
       const data = await listingAPI.getMyListings();
-      console.log('My listings response:', data);
       setListings(data);
     } catch (err: any) {
       console.error('Fetch my listings error:', err);
-      console.error('Error details:', err.response?.data);
       setError(err.response?.data?.error?.message || 'Could not load your activities');
     } finally {
       setIsLoading(false);
@@ -59,9 +57,13 @@ export default function MyActivitiesScreen() {
     <View style={styles.emptyState}>
       <Ionicons name="calendar-outline" size={64} color="#ccc" />
       <Text style={styles.emptyTitle}>No Activities Yet</Text>
-      <Text style={styles.emptySubtitle}>
-        Activities you create will appear here
-      </Text>
+      <Text style={styles.emptySubtitle}>Activities you create will appear here</Text>
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={() => navigation.navigate('CreateActivity')}
+      >
+        <Ionicons name="add-circle" size={48} color="#B8860B" />
+      </TouchableOpacity>
     </View>
   );
 
@@ -70,10 +72,7 @@ export default function MyActivitiesScreen() {
       <Ionicons name="alert-circle-outline" size={64} color="#ef4444" />
       <Text style={styles.errorTitle}>Oops!</Text>
       <Text style={styles.errorText}>{error}</Text>
-      <TouchableOpacity
-        style={styles.retryButton}
-        onPress={fetchMyListings}
-      >
+      <TouchableOpacity style={styles.retryButton} onPress={fetchMyListings}>
         <Text style={styles.retryButtonText}>Try Again</Text>
       </TouchableOpacity>
     </View>
@@ -81,33 +80,47 @@ export default function MyActivitiesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Activities</Text>
-      </View>
-
-      {/* Content */}
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Loading your activities...</Text>
-        </View>
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>My Activities</Text>
+            <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+              <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#B8860B" />
+            <Text style={styles.loadingText}>Loading your activities...</Text>
+          </View>
+        </>
       ) : error ? (
-        renderError()
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>My Activities</Text>
+            <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+              <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+            </TouchableOpacity>
+          </View>
+          {renderError()}
+        </>
       ) : (
         <FlatList
           data={listings}
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <View style={styles.header}>
+              <Text style={styles.headerTitle}>My Activities</Text>
+              <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+                <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+              </TouchableOpacity>
+            </View>
+          }
           renderItem={({ item }) => {
-            // Count pending requests for this listing
             const pendingCount = (item as any).requests?.filter((r: any) => r.status === 'pending').length || 0;
-
             return (
               <ListingCard
                 listing={item}
-                onPress={() => {
-                  navigation.navigate('ActivityDetail', { activityId: item.id });
-                }}
+                onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
                 pendingRequestCount={pendingCount}
               />
             );
@@ -118,8 +131,8 @@ export default function MyActivitiesScreen() {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={['#6366f1']}
-              tintColor="#6366f1"
+              colors={['#B8860B']}
+              tintColor="#B8860B"
             />
           }
         />
@@ -134,16 +147,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     backgroundColor: '#fff',
   },
+  createButton: {
+    padding: 5,
+  },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#B8860B',
   },
   loadingContainer: {
     flex: 1,
@@ -168,7 +187,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#B8860B',
     marginTop: 16,
   },
   emptySubtitle: {
@@ -176,6 +195,9 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 8,
     textAlign: 'center',
+  },
+  createButton: {
+    marginTop: 20,
   },
   errorState: {
     flex: 1,
@@ -186,7 +208,7 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#B8860B',
     marginTop: 16,
   },
   errorText: {
@@ -196,7 +218,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
