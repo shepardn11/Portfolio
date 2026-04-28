@@ -1,4 +1,4 @@
-// App Navigator - Main navigation structure with bottom tabs
+﻿// App Navigator - Main navigation structure with bottom tabs
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -112,7 +112,7 @@ function MainTabs() {
     const interval = setInterval(() => {
       fetchUnreadCount();
       fetchPendingRequests();
-    }, 30000); // Every 30 seconds
+    }, 15000); // Every 15 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -134,14 +134,19 @@ function MainTabs() {
             iconName = focused ? 'person' : 'person-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={24} color={color} />;
         },
-        tabBarActiveTintColor: '#6366f1',
+        tabBarActiveTintColor: '#B8860B',
         tabBarInactiveTintColor: 'gray',
+        tabBarShowLabel: false,
         tabBarStyle: {
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+          paddingHorizontal: 20,
+          height: 68,
+        },
+        tabBarItemStyle: {
+          marginHorizontal: 4,
         },
         headerShown: false,
       })}
@@ -221,7 +226,7 @@ export default function AppNavigator() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#B8860B" />
       </View>
     );
   }

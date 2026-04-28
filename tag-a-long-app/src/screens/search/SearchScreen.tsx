@@ -1,4 +1,4 @@
-// Search Screen - Search for users by name
+﻿// Search Screen - Search for users by name
 import React, { useState, useCallback } from 'react';
 import {
   View,
@@ -87,7 +87,7 @@ export default function SearchScreen({ navigation }: Props) {
           <View style={styles.nameRow}>
             <Text style={styles.displayName}>{item.display_name}</Text>
             {item.is_premium && (
-              <Ionicons name="checkmark-circle" size={16} color="#6366f1" />
+              <Ionicons name="checkmark-circle" size={16} color="#B8860B" />
             )}
           </View>
           <Text style={styles.username}>@{item.username}</Text>
@@ -169,7 +169,7 @@ export default function SearchScreen({ navigation }: Props) {
       {/* Results */}
       {isSearching ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color="#B8860B" />
           <Text style={styles.loadingText}>Searching...</Text>
         </View>
       ) : (
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#B8860B',
   },
   searchContainer: {
     padding: 16,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     marginLeft: 8,
-    color: '#333',
+    color: '#B8860B',
   },
   loadingContainer: {
     flex: 1,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowcolor: '#B8860B',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#B8860B',
   },
   username: {
     fontSize: 14,
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#B8860B',
     marginTop: 16,
   },
   emptySubtitle: {

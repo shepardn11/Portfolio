@@ -1,4 +1,4 @@
-// Messages Screen - List of conversations
+﻿// Messages Screen - List of conversations
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -140,7 +140,7 @@ export default function MessagesScreen({ navigation }: any) {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#B8860B" />
       </View>
     );
   }
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#000',
+    color: '#B8860B',
   },
   listContent: {
     paddingVertical: 8,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#B8860B',
   },
   timestamp: {
     fontSize: 13,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   },
   unreadMessage: {
     fontWeight: '600',
-    color: '#000',
+    color: '#B8860B',
   },
   noMessages: {
     fontSize: 14,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   unreadBadge: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: '#B8860B',
     marginTop: 16,
     marginBottom: 8,
   },
