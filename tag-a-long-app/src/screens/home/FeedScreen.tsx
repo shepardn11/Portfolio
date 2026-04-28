@@ -42,7 +42,6 @@ export default function FeedScreen({ navigation }: Props) {
   const locationInitialized = useRef(false);
 
   const requestLocation = async () => {
-    // Show explanation before triggering the system dialog
     const { status: existing } = await Location.getForegroundPermissionsAsync();
     if (existing === 'granted') {
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -51,21 +50,24 @@ export default function FeedScreen({ navigation }: Props) {
     }
 
     Alert.alert(
-      'Allow Location Access',
-      'Tag-A-Long uses your location to show you activities happening nearby. Without it, we\'ll show activities in your home city.',
+      'Location Required',
+      'Tag-A-Long needs your location to show you activities happening nearby.',
       [
-        { text: 'Not Now', style: 'cancel' },
         {
-          text: 'Continue',
+          text: 'Enable Location',
           onPress: async () => {
             const { status } = await Location.requestForegroundPermissionsAsync();
             if (status === 'granted') {
               const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
               setUserCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+            } else {
+              // Permission denied by system — prompt again
+              requestLocation();
             }
           },
         },
-      ]
+      ],
+      { cancelable: false }
     );
   };
 
