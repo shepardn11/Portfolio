@@ -1,4 +1,4 @@
-// Activity Detail Screen - Full activity information with Tag-a-long button
+﻿// Activity Detail Screen - Full activity information with Tag-a-long button
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,7 +9,10 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Dimensions,
 } from 'react-native';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { HomeStackParamList, ActivityListing } from '../../types';
@@ -183,7 +186,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color="#B8860B" />
           <Text style={styles.loadingText}>Loading activity...</Text>
         </View>
       </View>
@@ -279,7 +282,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                             request.status === 'accepted' ? styles.acceptedText : styles.rejectedText,
                           ]}
                         >
-                          {request.status === 'accepted' ? '✓ Accepted' : '✗ Declined'}
+                          {request.status === 'accepted' ? 'Accepted' : 'Declined'}
                         </Text>
                       </View>
                     )}
@@ -321,7 +324,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
             <View style={styles.detailCard}>
               <View style={styles.detailRow}>
-                <Ionicons name="calendar" size={20} color="#6366f1" />
+                <Ionicons name="calendar" size={20} color="#B8860B" />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date</Text>
                   <Text style={styles.detailValue}>{formatDate(listing.date)}</Text>
@@ -330,7 +333,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
               {listing.time && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="time" size={20} color="#6366f1" />
+                  <Ionicons name="time" size={20} color="#B8860B" />
                   <View style={styles.detailContent}>
                     <Text style={styles.detailLabel}>Time</Text>
                     <Text style={styles.detailValue}>{formatTime(listing.time)}</Text>
@@ -339,7 +342,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               )}
 
               <View style={styles.detailRow}>
-                <Ionicons name="location" size={20} color="#6366f1" />
+                <Ionicons name="location" size={20} color="#B8860B" />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Location</Text>
                   <Text style={styles.detailValue}>{listing.location}</Text>
@@ -348,7 +351,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
               {listing.max_participants && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="people" size={20} color="#6366f1" />
+                  <Ionicons name="people" size={20} color="#B8860B" />
                   <View style={styles.detailContent}>
                     <Text style={styles.detailLabel}>Looking for</Text>
                     <Text style={styles.detailValue}>
@@ -469,7 +472,7 @@ const styles = StyleSheet.create({
   },
   featuredImage: {
     width: '100%',
-    height: 300,
+    height: SCREEN_HEIGHT * 0.45,
     backgroundColor: '#f0f0f0',
   },
   content: {
@@ -711,10 +714,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     paddingVertical: 16,
     borderRadius: 12,
-    shadowColor: '#6366f1',
+    shadowColor: '#B8860B',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
