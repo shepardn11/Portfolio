@@ -1,4 +1,4 @@
-// Create Listing Screen - Create new activity post
+﻿// Create Listing Screen - Create new activity post
 import React, { useState } from 'react';
 import {
   View,
@@ -19,6 +19,7 @@ import { HomeStackParamList } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import apiClient from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
 import { uploadImage } from '../../utils/imageUpload';
@@ -328,14 +329,28 @@ export default function CreateListingScreen({ navigation }: Props) {
       const minutes = time.getMinutes().toString().padStart(2, '0');
       const activityTime = `${hours}:${minutes}`; // HH:mm
 
+      // Geocode the location string to lat/lng for radius-based feed filtering
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      try {
+        const geocoded = await Location.geocodeAsync(location.trim());
+        if (geocoded.length > 0) {
+          latitude = geocoded[0].latitude;
+          longitude = geocoded[0].longitude;
+        }
+      } catch {
+        // Geocoding failed — listing still saves, just won't appear in radius feed
+      }
+
       const listingData: any = {
         title: title.trim(),
         description: description.trim(),
         category,
         location: location.trim(),
-        date: combinedDateTime.toISOString(), // Send as ISO string for Joi date validation
+        date: combinedDateTime.toISOString(),
         time: activityTime,
-        photo_url: uploadedPhotoUrl, // Use uploaded photo or profile photo
+        photo_url: uploadedPhotoUrl,
+        ...(latitude !== null && { latitude, longitude }),
       };
 
       // Only add max_participants if it's a valid number
@@ -456,7 +471,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   onPress={takePhoto}
                   disabled={isLoading}
                 >
-                  <Ionicons name="camera" size={24} color="#6366f1" />
+                  <Ionicons name="camera" size={24} color="#B8860B" />
                   <Text style={styles.photoButtonText}>Take Photo</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -464,7 +479,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   onPress={pickImage}
                   disabled={isLoading}
                 >
-                  <Ionicons name="images" size={24} color="#6366f1" />
+                  <Ionicons name="images" size={24} color="#B8860B" />
                   <Text style={styles.photoButtonText}>Choose from Library</Text>
                 </TouchableOpacity>
               </View>
@@ -493,7 +508,7 @@ export default function CreateListingScreen({ navigation }: Props) {
               {/* Date Button/Picker */}
               {Platform.OS === 'web' ? (
                 <View style={styles.dateTimeButton}>
-                  <Ionicons name="calendar-outline" size={24} color="#6366f1" />
+                  <Ionicons name="calendar-outline" size={24} color="#B8860B" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Date</Text>
                     <input
@@ -532,7 +547,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   }}
                   disabled={isLoading}
                 >
-                  <Ionicons name="calendar-outline" size={24} color="#6366f1" />
+                  <Ionicons name="calendar-outline" size={24} color="#B8860B" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Date</Text>
                     <Text style={styles.buttonValue}>{formatDate(date)}</Text>
@@ -543,7 +558,7 @@ export default function CreateListingScreen({ navigation }: Props) {
               {/* Time Button/Picker */}
               {Platform.OS === 'web' ? (
                 <View style={styles.dateTimeButton}>
-                  <Ionicons name="time-outline" size={24} color="#6366f1" />
+                  <Ionicons name="time-outline" size={24} color="#B8860B" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Time</Text>
                     <input
@@ -584,7 +599,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   }}
                   disabled={isLoading}
                 >
-                  <Ionicons name="time-outline" size={24} color="#6366f1" />
+                  <Ionicons name="time-outline" size={24} color="#B8860B" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Time</Text>
                     <Text style={styles.buttonValue}>{formatTime(time)}</Text>
@@ -790,7 +805,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingTop: 55,
+    paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     backgroundColor: '#fff',
@@ -863,8 +879,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   categoryButtonActive: {
-    backgroundColor: '#6366f1',
-    borderColor: '#6366f1',
+    backgroundColor: '#B8860B',
+    borderColor: '#B8860B',
   },
   categoryLabel: {
     fontSize: 14,
@@ -929,7 +945,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   createButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     borderRadius: 10,
     padding: 16,
     flexDirection: 'row',
@@ -959,12 +975,12 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#6366f1',
+    borderColor: '#B8860B',
   },
   photoButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6366f1',
+    color: '#B8860B',
     marginLeft: 8,
   },
   photoPreview: {
@@ -973,9 +989,10 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: '100%',
-    height: 200,
+    height: 300,
     borderRadius: 10,
     backgroundColor: '#f0f0f0',
+    resizeMode: 'contain',
   },
   removePhotoButton: {
     position: 'absolute',
@@ -1015,7 +1032,7 @@ const styles = StyleSheet.create({
   taggedUserName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#6366f1',
+    color: '#B8860B',
   },
   modalOverlay: {
     flex: 1,
@@ -1039,7 +1056,7 @@ const styles = StyleSheet.create({
   },
   pickerButton: {
     fontSize: 17,
-    color: '#6366f1',
+    color: '#B8860B',
   },
   pickerButtonDone: {
     fontWeight: '600',
