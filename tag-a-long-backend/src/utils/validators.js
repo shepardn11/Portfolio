@@ -42,10 +42,14 @@ const createListingSchema = Joi.object({
   max_participants: Joi.number().integer().min(1).max(100).optional(),
   tagged_users: Joi.array().items(Joi.string().uuid()).optional(),
 
+  // Coordinates for radius-based feed filtering
+  latitude: Joi.number().min(-90).max(90).optional(),
+  longitude: Joi.number().min(-180).max(180).optional(),
+
   // Legacy fields (optional for backwards compatibility)
   caption: Joi.string().max(200).optional(),
   time_text: Joi.string().max(100).optional(),
-  photo_url: Joi.string().uri().optional(),
+  photo_url: Joi.string().uri().allow('', null).optional(),
 });
 
 const updateProfileSchema = Joi.object({
