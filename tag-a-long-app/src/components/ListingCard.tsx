@@ -110,14 +110,11 @@ export default function ListingCard({ listing, onPress, pendingRequestCount }: L
 
       {/* Content Overlay - Bottom */}
       <View style={styles.contentOverlay}>
-        {/* Title */}
         <Text style={styles.title} numberOfLines={2}>{listing.title}</Text>
 
-        {/* Info Grid */}
         <View style={styles.infoGrid}>
-          {/* Date & Time */}
           <View style={styles.infoItem}>
-            <Ionicons name="calendar" size={18} color="#fff" />
+            <Ionicons name="calendar" size={16} color="#fff" />
             <Text style={styles.infoText} numberOfLines={1}>
               {formatDate(listing.date)}
             </Text>
@@ -125,36 +122,22 @@ export default function ListingCard({ listing, onPress, pendingRequestCount }: L
 
           {listing.time && (
             <View style={styles.infoItem}>
-              <Ionicons name="time" size={18} color="#fff" />
+              <Ionicons name="time" size={16} color="#fff" />
               <Text style={styles.infoText} numberOfLines={1}>
                 {formatTime(listing.time)}
               </Text>
             </View>
           )}
 
-          {/* Location */}
           <View style={[styles.infoItem, styles.infoItemFull]}>
-            <Ionicons name="location" size={18} color="#fff" />
+            <Ionicons name="location" size={16} color="#fff" />
             <Text style={styles.infoText} numberOfLines={1}>
               {listing.location}
             </Text>
           </View>
         </View>
 
-        {/* User Info */}
-        <View style={styles.userBar}>
-          {listing.profile_photo_url ? (
-            <Image
-              source={{ uri: listing.profile_photo_url }}
-              style={styles.smallProfilePhoto}
-            />
-          ) : (
-            <View style={[styles.smallProfilePhoto, styles.profilePhotoPlaceholder]}>
-              <Ionicons name="person" size={16} color="#fff" />
-            </View>
-          )}
-          <Text style={styles.userName}>{listing.display_name || listing.username}</Text>
-        </View>
+        <Text style={styles.userName}>{listing.display_name || listing.username}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -235,10 +218,10 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 10,
+    marginBottom: 12,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
@@ -246,7 +229,8 @@ const styles = StyleSheet.create({
   infoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 10,
+    marginBottom: 12,
+    gap: 6,
   },
   infoItem: {
     flexDirection: 'row',
@@ -255,50 +239,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
-    marginRight: 6,
-    marginBottom: 6,
   },
   infoItemFull: {
     flex: 1,
     minWidth: '100%',
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#fff',
-    marginLeft: 6,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  userBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  smallProfilePhoto: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 8,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  profilePhotoPlaceholder: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginLeft: 5,
   },
   userName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-    flex: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    fontSize: 13,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.8)',
   },
 });
