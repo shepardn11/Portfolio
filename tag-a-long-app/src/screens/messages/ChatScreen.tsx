@@ -1,4 +1,4 @@
-// Chat Screen - Individual conversation
+﻿// Chat Screen - Individual conversation
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -127,6 +127,7 @@ export default function ChatScreen({ route, navigation }: any) {
             style={[
               styles.messageText,
               isMyMessage ? styles.myMessageText : styles.otherMessageText,
+              item.content.startsWith('You have been accepted to tag along') && styles.acceptanceMessageText,
             ]}
           >
             {item.content}
@@ -147,7 +148,7 @@ export default function ChatScreen({ route, navigation }: any) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#B8860B" />
       </View>
     );
   }
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   myMessageBubble: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     borderBottomRightRadius: 4,
   },
   otherMessageBubble: {
@@ -313,6 +314,9 @@ const styles = StyleSheet.create({
   messageText: {
     fontSize: 15,
     lineHeight: 20,
+  },
+  acceptanceMessageText: {
+    fontWeight: 'bold',
   },
   myMessageText: {
     color: '#fff',
@@ -373,7 +377,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#B8860B',
     alignItems: 'center',
     justifyContent: 'center',
   },
