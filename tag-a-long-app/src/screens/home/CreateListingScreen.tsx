@@ -329,17 +329,18 @@ export default function CreateListingScreen({ navigation }: Props) {
       const minutes = time.getMinutes().toString().padStart(2, '0');
       const activityTime = `${hours}:${minutes}`; // HH:mm
 
-      // Geocode the location string to lat/lng for radius-based feed filtering
+      // Use creator's current GPS position for accurate radius-based feed filtering
       let latitude: number | null = null;
       let longitude: number | null = null;
       try {
-        const geocoded = await Location.geocodeAsync(location.trim());
-        if (geocoded.length > 0) {
-          latitude = geocoded[0].latitude;
-          longitude = geocoded[0].longitude;
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          latitude = pos.coords.latitude;
+          longitude = pos.coords.longitude;
         }
       } catch {
-        // Geocoding failed — listing still saves, just won't appear in radius feed
+        // GPS unavailable — listing still saves, just won't appear in radius feed
       }
 
       const listingData: any = {

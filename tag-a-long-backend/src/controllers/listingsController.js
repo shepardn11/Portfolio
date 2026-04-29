@@ -70,10 +70,20 @@ const getFeed = async (req, res, next) => {
       taggedUsers.forEach(user => taggedUsersMap.set(user.id, user));
     }
 
-    // Filter out activities whose date/time has passed (+ 30 min grace)
+    // Filter by date expiry and optional radius
     const now = new Date();
     const formattedListings = listings
       .filter(listing => {
+        // Radius filter using creator's GPS coords (accurate, no geocoding)
+        if (userLat !== null && userLng !== null) {
+          if (listing.latitude !== null && listing.longitude !== null) {
+            const dist = haversineDistance(userLat, userLng, listing.latitude, listing.longitude);
+            if (dist > radiusMiles) return false;
+          }
+          // No coordinates stored — include it regardless
+        }
+
+        // Filter expired activities
         if (listing.date) {
           const activityDate = new Date(listing.date);
           activityDate.setMinutes(activityDate.getMinutes() + 30);
