@@ -692,8 +692,13 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
             {/* User search overlay */}
             {showUserSearch && (
-              <TouchableOpacity style={styles.pickerBackdrop} activeOpacity={1} onPress={() => setShowUserSearch(false)}>
-                <View style={[styles.pickerSheet, styles.userSearchSheet]} onStartShouldSetResponder={() => true}>
+              <KeyboardAvoidingView
+                style={styles.userSearchBackdrop}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                pointerEvents="box-none"
+              >
+                <TouchableOpacity style={StyleSheet.absoluteFillObject} activeOpacity={1} onPress={() => setShowUserSearch(false)} />
+                <View style={styles.userSearchSheet} onStartShouldSetResponder={() => true}>
                   <View style={styles.userSearchSheetHeader}>
                     <Text style={styles.userSearchSheetTitle}>Tag People</Text>
                     <TouchableOpacity onPress={() => setShowUserSearch(false)}>
@@ -716,28 +721,30 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                       </TouchableOpacity>
                     )}
                   </View>
-                  {userSearchLoading && <ActivityIndicator size="small" color="#B8860B" style={{ marginTop: 12 }} />}
-                  {userSearchResults.map((u) => {
-                    const isSelected = editTaggedUsers.some(t => t.id === u.id);
-                    return (
-                      <TouchableOpacity key={u.id} style={styles.userSearchRow} onPress={() => toggleTagUser(u)}>
-                        {u.profile_photo_url ? (
-                          <Image source={{ uri: u.profile_photo_url }} style={styles.userSearchAvatar} />
-                        ) : (
-                          <View style={[styles.userSearchAvatar, { backgroundColor: '#e0e0e0', alignItems: 'center', justifyContent: 'center' }]}>
-                            <Ionicons name="person" size={14} color="#999" />
+                  {userSearchLoading && <ActivityIndicator size="small" color="#B8860B" style={{ marginVertical: 12 }} />}
+                  <ScrollView keyboardShouldPersistTaps="handled" style={styles.userSearchResultsList}>
+                    {userSearchResults.map((u) => {
+                      const isSelected = editTaggedUsers.some(t => t.id === u.id);
+                      return (
+                        <TouchableOpacity key={u.id} style={styles.userSearchRow} onPress={() => toggleTagUser(u)}>
+                          {u.profile_photo_url ? (
+                            <Image source={{ uri: u.profile_photo_url }} style={styles.userSearchAvatar} />
+                          ) : (
+                            <View style={[styles.userSearchAvatar, { backgroundColor: '#e0e0e0', alignItems: 'center', justifyContent: 'center' }]}>
+                              <Ionicons name="person" size={14} color="#999" />
+                            </View>
+                          )}
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.userSearchName}>{u.display_name}</Text>
+                            <Text style={styles.userSearchUsername}>@{u.username}</Text>
                           </View>
-                        )}
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.userSearchName}>{u.display_name}</Text>
-                          <Text style={styles.userSearchUsername}>@{u.username}</Text>
-                        </View>
-                        {isSelected && <Ionicons name="checkmark-circle" size={20} color="#B8860B" />}
-                      </TouchableOpacity>
-                    );
-                  })}
+                          {isSelected && <Ionicons name="checkmark-circle" size={20} color="#B8860B" />}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
                 </View>
-              </TouchableOpacity>
+              </KeyboardAvoidingView>
             )}
           </View>
         </KeyboardAvoidingView>
@@ -913,9 +920,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#007AFF',
   },
+  userSearchBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
   userSearchSheet: {
-    paddingHorizontal: 0,
-    maxHeight: '80%',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  userSearchResultsList: {
+    maxHeight: 220,
   },
   userSearchSheetHeader: {
     flexDirection: 'row',
