@@ -9,6 +9,8 @@ import {
   TextInput,
   Image,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { profileAPI } from '../api/endpoints';
@@ -140,7 +142,10 @@ export default function UserSelectionModal({
       transparent={false}
       onRequestClose={handleCancel}
     >
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleCancel}>
@@ -207,7 +212,7 @@ export default function UserSelectionModal({
             contentContainerStyle={styles.listContent}
           />
         )}
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
