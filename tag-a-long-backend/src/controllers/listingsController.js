@@ -31,23 +31,10 @@ const getFeed = async (req, res, next) => {
       date: { gte: thirtyMinutesAgo },
     };
 
-    if (userLat !== null && userLng !== null) {
-      // Rough bounding box: 1 degree lat ≈ 69 miles, 1 degree lng ≈ 69*cos(lat) miles
-      const latDelta = radiusMiles / 69;
-      const lngDelta = radiusMiles / (69 * Math.cos((userLat * Math.PI) / 180));
-      where.OR = [
-        { latitude: null }, // include listings without coords
-        {
-          latitude: { gte: userLat - latDelta, lte: userLat + latDelta },
-          longitude: { gte: userLng - lngDelta, lte: userLng + lngDelta },
-        },
-      ];
-    }
-
     // Get listings
     const listings = await prisma.listing.findMany({
       where,
-      take: parseInt(limit) * 3, // fetch extra to account for JS-level filtering
+      take: parseInt(limit),
       skip: parseInt(offset),
       orderBy: { date: 'asc' }, // Sort by date ascending (soonest first)
       include: {
