@@ -21,12 +21,14 @@ const getFeed = async (req, res, next) => {
     const userLng = lng ? parseFloat(lng) : null;
     const radiusMiles = parseFloat(radius);
 
-    // Build where clause — no expires_at filter here; JS filter handles expiration
-    // using listing.date which has the correct UTC datetime from the client.
+    // Pre-filter at DB level: only fetch activities whose date is within the
+    // 30-min grace window or still in the future. This ensures near-future
+    // activities aren't crowded out by past ones when sorting by date asc.
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const where = {
       is_active: true,
       user_id: { not: req.user.id },
-      created_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      date: { gte: thirtyMinutesAgo },
     };
 
     if (userLat !== null && userLng !== null) {
@@ -62,9 +64,6 @@ const getFeed = async (req, res, next) => {
         },
       },
     });
-
-    // Get total count for pagination (will be refined after JS filter below)
-    const dbTotal = await prisma.listing.count({ where });
 
     // Get all unique tagged user IDs
     const allTaggedUserIds = [...new Set(listings.flatMap(l => l.tagged_users || []))];
@@ -308,7 +307,7 @@ const getMyListings = async (req, res, next) => {
 
     // Filter by status if provided, otherwise show only active (non-expired) by default
     where.is_active = true;
-    where.created_at = { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) };
+    where.date = { gte: new Date(Date.now() - 30 * 60 * 1000) };
 
     // Get listings
     const listings = await prisma.listing.findMany({
