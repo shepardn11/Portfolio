@@ -594,44 +594,6 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
               </View>
 
-              {/* iOS date picker inline */}
-              {Platform.OS === 'ios' && showDatePicker && (
-                <View style={styles.inlinePicker}>
-                  <DateTimePicker
-                    value={editDate}
-                    mode="date"
-                    display="inline"
-                    onChange={(_, d) => { if (d) { setEditDate(d); setTempDate(d); } }}
-                    minimumDate={new Date()}
-                    accentColor="#B8860B"
-                  />
-                  <TouchableOpacity
-                    style={styles.inlinePickerDoneButton}
-                    onPress={() => setShowDatePicker(false)}
-                  >
-                    <Text style={styles.pickerDone}>Done</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {/* iOS time picker inline */}
-              {Platform.OS === 'ios' && showTimePicker && (
-                <View style={styles.inlinePicker}>
-                  <View style={styles.inlinePickerHeader}>
-                    <TouchableOpacity onPress={() => setShowTimePicker(false)}>
-                      <Text style={styles.pickerCancel}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => { setEditTime(tempTime); setShowTimePicker(false); }}>
-                      <Text style={styles.pickerDone}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <DateTimePicker
-                    value={tempTime}
-                    mode="time"
-                    display="spinner"
-                    onChange={(_, t) => { if (t) setTempTime(t); }}
-                  />
-                </View>
-              )}
               {/* Android pickers */}
               {Platform.OS === 'android' && showDatePicker && (
                 <DateTimePicker
@@ -722,6 +684,46 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               )}
               <View style={{ height: 300 }} />
             </ScrollView>
+
+            {/* iOS date picker overlay */}
+            {Platform.OS === 'ios' && showDatePicker && (
+              <TouchableOpacity style={styles.pickerBackdrop} activeOpacity={1} onPress={() => setShowDatePicker(false)}>
+                <View style={styles.pickerSheet} onStartShouldSetResponder={() => true}>
+                  <DateTimePicker
+                    value={editDate}
+                    mode="date"
+                    display="inline"
+                    onChange={(_, d) => { if (d) { setEditDate(d); setTempDate(d); } }}
+                    minimumDate={new Date()}
+                    accentColor="#B8860B"
+                  />
+                  <View style={styles.pickerFooter}>
+                    <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                      <Text style={styles.pickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* iOS time picker overlay */}
+            {Platform.OS === 'ios' && showTimePicker && (
+              <TouchableOpacity style={styles.pickerBackdrop} activeOpacity={1} onPress={() => { setEditTime(tempTime); setShowTimePicker(false); }}>
+                <View style={styles.pickerSheet} onStartShouldSetResponder={() => true}>
+                  <DateTimePicker
+                    value={tempTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={(_, t) => { if (t) setTempTime(t); }}
+                  />
+                  <View style={styles.pickerFooter}>
+                    <TouchableOpacity onPress={() => { setEditTime(tempTime); setShowTimePicker(false); }}>
+                      <Text style={styles.pickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -855,22 +857,28 @@ const styles = StyleSheet.create({
     color: '#333',
     flexShrink: 1,
   },
-  inlinePicker: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 10,
-    marginBottom: 12,
-    overflow: 'hidden',
+  pickerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
-  inlinePickerDoneButton: {
-    alignItems: 'flex-end',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+  pickerSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 8,
+    paddingBottom: 40,
+  },
+  pickerFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
   },
   pickerDone: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '600',
     color: '#B8860B',
   },

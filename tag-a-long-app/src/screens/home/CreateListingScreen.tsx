@@ -613,18 +613,10 @@ export default function CreateListingScreen({ navigation }: Props) {
               transparent={true}
               animationType="slide"
               visible={showDatePicker}
-              onRequestClose={cancelDatePicker}
+              onRequestClose={confirmDate}
             >
-              <View style={styles.modalOverlay}>
-                <View style={styles.pickerContainer}>
-                  <View style={styles.pickerHeader}>
-                    <TouchableOpacity onPress={cancelDatePicker}>
-                      <Text style={styles.pickerButton}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={confirmDate}>
-                      <Text style={[styles.pickerButton, styles.pickerButtonDone]}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
+              <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={confirmDate}>
+                <View style={styles.pickerContainer} onStartShouldSetResponder={() => true}>
                   <DateTimePicker
                     value={tempDate}
                     mode="date"
@@ -633,8 +625,13 @@ export default function CreateListingScreen({ navigation }: Props) {
                     minimumDate={new Date()}
                     accentColor="#B8860B"
                   />
+                  <View style={styles.pickerFooter}>
+                    <TouchableOpacity onPress={confirmDate}>
+                      <Text style={[styles.pickerButton, styles.pickerButtonDone]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             </Modal>
           )}
 
@@ -644,18 +641,10 @@ export default function CreateListingScreen({ navigation }: Props) {
               transparent={true}
               animationType="slide"
               visible={showTimePicker}
-              onRequestClose={cancelTimePicker}
+              onRequestClose={confirmTime}
             >
-              <View style={styles.modalOverlay}>
-                <View style={styles.pickerContainer}>
-                  <View style={styles.pickerHeader}>
-                    <TouchableOpacity onPress={cancelTimePicker}>
-                      <Text style={styles.pickerButton}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={confirmTime}>
-                      <Text style={[styles.pickerButton, styles.pickerButtonDone]}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
+              <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={confirmTime}>
+                <View style={styles.pickerContainer} onStartShouldSetResponder={() => true}>
                   <DateTimePicker
                     value={tempTime}
                     mode="time"
@@ -663,8 +652,13 @@ export default function CreateListingScreen({ navigation }: Props) {
                     onChange={handleTimeChange}
                     style={styles.picker}
                   />
+                  <View style={styles.pickerFooter}>
+                    <TouchableOpacity onPress={confirmTime}>
+                      <Text style={[styles.pickerButton, styles.pickerButtonDone]}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             </Modal>
           )}
 
@@ -1044,14 +1038,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingHorizontal: 8,
   },
-  pickerHeader: {
+  pickerFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   pickerButton: {
     fontSize: 17,
