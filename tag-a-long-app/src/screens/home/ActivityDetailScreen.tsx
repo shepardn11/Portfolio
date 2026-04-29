@@ -24,7 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { listingAPI, requestAPI } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import UserSelectionModal from '../../components/UserSelectionModal';
+import { profileAPI } from '../../api/endpoints';
 
 type ActivityDetailScreenNavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
@@ -71,7 +71,10 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   const [editTaggedUsers, setEditTaggedUsers] = useState<Array<{ id: string; username: string; display_name: string; profile_photo_url?: string }>>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [showUserModal, setShowUserModal] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<Array<{ id: string; username: string; display_name: string; profile_photo_url?: string }>>([]);
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
+  const [showUserSearch, setShowUserSearch] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
   const [tempTime, setTempTime] = useState(new Date());
   const [isSaving, setIsSaving] = useState(false);
@@ -164,7 +167,30 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
     setEditTime(d);
     setTempTime(d);
     setEditTaggedUsers(listing.tagged_users || []);
+    setUserSearchQuery('');
+    setUserSearchResults([]);
+    setShowUserSearch(false);
     setEditVisible(true);
+  };
+
+  const searchUsers = async (query: string) => {
+    setUserSearchQuery(query);
+    if (query.length < 2) { setUserSearchResults([]); return; }
+    try {
+      setUserSearchLoading(true);
+      const results = await profileAPI.searchUsers(query);
+      setUserSearchResults(results.filter(u => u.id !== user?.id));
+    } catch {
+      // ignore search errors
+    } finally {
+      setUserSearchLoading(false);
+    }
+  };
+
+  const toggleTagUser = (u: { id: string; username: string; display_name: string; profile_photo_url?: string }) => {
+    setEditTaggedUsers(prev =>
+      prev.some(p => p.id === u.id) ? prev.filter(p => p.id !== u.id) : [...prev, u]
+    );
   };
 
   const handleEditSave = async () => {
@@ -636,17 +662,10 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               />
 
               <Text style={styles.fieldLabel}>Who's Joining</Text>
-              <TouchableOpacity
-                style={styles.tagButton}
-                onPress={() => setShowUserModal(true)}
-              >
-                <Ionicons name="person-add-outline" size={18} color="#007AFF" />
-                <Text style={styles.tagButtonText}>Tag people joining you</Text>
-              </TouchableOpacity>
               {editTaggedUsers.length > 0 && (
                 <View style={styles.taggedUsersContainer}>
                   {editTaggedUsers.map((u) => (
-                    <View key={u.id} style={styles.taggedUserChip}>
+                    <TouchableOpacity key={u.id} style={styles.taggedUserChip} onPress={() => toggleTagUser(u)}>
                       {u.profile_photo_url ? (
                         <Image source={{ uri: u.profile_photo_url }} style={styles.taggedUserAvatar} />
                       ) : (
@@ -655,22 +674,58 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                         </View>
                       )}
                       <Text style={styles.taggedUserName}>{u.display_name}</Text>
-                    </View>
+                      <Ionicons name="close-circle" size={16} color="#B8860B" />
+                    </TouchableOpacity>
                   ))}
                 </View>
+              )}
+              <View style={styles.userSearchBox}>
+                <Ionicons name="search-outline" size={16} color="#999" />
+                <TextInput
+                  style={styles.userSearchInput}
+                  placeholder="Search people to tag..."
+                  placeholderTextColor="#aaa"
+                  value={userSearchQuery}
+                  onChangeText={searchUsers}
+                  onFocus={() => setShowUserSearch(true)}
+                />
+                {userSearchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => { setUserSearchQuery(''); setUserSearchResults([]); }}>
+                    <Ionicons name="close-circle" size={16} color="#999" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {showUserSearch && userSearchResults.length > 0 && (
+                <View style={styles.userSearchResults}>
+                  {userSearchResults.map((u) => {
+                    const isSelected = editTaggedUsers.some(t => t.id === u.id);
+                    return (
+                      <TouchableOpacity key={u.id} style={styles.userSearchRow} onPress={() => toggleTagUser(u)}>
+                        {u.profile_photo_url ? (
+                          <Image source={{ uri: u.profile_photo_url }} style={styles.userSearchAvatar} />
+                        ) : (
+                          <View style={[styles.userSearchAvatar, { backgroundColor: '#e0e0e0', alignItems: 'center', justifyContent: 'center' }]}>
+                            <Ionicons name="person" size={14} color="#999" />
+                          </View>
+                        )}
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.userSearchName}>{u.display_name}</Text>
+                          <Text style={styles.userSearchUsername}>@{u.username}</Text>
+                        </View>
+                        {isSelected && <Ionicons name="checkmark-circle" size={20} color="#B8860B" />}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+              {showUserSearch && userSearchLoading && (
+                <ActivityIndicator size="small" color="#B8860B" style={{ marginTop: 8 }} />
               )}
               <View style={{ height: 40 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
-
-      <UserSelectionModal
-        visible={showUserModal}
-        onClose={() => setShowUserModal(false)}
-        onSelectUsers={setEditTaggedUsers}
-        selectedUsers={editTaggedUsers}
-      />
 
       {/* Fixed Bottom Button - Only show if not own activity */}
       {!isOwnActivity && (
@@ -826,20 +881,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#B8860B',
   },
-  tagButton: {
+  userSearchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     backgroundColor: '#fafafa',
+    marginTop: 8,
   },
-  tagButtonText: {
+  userSearchInput: {
+    flex: 1,
     fontSize: 15,
-    color: '#007AFF',
+    color: '#333',
+  },
+  userSearchResults: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  userSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  userSearchAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+  },
+  userSearchName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  userSearchUsername: {
+    fontSize: 12,
+    color: '#888',
   },
   taggedUsersContainer: {
     flexDirection: 'row',
