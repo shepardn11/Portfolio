@@ -1,0 +1,47 @@
+graph TB
+    subgraph "Your Backend"
+        API[Express API]
+    end
+
+    subgraph "AWS Ecosystem"
+        S3[S3 Bucket<br/>tagalong-photos]
+        CDN[CloudFront CDN<br/>Optional]
+    end
+
+    subgraph "Firebase Ecosystem"
+        FCM[Firebase Cloud<br/>Messaging]
+        APNs[Apple Push<br/>Notification Service]
+        GoogleFCM[Google FCM<br/>Servers]
+    end
+
+    subgraph "Stripe Ecosystem"
+        StripeAPI[Stripe API]
+        StripeCheckout[Stripe Checkout]
+        StripeWebhook[Stripe Webhooks]
+    end
+
+    subgraph "Supabase Ecosystem"
+        SupabaseDB[PostgreSQL]
+        SupabaseFn[Edge Functions]
+        SupabaseStorage[Storage<br/>Alternative]
+    end
+
+    API -->|Upload Image| S3
+    S3 -->|Serve Image| CDN
+
+    API -->|Send Notification| FCM
+    FCM -->|Route iOS| APNs
+    FCM -->|Route Android| GoogleFCM
+
+    API -->|Create Session| StripeAPI
+    StripeAPI --> StripeCheckout
+    StripeCheckout -->|Payment Event| StripeWebhook
+    StripeWebhook --> SupabaseFn
+
+    API <-->|Query Data| SupabaseDB
+    SupabaseFn -->|Update DB| SupabaseDB
+
+    style S3 fill:#ff9900
+    style FCM fill:#ffca28
+    style StripeAPI fill:#635bff
+    style SupabaseDB fill:#3ecf8e

@@ -1,0 +1,55 @@
+graph TB
+    subgraph "Client Tier"
+        Mobile[📱 Mobile App<br/>React Native]
+    end
+
+    subgraph "Edge Tier"
+        Vercel[☁️ Vercel<br/>Global CDN<br/>Serverless]
+    end
+
+    subgraph "Application Tier"
+        Express[🚀 Express Server<br/>Node.js]
+        Middleware[🛡️ Middleware<br/>Auth, Validation, Rate Limit]
+        Routes[🗺️ Routes<br/>32 Endpoints]
+        Controllers[🎯 Controllers<br/>Business Logic]
+        Services[⚙️ Services<br/>S3, FCM, Stripe]
+    end
+
+    subgraph "Data Tier"
+        PostgreSQL[(🗄️ PostgreSQL<br/>5 Tables<br/>Prisma ORM)]
+    end
+
+    subgraph "Storage Tier"
+        S3[🪣 AWS S3<br/>Image Storage]
+    end
+
+    subgraph "Notification Tier"
+        Firebase[🔔 Firebase FCM<br/>Push Notifications]
+    end
+
+    subgraph "Payment Tier"
+        Stripe[💳 Stripe<br/>Payments]
+        SupabaseEdge[⚡ Supabase<br/>Webhooks]
+    end
+
+    Mobile -->|HTTPS/JSON| Vercel
+    Vercel --> Express
+    Express --> Middleware
+    Middleware --> Routes
+    Routes --> Controllers
+    Controllers --> Services
+    Controllers <-->|Prisma| PostgreSQL
+    Services -->|Upload| S3
+    Services -->|Send| Firebase
+    Services -->|Charge| Stripe
+    Stripe -->|Webhook| SupabaseEdge
+    SupabaseEdge -->|Update| PostgreSQL
+
+    style Mobile fill:#e1f5ff
+    style Vercel fill:#000000,color:#ffffff
+    style Express fill:#68a063,color:#ffffff
+    style PostgreSQL fill:#336791,color:#ffffff
+    style S3 fill:#ff9900,color:#ffffff
+    style Firebase fill:#ffca28
+    style Stripe fill:#635bff,color:#ffffff
+    style SupabaseEdge fill:#3ecf8e

@@ -1,0 +1,51 @@
+graph LR
+    subgraph "Frontend"
+        A[React Native<br/>TypeScript]
+        A1[Expo]
+        A2[React Navigation]
+    end
+
+    subgraph "Backend Runtime"
+        B[Node.js v18+]
+        B1[Express.js 4.18]
+        B2[JavaScript ES6+]
+    end
+
+    subgraph "Database"
+        C[PostgreSQL 15+]
+        C1[Prisma ORM 5.7]
+    end
+
+    subgraph "Cloud Platform"
+        D[Vercel<br/>Serverless]
+        D1[Supabase<br/>Edge Functions<br/>Deno]
+    end
+
+    subgraph "External Services"
+        E[AWS S3]
+        F[Firebase FCM]
+        G[Stripe]
+    end
+
+    subgraph "Development Tools"
+        H[Git/GitHub]
+        I[VS Code]
+        J[Postman]
+        K[Prisma Studio]
+    end
+
+    A --> B
+    B --> C
+    B --> D
+    B --> E
+    B --> F
+    B --> G
+    D --> D1
+
+    style A fill:#61dafb
+    style B fill:#68a063
+    style C fill:#336791
+    style D fill:#000000
+    style E fill:#ff9900
+    style F fill:#ffca28
+    style G fill:#635bff

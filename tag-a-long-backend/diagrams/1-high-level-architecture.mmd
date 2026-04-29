@@ -1,0 +1,49 @@
+graph TB
+    subgraph "Client Layer"
+        A[Mobile App<br/>React Native<br/>iOS/Android]
+    end
+
+    subgraph "API Gateway"
+        B[Vercel<br/>Serverless Functions<br/>Edge Network]
+    end
+
+    subgraph "Application Layer - Express Backend"
+        C[Express Server<br/>Node.js]
+        D[Middleware Pipeline]
+        E[Routes<br/>API Endpoints]
+        F[Controllers<br/>Business Logic]
+        G[Services<br/>External Integrations]
+    end
+
+    subgraph "Data Layer"
+        H[(PostgreSQL<br/>Database<br/>Prisma ORM)]
+    end
+
+    subgraph "External Services"
+        I[AWS S3<br/>Image Storage]
+        J[Firebase FCM<br/>Push Notifications]
+        K[Stripe<br/>Payments]
+        L[Supabase<br/>Edge Functions<br/>Webhooks]
+    end
+
+    A -->|HTTP/JSON| B
+    B -->|Routes Request| C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    F <-->|SQL Queries<br/>Prisma| H
+    G <-->|Upload Images| I
+    G <-->|Send Push| J
+    G <-->|Process Payments| K
+    L -->|Stripe Webhooks| H
+    K -->|Payment Events| L
+
+    style A fill:#e1f5ff
+    style B fill:#fff4e6
+    style C fill:#f0f0f0
+    style H fill:#e8f5e9
+    style I fill:#fff3e0
+    style J fill:#fce4ec
+    style K fill:#e3f2fd
+    style L fill:#f3e5f5

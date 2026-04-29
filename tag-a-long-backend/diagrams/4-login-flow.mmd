@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant User as 📱 Mobile App
+    participant API as 🌐 Backend API
+    participant Controller as 🎯 Auth Controller
+    participant DB as 🗄️ Database
+    participant bcrypt as 🔐 bcrypt
+    participant JWT as 🎫 JWT Utils
+
+    User->>API: POST /api/auth/login<br/>{email, password}
+    API->>Controller: Route to login()
+
+    Controller->>DB: SELECT * FROM users<br/>WHERE email = ?
+    DB-->>Controller: User found (includes password_hash)
+
+    Controller->>bcrypt: compare(password, password_hash)
+    bcrypt-->>Controller: true ✓
+
+    Controller->>JWT: generateToken(userId)
+    JWT-->>Controller: eyJhbGciOiJIUzI1NiIs...
+
+    Controller-->>User: 200 OK<br/>{user: {...}, token: "..."}
+
+    Note over User: Token saved<br/>User logged in

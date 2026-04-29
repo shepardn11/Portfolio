@@ -1,0 +1,73 @@
+erDiagram
+    USERS ||--o{ LISTINGS : creates
+    USERS ||--o{ TAG_ALONG_REQUESTS : makes
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ FCM_TOKENS : has
+    LISTINGS ||--o{ TAG_ALONG_REQUESTS : receives
+
+    USERS {
+        uuid id PK
+        string email UK
+        string username UK
+        string password_hash
+        string display_name
+        string bio
+        string profile_photo_url
+        string[] photo_gallery
+        string city "indexed"
+        string instagram_handle
+        datetime date_of_birth
+        boolean is_active
+        datetime created_at
+        datetime last_active
+    }
+
+    LISTINGS {
+        uuid id PK
+        uuid user_id FK
+        string photo_url
+        string title
+        string caption
+        string description
+        string category "indexed"
+        string location
+        datetime date
+        string time
+        string time_text
+        int max_participants
+        string city "indexed"
+        float latitude
+        float longitude
+        boolean is_active
+        int view_count
+        datetime created_at "indexed"
+        datetime expires_at "indexed"
+    }
+
+    TAG_ALONG_REQUESTS {
+        uuid id PK
+        uuid listing_id FK
+        uuid requester_id FK
+        string status "pending|accepted|rejected"
+        datetime created_at
+        datetime responded_at
+    }
+
+    NOTIFICATIONS {
+        uuid id PK
+        uuid user_id FK
+        string type
+        string title
+        string body
+        string data "JSON"
+        boolean is_read "indexed"
+        datetime created_at "indexed"
+    }
+
+    FCM_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        string token UK
+        string device_type
+        datetime created_at
+    }

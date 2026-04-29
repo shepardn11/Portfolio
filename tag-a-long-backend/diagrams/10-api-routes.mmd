@@ -1,0 +1,59 @@
+graph TB
+    Start[Mobile App]
+
+    subgraph "Authentication Routes"
+        Auth1[POST /api/auth/signup]
+        Auth2[POST /api/auth/login]
+    end
+
+    subgraph "Profile Routes"
+        Profile1[GET /api/profile/me]
+        Profile2[PUT /api/profile/me]
+        Profile3[GET /api/profile/:username]
+        Profile4[POST /api/profile/me/photo]
+        Profile5[GET /api/profile/search-users]
+    end
+
+    subgraph "Listings Routes"
+        List1[GET /api/listings/feed]
+        List2[POST /api/listings]
+        List3[GET /api/listings/:id]
+        List4[DELETE /api/listings/:id]
+        List5[GET /api/listings/my-listings]
+    end
+
+    subgraph "Requests Routes"
+        Req1[POST /api/requests]
+        Req2[GET /api/requests/received]
+        Req3[GET /api/requests/sent]
+        Req4[PUT /api/requests/:id/accept]
+        Req5[PUT /api/requests/:id/reject]
+    end
+
+    subgraph "Notifications Routes"
+        Notif1[GET /api/notifications]
+        Notif2[PUT /api/notifications/:id/read]
+        Notif3[POST /api/notifications/register-token]
+    end
+
+    subgraph "Subscription Routes"
+        Sub1[POST /api/subscription/create-checkout]
+        Sub2[GET /api/subscription/status]
+        Sub3[POST /api/subscription/cancel]
+    end
+
+    Start --> Auth1
+    Start --> Auth2
+    Start --> Profile1
+    Start --> List1
+    Start --> Req1
+    Start --> Notif1
+    Start --> Sub1
+
+    style Auth1 fill:#ffebee
+    style Auth2 fill:#ffebee
+    style List1 fill:#e3f2fd
+    style List2 fill:#e3f2fd
+    style Req1 fill:#f3e5f5
+    style Req4 fill:#f3e5f5
+    style Sub1 fill:#fff3e0

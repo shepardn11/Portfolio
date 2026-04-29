@@ -23,6 +23,8 @@ import { HomeStackParamList, ActivityListing } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
 import { listingAPI, requestAPI } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import UserSelectionModal from '../../components/UserSelectionModal';
 
 type ActivityDetailScreenNavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
@@ -64,6 +66,14 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   const [editDescription, setEditDescription] = useState('');
   const [editLocation, setEditLocation] = useState('');
   const [editMaxParticipants, setEditMaxParticipants] = useState('');
+  const [editDate, setEditDate] = useState(new Date());
+  const [editTime, setEditTime] = useState(new Date());
+  const [editTaggedUsers, setEditTaggedUsers] = useState<Array<{ id: string; username: string; display_name: string; profile_photo_url?: string }>>([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [tempDate, setTempDate] = useState(new Date());
+  const [tempTime, setTempTime] = useState(new Date());
   const [isSaving, setIsSaving] = useState(false);
 
   // Check if this is the current user's own activity
@@ -148,6 +158,12 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
     setEditDescription(listing.description || '');
     setEditLocation(listing.location || '');
     setEditMaxParticipants(listing.max_participants ? String(listing.max_participants) : '');
+    const d = listing.date ? new Date(listing.date) : new Date();
+    setEditDate(d);
+    setTempDate(d);
+    setEditTime(d);
+    setTempTime(d);
+    setEditTaggedUsers(listing.tagged_users || []);
     setEditVisible(true);
   };
 
@@ -158,12 +174,19 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
     }
     try {
       setIsSaving(true);
+      const combined = new Date(editDate);
+      combined.setHours(editTime.getHours(), editTime.getMinutes(), 0, 0);
+      const hours = editTime.getHours().toString().padStart(2, '0');
+      const minutes = editTime.getMinutes().toString().padStart(2, '0');
       await listingAPI.update(activityId, {
         title: editTitle.trim(),
         description: editDescription.trim() || undefined,
         location: editLocation.trim() || undefined,
         max_participants: editMaxParticipants ? parseInt(editMaxParticipants) : undefined,
-      });
+        date: combined.toISOString(),
+        time: `${hours}:${minutes}`,
+        tagged_users: editTaggedUsers.map(u => u.id),
+      } as any);
       setEditVisible(false);
       await fetchActivity();
     } catch (error: any) {
@@ -522,6 +545,87 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                 onChangeText={setEditLocation}
                 placeholder="Where is it happening?"
               />
+
+              <Text style={styles.fieldLabel}>Date & Time</Text>
+              <View style={styles.dateTimeRow}>
+                <TouchableOpacity
+                  style={styles.dateTimeButton}
+                  onPress={() => { setTempDate(editDate); setShowDatePicker(true); }}
+                >
+                  <Ionicons name="calendar-outline" size={18} color="#B8860B" />
+                  <Text style={styles.dateTimeButtonText}>
+                    {editDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.dateTimeButton}
+                  onPress={() => { setTempTime(editTime); setShowTimePicker(true); }}
+                >
+                  <Ionicons name="time-outline" size={18} color="#B8860B" />
+                  <Text style={styles.dateTimeButtonText}>
+                    {editTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* iOS date picker inline */}
+              {Platform.OS === 'ios' && showDatePicker && (
+                <View style={styles.inlinePicker}>
+                  <View style={styles.inlinePickerHeader}>
+                    <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                      <Text style={styles.pickerCancel}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setEditDate(tempDate); setShowDatePicker(false); }}>
+                      <Text style={styles.pickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={(_, d) => { if (d) setTempDate(d); }}
+                    minimumDate={new Date()}
+                  />
+                </View>
+              )}
+              {/* iOS time picker inline */}
+              {Platform.OS === 'ios' && showTimePicker && (
+                <View style={styles.inlinePicker}>
+                  <View style={styles.inlinePickerHeader}>
+                    <TouchableOpacity onPress={() => setShowTimePicker(false)}>
+                      <Text style={styles.pickerCancel}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { setEditTime(tempTime); setShowTimePicker(false); }}>
+                      <Text style={styles.pickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <DateTimePicker
+                    value={tempTime}
+                    mode="time"
+                    display="spinner"
+                    onChange={(_, t) => { if (t) setTempTime(t); }}
+                  />
+                </View>
+              )}
+              {/* Android pickers */}
+              {Platform.OS === 'android' && showDatePicker && (
+                <DateTimePicker
+                  value={editDate}
+                  mode="date"
+                  display="default"
+                  onChange={(e, d) => { setShowDatePicker(false); if (e.type !== 'dismissed' && d) setEditDate(d); }}
+                  minimumDate={new Date()}
+                />
+              )}
+              {Platform.OS === 'android' && showTimePicker && (
+                <DateTimePicker
+                  value={editTime}
+                  mode="time"
+                  display="default"
+                  onChange={(e, t) => { setShowTimePicker(false); if (e.type !== 'dismissed' && t) setEditTime(t); }}
+                />
+              )}
+
               <Text style={styles.fieldLabel}>Max Participants</Text>
               <TextInput
                 style={styles.fieldInput}
@@ -530,10 +634,43 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                 placeholder="Leave blank for no limit"
                 keyboardType="number-pad"
               />
+
+              <Text style={styles.fieldLabel}>Who's Joining</Text>
+              <TouchableOpacity
+                style={styles.tagButton}
+                onPress={() => setShowUserModal(true)}
+              >
+                <Ionicons name="person-add-outline" size={18} color="#007AFF" />
+                <Text style={styles.tagButtonText}>Tag people joining you</Text>
+              </TouchableOpacity>
+              {editTaggedUsers.length > 0 && (
+                <View style={styles.taggedUsersContainer}>
+                  {editTaggedUsers.map((u) => (
+                    <View key={u.id} style={styles.taggedUserChip}>
+                      {u.profile_photo_url ? (
+                        <Image source={{ uri: u.profile_photo_url }} style={styles.taggedUserAvatar} />
+                      ) : (
+                        <View style={styles.taggedUserAvatarPlaceholder}>
+                          <Ionicons name="person" size={12} color="#999" />
+                        </View>
+                      )}
+                      <Text style={styles.taggedUserName}>{u.display_name}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+              <View style={{ height: 40 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <UserSelectionModal
+        visible={showUserModal}
+        onClose={() => setShowUserModal(false)}
+        onSelectUsers={setEditTaggedUsers}
+        selectedUsers={editTaggedUsers}
+      />
 
       {/* Fixed Bottom Button - Only show if not own activity */}
       {!isOwnActivity && (
@@ -640,6 +777,102 @@ const styles = StyleSheet.create({
   fieldInputMultiline: {
     height: 100,
     textAlignVertical: 'top',
+  },
+  dateTimeRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 4,
+  },
+  dateTimeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: '#fafafa',
+  },
+  dateTimeButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    flexShrink: 1,
+  },
+  inlinePicker: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  inlinePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#f9fafb',
+  },
+  pickerCancel: {
+    fontSize: 15,
+    color: '#666',
+  },
+  pickerDone: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#B8860B',
+  },
+  tagButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: '#fafafa',
+  },
+  tagButtonText: {
+    fontSize: 15,
+    color: '#007AFF',
+  },
+  taggedUsersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+  },
+  taggedUserChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0ff',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  taggedUserAvatar: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+  },
+  taggedUserAvatarPlaceholder: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#e0e0e0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  taggedUserName: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#B8860B',
   },
   headerTitle: {
     fontSize: 18,

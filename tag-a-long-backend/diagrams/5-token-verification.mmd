@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant User as 📱 Mobile App
+    participant Middleware as 🛡️ Auth Middleware
+    participant JWT as 🎫 JWT Utils
+    participant DB as 🗄️ Database
+    participant Controller as 🎯 Controller
+
+    User->>Middleware: GET /api/listings/feed<br/>Authorization: Bearer <token>
+
+    Middleware->>Middleware: Extract token from header
+    Middleware->>JWT: verify(token, JWT_SECRET)
+
+    alt Token Valid
+        JWT-->>Middleware: {userId: "550e8400..."}
+        Middleware->>DB: SELECT * FROM users<br/>WHERE id = userId
+        DB-->>Middleware: User found & active
+        Middleware->>DB: UPDATE users<br/>SET last_active = NOW()
+        Middleware->>Middleware: Attach user to req.user
+        Middleware->>Controller: Continue to controller
+        Controller-->>User: 200 OK + Data
+    else Token Invalid/Expired
+        JWT-->>Middleware: Error
+        Middleware-->>User: 401 Unauthorized<br/>{error: "INVALID_TOKEN"}
+    end

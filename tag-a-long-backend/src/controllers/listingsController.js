@@ -350,7 +350,7 @@ const getMyListings = async (req, res, next) => {
 const updateListing = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { title, description, category, location, date, time, max_participants, caption, time_text } = req.body;
+    const { title, description, category, location, date, time, max_participants, caption, time_text, tagged_users } = req.body;
 
     const listing = await prisma.listing.findUnique({ where: { id }, select: { user_id: true } });
 
@@ -379,6 +379,7 @@ const updateListing = async (req, res, next) => {
     if (max_participants !== undefined) data.max_participants = max_participants || null;
     if (caption !== undefined) data.caption = caption?.trim() || null;
     if (time_text !== undefined) data.time_text = time_text || null;
+    if (tagged_users !== undefined) data.tagged_users = tagged_users;
 
     const updated = await prisma.listing.update({ where: { id }, data });
 

@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant User as 📱 Mobile App
+    participant Vercel as ☁️ Vercel Edge
+    participant Middleware as 🛡️ Middleware
+    participant Controller as 🎯 Controller
+    participant ImageService as 📸 Image Service
+    participant S3 as 🪣 AWS S3
+    participant DB as 🗄️ PostgreSQL
+
+    User->>Vercel: POST /api/listings<br/>{title, description, photo...}<br/>Authorization: Bearer token
+    Vercel->>Middleware: Route to Express
+
+    Note over Middleware: Security Pipeline
+    Middleware->>Middleware: 1. Helmet (security headers)
+    Middleware->>Middleware: 2. CORS (allow origin)
+    Middleware->>Middleware: 3. Rate Limit (10/hour)
+    Middleware->>Middleware: 4. Authenticate JWT
+    Middleware->>DB: Verify user exists
+    DB-->>Middleware: User found ✓
+    Middleware->>Middleware: 5. Validate data (Joi)
+
+    Middleware->>Controller: Request validated ✓
+
+    Note over Controller: Business Logic
+    Controller->>Controller: Calculate expires_at<br/>(activity date + time)
+    Controller->>ImageService: Upload photo
+
+    ImageService->>ImageService: Resize to 1080x1080<br/>Compress JPEG 85%
+    ImageService->>S3: PUT object
+    S3-->>ImageService: Public URL
+
+    ImageService-->>Controller: Image URL
+    Controller->>DB: INSERT INTO listings<br/>(user_id, title, photo_url...)
+    DB-->>Controller: New listing created
+
+    Controller-->>User: 201 Created<br/>{id, title, photo_url, user...}
+
+    Note over User: Activity posted!<br/>Visible in feed
