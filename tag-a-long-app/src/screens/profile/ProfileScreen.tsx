@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   logoutButtonText: { color: '#888', fontSize: 15, fontWeight: '500' },
   deleteAccountButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    marginTop: 80, paddingVertical: 12,
+    marginTop: 300, paddingVertical: 12,
   },
   deleteAccountText: { color: '#ef4444', fontSize: 14, fontWeight: '500' },
 
