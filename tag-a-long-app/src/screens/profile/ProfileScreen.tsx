@@ -249,10 +249,6 @@ export default function ProfileScreen() {
           <Text style={styles.logoutButtonText}>Log Out</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
-          <Ionicons name="trash-outline" size={16} color="#ef4444" />
-          <Text style={styles.deleteAccountText}>Delete Account</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Edit Profile Modal */}
@@ -345,6 +341,12 @@ export default function ProfileScreen() {
                   </View>
                 ))}
               </View>
+
+              {/* Delete Account */}
+              <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
+                <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                <Text style={styles.deleteAccountText}>Delete Account</Text>
+              </TouchableOpacity>
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -402,7 +404,7 @@ const styles = StyleSheet.create({
   logoutButtonText: { color: '#888', fontSize: 15, fontWeight: '500' },
   deleteAccountButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    marginHorizontal: 20, marginTop: 12, paddingVertical: 12,
+    marginTop: 32, paddingVertical: 12,
   },
   deleteAccountText: { color: '#ef4444', fontSize: 14, fontWeight: '500' },
 
