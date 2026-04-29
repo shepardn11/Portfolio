@@ -96,19 +96,11 @@ const getFeed = async (req, res, next) => {
           // Listing has no coordinates — include it regardless
         }
 
-        // Filter expired by date/time
+        // Filter expired by date — date already contains full UTC datetime
         if (listing.date) {
           const activityDate = new Date(listing.date);
-          if (listing.time) {
-            const [hours, minutes] = listing.time.split(':');
-            activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-            activityDate.setMinutes(activityDate.getMinutes() + 30);
-            return activityDate > now;
-          } else {
-            activityDate.setHours(23, 59, 59, 999);
-            activityDate.setMinutes(activityDate.getMinutes() + 30);
-            return activityDate > now;
-          }
+          activityDate.setMinutes(activityDate.getMinutes() + 30);
+          return activityDate > now;
         }
         return true;
       })
@@ -253,28 +245,15 @@ const createListing = async (req, res, next) => {
       longitude,
     } = req.body;
 
-    // Calculate expiration based on activity date/time (with 10-minute grace period)
+    // The client sends date as a full UTC ISO string with time already embedded.
+    // Do NOT override hours using the time field — that re-interprets local time as UTC.
     let expires_at;
     if (date) {
-      const activityDate = new Date(date);
-
-      // If time is provided, combine date + time for exact expiration
-      if (time) {
-        const [hours, minutes] = time.split(':');
-        activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-        // Add 10-minute grace period
-        activityDate.setMinutes(activityDate.getMinutes() + 30);
-        expires_at = activityDate;
-      } else {
-        // No time specified, expire at end of day (11:59 PM) + 10 minutes
-        activityDate.setHours(23, 59, 59, 999);
-        activityDate.setMinutes(activityDate.getMinutes() + 30);
-        expires_at = activityDate;
-      }
+      const activityDate = new Date(date); // Already correct UTC datetime
+      activityDate.setMinutes(activityDate.getMinutes() + 30); // 30-min grace period
+      expires_at = activityDate;
     } else {
-      // No date specified, expire 24 hours from now
-      expires_at = new Date();
-      expires_at.setHours(expires_at.getHours() + 24);
+      expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
     }
 
     // Create listing with new structure
@@ -369,24 +348,11 @@ const getMyListings = async (req, res, next) => {
     const filteredListings = status === 'expired'
       ? listings
       : listings.filter(listing => {
-          // Check if activity date/time has passed
           if (listing.date) {
             const activityDate = new Date(listing.date);
-
-            if (listing.time) {
-              // Has specific time - check date + time + 10min grace period
-              const [hours, minutes] = listing.time.split(':');
-              activityDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-              activityDate.setMinutes(activityDate.getMinutes() + 30); // Add grace period
-              return activityDate > now;
-            } else {
-              // No time - check if date has passed (end of day + 10min grace period)
-              activityDate.setHours(23, 59, 59, 999);
-              activityDate.setMinutes(activityDate.getMinutes() + 30); // Add grace period
-              return activityDate > now;
-            }
+            activityDate.setMinutes(activityDate.getMinutes() + 30);
+            return activityDate > now;
           }
-          // No date specified - rely on expires_at (already filtered in query)
           return true;
         });
 
