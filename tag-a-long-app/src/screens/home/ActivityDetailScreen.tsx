@@ -10,6 +10,10 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -55,6 +59,12 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
   const [isLoading, setIsLoading] = useState(true);
   const [isRequesting, setIsRequesting] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
+  const [editVisible, setEditVisible] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [editMaxParticipants, setEditMaxParticipants] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Check if this is the current user's own activity
   const isOwnActivity = listing?.user_id === user?.id;
@@ -129,6 +139,37 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       await fetchRequests();
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.error?.message || 'Could not reject request');
+    }
+  };
+
+  const openEdit = () => {
+    if (!listing) return;
+    setEditTitle(listing.title || '');
+    setEditDescription(listing.description || '');
+    setEditLocation(listing.location || '');
+    setEditMaxParticipants(listing.max_participants ? String(listing.max_participants) : '');
+    setEditVisible(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editTitle.trim()) {
+      Alert.alert('Error', 'Title is required');
+      return;
+    }
+    try {
+      setIsSaving(true);
+      await listingAPI.update(activityId, {
+        title: editTitle.trim(),
+        description: editDescription.trim() || undefined,
+        location: editLocation.trim() || undefined,
+        max_participants: editMaxParticipants ? parseInt(editMaxParticipants) : undefined,
+      });
+      setEditVisible(false);
+      await fetchActivity();
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.error?.message || 'Could not save changes');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -223,7 +264,13 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Activity Details</Text>
-        <View style={{ width: 40 }} />
+        {isOwnActivity ? (
+          <TouchableOpacity onPress={openEdit} style={styles.editButton}>
+            <Ionicons name="pencil-outline" size={22} color="#B8860B" />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -434,6 +481,60 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
+      {/* Edit Activity Modal */}
+      <Modal visible={editVisible} animationType="slide" presentationStyle="pageSheet">
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setEditVisible(false)}>
+                <Text style={styles.modalCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Edit Activity</Text>
+              <TouchableOpacity onPress={handleEditSave} disabled={isSaving}>
+                {isSaving ? (
+                  <ActivityIndicator size="small" color="#B8860B" />
+                ) : (
+                  <Text style={styles.modalSave}>Save</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalContent} keyboardShouldPersistTaps="handled">
+              <Text style={styles.fieldLabel}>Title</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={editTitle}
+                onChangeText={setEditTitle}
+                placeholder="Activity title"
+              />
+              <Text style={styles.fieldLabel}>Description</Text>
+              <TextInput
+                style={[styles.fieldInput, styles.fieldInputMultiline]}
+                value={editDescription}
+                onChangeText={setEditDescription}
+                placeholder="What's this activity about?"
+                multiline
+                numberOfLines={4}
+              />
+              <Text style={styles.fieldLabel}>Location</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={editLocation}
+                onChangeText={setEditLocation}
+                placeholder="Where is it happening?"
+              />
+              <Text style={styles.fieldLabel}>Max Participants</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={editMaxParticipants}
+                onChangeText={setEditMaxParticipants}
+                placeholder="Leave blank for no limit"
+                keyboardType="number-pad"
+              />
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
       {/* Fixed Bottom Button - Only show if not own activity */}
       {!isOwnActivity && (
         <View style={styles.bottomBar}>
@@ -480,6 +581,65 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  editButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalCancel: {
+    fontSize: 16,
+    color: '#666',
+  },
+  modalSave: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#B8860B',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 6,
+    marginTop: 16,
+  },
+  fieldInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#333',
+    backgroundColor: '#fafafa',
+  },
+  fieldInputMultiline: {
+    height: 100,
+    textAlignVertical: 'top',
   },
   headerTitle: {
     fontSize: 18,

@@ -347,6 +347,47 @@ const getMyListings = async (req, res, next) => {
   }
 };
 
+const updateListing = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, description, category, location, date, time, max_participants, caption, time_text } = req.body;
+
+    const listing = await prisma.listing.findUnique({ where: { id }, select: { user_id: true } });
+
+    if (!listing) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Listing not found' } });
+    }
+
+    if (listing.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You can only edit your own listings' } });
+    }
+
+    const data = {};
+    if (title !== undefined) data.title = title.trim();
+    if (description !== undefined) data.description = description?.trim() || null;
+    if (category !== undefined) data.category = category;
+    if (location !== undefined) data.location = location?.trim() || null;
+    if (date !== undefined) {
+      data.date = date ? new Date(date) : null;
+      if (date) {
+        const activityDate = new Date(date);
+        activityDate.setMinutes(activityDate.getMinutes() + 30);
+        data.expires_at = activityDate;
+      }
+    }
+    if (time !== undefined) data.time = time || null;
+    if (max_participants !== undefined) data.max_participants = max_participants || null;
+    if (caption !== undefined) data.caption = caption?.trim() || null;
+    if (time_text !== undefined) data.time_text = time_text || null;
+
+    const updated = await prisma.listing.update({ where: { id }, data });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteListing = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -394,5 +435,6 @@ module.exports = {
   getListingById,
   createListing,
   getMyListings,
+  updateListing,
   deleteListing,
 };

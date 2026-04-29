@@ -20,6 +20,7 @@ router.post(
   listingsController.createListing
 );
 
+router.put('/:id', authenticateToken, listingsController.updateListing);
 router.delete('/:id', authenticateToken, listingsController.deleteListing);
 
 module.exports = router;
