@@ -640,48 +640,13 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                   ))}
                 </View>
               )}
-              <View style={styles.userSearchBox}>
-                <Ionicons name="search-outline" size={16} color="#999" />
-                <TextInput
-                  style={styles.userSearchInput}
-                  placeholder="Search people to tag..."
-                  placeholderTextColor="#aaa"
-                  value={userSearchQuery}
-                  onChangeText={searchUsers}
-                  onFocus={() => setShowUserSearch(true)}
-                />
-                {userSearchQuery.length > 0 && (
-                  <TouchableOpacity onPress={() => { setUserSearchQuery(''); setUserSearchResults([]); }}>
-                    <Ionicons name="close-circle" size={16} color="#999" />
-                  </TouchableOpacity>
-                )}
-              </View>
-              {showUserSearch && userSearchResults.length > 0 && (
-                <View style={styles.userSearchResults}>
-                  {userSearchResults.map((u) => {
-                    const isSelected = editTaggedUsers.some(t => t.id === u.id);
-                    return (
-                      <TouchableOpacity key={u.id} style={styles.userSearchRow} onPress={() => toggleTagUser(u)}>
-                        {u.profile_photo_url ? (
-                          <Image source={{ uri: u.profile_photo_url }} style={styles.userSearchAvatar} />
-                        ) : (
-                          <View style={[styles.userSearchAvatar, { backgroundColor: '#e0e0e0', alignItems: 'center', justifyContent: 'center' }]}>
-                            <Ionicons name="person" size={14} color="#999" />
-                          </View>
-                        )}
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.userSearchName}>{u.display_name}</Text>
-                          <Text style={styles.userSearchUsername}>@{u.username}</Text>
-                        </View>
-                        {isSelected && <Ionicons name="checkmark-circle" size={20} color="#B8860B" />}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-              {showUserSearch && userSearchLoading && (
-                <ActivityIndicator size="small" color="#B8860B" style={{ marginTop: 8 }} />
-              )}
+              <TouchableOpacity
+                style={styles.tagButton}
+                onPress={() => { setUserSearchQuery(''); setUserSearchResults([]); setShowUserSearch(true); }}
+              >
+                <Ionicons name="person-add-outline" size={18} color="#007AFF" />
+                <Text style={styles.tagButtonText}>Tag people joining you</Text>
+              </TouchableOpacity>
               <View style={{ height: 300 }} />
             </ScrollView>
 
@@ -721,6 +686,56 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                       <Text style={styles.pickerDone}>Done</Text>
                     </TouchableOpacity>
                   </View>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* User search overlay */}
+            {showUserSearch && (
+              <TouchableOpacity style={styles.pickerBackdrop} activeOpacity={1} onPress={() => setShowUserSearch(false)}>
+                <View style={[styles.pickerSheet, styles.userSearchSheet]} onStartShouldSetResponder={() => true}>
+                  <View style={styles.userSearchSheetHeader}>
+                    <Text style={styles.userSearchSheetTitle}>Tag People</Text>
+                    <TouchableOpacity onPress={() => setShowUserSearch(false)}>
+                      <Text style={styles.pickerDone}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.userSearchBox}>
+                    <Ionicons name="search-outline" size={16} color="#999" />
+                    <TextInput
+                      style={styles.userSearchInput}
+                      placeholder="Search by name or username..."
+                      placeholderTextColor="#aaa"
+                      value={userSearchQuery}
+                      onChangeText={searchUsers}
+                      autoFocus
+                    />
+                    {userSearchQuery.length > 0 && (
+                      <TouchableOpacity onPress={() => { setUserSearchQuery(''); setUserSearchResults([]); }}>
+                        <Ionicons name="close-circle" size={16} color="#999" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {userSearchLoading && <ActivityIndicator size="small" color="#B8860B" style={{ marginTop: 12 }} />}
+                  {userSearchResults.map((u) => {
+                    const isSelected = editTaggedUsers.some(t => t.id === u.id);
+                    return (
+                      <TouchableOpacity key={u.id} style={styles.userSearchRow} onPress={() => toggleTagUser(u)}>
+                        {u.profile_photo_url ? (
+                          <Image source={{ uri: u.profile_photo_url }} style={styles.userSearchAvatar} />
+                        ) : (
+                          <View style={[styles.userSearchAvatar, { backgroundColor: '#e0e0e0', alignItems: 'center', justifyContent: 'center' }]}>
+                            <Ionicons name="person" size={14} color="#999" />
+                          </View>
+                        )}
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.userSearchName}>{u.display_name}</Text>
+                          <Text style={styles.userSearchUsername}>@{u.username}</Text>
+                        </View>
+                        {isSelected && <Ionicons name="checkmark-circle" size={20} color="#B8860B" />}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </TouchableOpacity>
             )}
@@ -882,6 +897,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#B8860B',
   },
+  tagButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: '#fafafa',
+    marginTop: 8,
+  },
+  tagButtonText: {
+    fontSize: 15,
+    color: '#007AFF',
+  },
+  userSearchSheet: {
+    paddingHorizontal: 0,
+    maxHeight: '80%',
+  },
+  userSearchSheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  userSearchSheetTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333',
+  },
   userSearchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -892,19 +941,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: '#fafafa',
-    marginTop: 8,
+    margin: 16,
   },
   userSearchInput: {
     flex: 1,
     fontSize: 15,
     color: '#333',
-  },
-  userSearchResults: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 10,
-    marginTop: 4,
-    overflow: 'hidden',
   },
   userSearchRow: {
     flexDirection: 'row',
