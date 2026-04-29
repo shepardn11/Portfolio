@@ -70,20 +70,10 @@ const getFeed = async (req, res, next) => {
       taggedUsers.forEach(user => taggedUsersMap.set(user.id, user));
     }
 
-    // Format response and filter out activities whose date/time has passed
+    // Filter out activities whose date/time has passed (+ 30 min grace)
     const now = new Date();
     const formattedListings = listings
       .filter(listing => {
-        // Radius filter — if user sent coordinates, filter by distance
-        if (userLat !== null && userLng !== null) {
-          if (listing.latitude !== null && listing.longitude !== null) {
-            const dist = haversineDistance(userLat, userLng, listing.latitude, listing.longitude);
-            if (dist > radiusMiles) return false;
-          }
-          // Listing has no coordinates — include it regardless
-        }
-
-        // Filter expired by date — date already contains full UTC datetime
         if (listing.date) {
           const activityDate = new Date(listing.date);
           activityDate.setMinutes(activityDate.getMinutes() + 30);
