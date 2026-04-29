@@ -721,7 +721,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               {showUserSearch && userSearchLoading && (
                 <ActivityIndicator size="small" color="#B8860B" style={{ marginTop: 8 }} />
               )}
-              <View style={{ height: 40 }} />
+              <View style={{ height: 300 }} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
