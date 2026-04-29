@@ -597,21 +597,20 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               {/* iOS date picker inline */}
               {Platform.OS === 'ios' && showDatePicker && (
                 <View style={styles.inlinePicker}>
-                  <View style={styles.inlinePickerHeader}>
-                    <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                      <Text style={styles.pickerCancel}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => { setEditDate(tempDate); setShowDatePicker(false); }}>
-                      <Text style={styles.pickerDone}>Done</Text>
-                    </TouchableOpacity>
-                  </View>
                   <DateTimePicker
-                    value={tempDate}
+                    value={editDate}
                     mode="date"
-                    display="spinner"
-                    onChange={(_, d) => { if (d) setTempDate(d); }}
+                    display="inline"
+                    onChange={(_, d) => { if (d) { setEditDate(d); setTempDate(d); } }}
                     minimumDate={new Date()}
+                    accentColor="#B8860B"
                   />
+                  <TouchableOpacity
+                    style={styles.inlinePickerDoneButton}
+                    onPress={() => setShowDatePicker(false)}
+                  >
+                    <Text style={styles.pickerDone}>Done</Text>
+                  </TouchableOpacity>
                 </View>
               )}
               {/* iOS time picker inline */}
@@ -863,18 +862,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     overflow: 'hidden',
   },
-  inlinePickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  inlinePickerDoneButton: {
+    alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#f9fafb',
-  },
-  pickerCancel: {
-    fontSize: 15,
-    color: '#666',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
   },
   pickerDone: {
     fontSize: 15,

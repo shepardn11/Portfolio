@@ -143,20 +143,17 @@ export default function CreateListingScreen({ navigation }: Props) {
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
-      // On Android, event.type can be 'set', 'dismissed', or 'neutralButtonPressed'
       if (event.type === 'dismissed') {
         setShowDatePicker(false);
         return;
       }
-
       setShowDatePicker(false);
-      if (selectedDate) {
-        setDate(selectedDate);
-      }
+      if (selectedDate) setDate(selectedDate);
     } else {
-      // On iOS, update temp date as user scrolls
+      // inline display: fires once on tap, update both temp and committed date
       if (selectedDate) {
         setTempDate(selectedDate);
+        setDate(selectedDate);
       }
     }
   };
@@ -631,10 +628,10 @@ export default function CreateListingScreen({ navigation }: Props) {
                   <DateTimePicker
                     value={tempDate}
                     mode="date"
-                    display="spinner"
+                    display="inline"
                     onChange={handleDateChange}
                     minimumDate={new Date()}
-                    style={styles.picker}
+                    accentColor="#B8860B"
                   />
                 </View>
               </View>
@@ -1045,6 +1042,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 40,
+    paddingHorizontal: 8,
   },
   pickerHeader: {
     flexDirection: 'row',
