@@ -21,11 +21,12 @@ const getFeed = async (req, res, next) => {
     const userLng = lng ? parseFloat(lng) : null;
     const radiusMiles = parseFloat(radius);
 
-    // Build where clause — add bounding box pre-filter when coordinates provided
+    // Build where clause — no expires_at filter here; JS filter handles expiration
+    // using listing.date which has the correct UTC datetime from the client.
     const where = {
       is_active: true,
-      expires_at: { gt: new Date() },
       user_id: { not: req.user.id },
+      created_at: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
     };
 
     if (userLat !== null && userLng !== null) {
@@ -306,13 +307,8 @@ const getMyListings = async (req, res, next) => {
     };
 
     // Filter by status if provided, otherwise show only active (non-expired) by default
-    if (status === 'expired') {
-      where.expires_at = { lte: new Date() };
-    } else {
-      // Default: show only active (non-expired) listings
-      where.is_active = true;
-      where.expires_at = { gt: new Date() };
-    }
+    where.is_active = true;
+    where.created_at = { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) };
 
     // Get listings
     const listings = await prisma.listing.findMany({

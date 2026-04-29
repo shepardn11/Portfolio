@@ -198,7 +198,7 @@ export default function FeedScreen({ navigation }: Props) {
             <Text style={styles.loadingText}>Loading activities...</Text>
           </View>
         </>
-      ) : error ? (
+      ) : error && listings.length === 0 ? (
         <>
           {renderHeader()}
           {renderError()}
