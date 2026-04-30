@@ -159,7 +159,8 @@ export default function ProfileScreen() {
     try {
       const users = await safetyAPI.getBlockedUsers();
       setBlockedUsers(users);
-      setBlockedVisible(true);
+      setEditVisible(false);
+      setTimeout(() => setBlockedVisible(true), 400);
     } catch {
       Alert.alert('Error', 'Could not load blocked users.');
     }
