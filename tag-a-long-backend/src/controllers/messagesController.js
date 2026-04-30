@@ -5,12 +5,19 @@ const getConversations = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // Get conversations where user is either participant1 or participant2
+    // Get IDs of users this user has blocked or been blocked by
+    const blocks = await prisma.block.findMany({
+      where: { OR: [{ blocker_id: userId }, { blocked_id: userId }] },
+      select: { blocker_id: true, blocked_id: true },
+    });
+    const blockedIds = blocks.map(b => b.blocker_id === userId ? b.blocked_id : b.blocker_id);
+
+    // Get conversations where user is either participant, excluding blocked users
     const conversations = await prisma.conversation.findMany({
       where: {
         OR: [
-          { participant1: userId },
-          { participant2: userId },
+          { participant1: userId, participant2: { notIn: blockedIds } },
+          { participant2: userId, participant1: { notIn: blockedIds } },
         ],
       },
       include: {

@@ -16,6 +16,7 @@ const notificationsRoutes = require('./routes/notifications');
 const messagesRoutes = require('./routes/messages');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
+const safetyRoutes = require('./routes/safety');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -47,6 +48,7 @@ app.use('/api/listings', listingsRoutes);
 app.use('/api/requests', requestsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/safety', safetyRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 
 // Health check endpoint

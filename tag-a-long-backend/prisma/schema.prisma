@@ -35,10 +35,24 @@ model User {
   conversations1    Conversation[]      @relation("ConversationUser1")
   conversations2    Conversation[]      @relation("ConversationUser2")
   messages          Message[]
+  blocks_made       Block[]             @relation("BlocksMade")
+  blocks_received   Block[]             @relation("BlocksReceived")
 
   @@index([city])
   @@index([username])
   @@map("users")
+}
+
+model Block {
+  id         String   @id @default(uuid())
+  blocker_id String
+  blocked_id String
+  created_at DateTime @default(now())
+  blocker    User     @relation("BlocksMade", fields: [blocker_id], references: [id], onDelete: Cascade)
+  blocked    User     @relation("BlocksReceived", fields: [blocked_id], references: [id], onDelete: Cascade)
+
+  @@unique([blocker_id, blocked_id])
+  @@map("blocks")
 }
 
 model Listing {

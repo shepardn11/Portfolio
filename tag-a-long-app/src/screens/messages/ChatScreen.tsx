@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { messageAPI } from '../../api/endpoints';
+import { messageAPI, safetyAPI } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
 
 interface Message {
@@ -40,6 +40,29 @@ export default function ChatScreen({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  const handleBlockUser = () => {
+    Alert.alert(
+      `Block ${otherUser.display_name}?`,
+      'They won\'t be able to message you and their conversations will be hidden. You can unblock them from your profile settings.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await safetyAPI.blockUser(otherUser.id);
+              Alert.alert('Blocked', `${otherUser.display_name} has been blocked.`);
+              navigation.navigate('MessagesList');
+            } catch (error: any) {
+              Alert.alert('Error', 'Could not block user. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   useEffect(() => {
     fetchMessages();
@@ -177,7 +200,9 @@ export default function ChatScreen({ route, navigation }: any) {
             <Text style={styles.headerTitle}>{otherUser.display_name}</Text>
             <Text style={styles.headerSubtitle}>@{otherUser.username}</Text>
           </View>
-          <View style={{ width: 40 }} />
+          <TouchableOpacity onPress={handleBlockUser} style={styles.blockButton}>
+            <Ionicons name="ellipsis-vertical" size={22} color="#333" />
+          </TouchableOpacity>
         </View>
 
         {/* Messages List */}
@@ -263,6 +288,11 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 13,
     color: '#666',
+  },
+  blockButton: {
+    padding: 8,
+    width: 40,
+    alignItems: 'center',
   },
   messagesList: {
     paddingHorizontal: 16,
