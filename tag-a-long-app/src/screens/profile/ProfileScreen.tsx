@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
-import { profileAPI } from '../../api/endpoints';
+import { profileAPI, safetyAPI } from '../../api/endpoints';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadImage } from '../../utils/imageUpload';
@@ -33,6 +33,8 @@ export default function ProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [blockedVisible, setBlockedVisible] = useState(false);
+  const [blockedUsers, setBlockedUsers] = useState<Array<{ id: string; display_name: string; username: string; profile_photo_url?: string }>>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -151,6 +153,33 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const openBlockedUsers = async () => {
+    try {
+      const users = await safetyAPI.getBlockedUsers();
+      setBlockedUsers(users);
+      setBlockedVisible(true);
+    } catch {
+      Alert.alert('Error', 'Could not load blocked users.');
+    }
+  };
+
+  const handleUnblock = (userId: string, displayName: string) => {
+    Alert.alert(`Unblock ${displayName}?`, '', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Unblock',
+        onPress: async () => {
+          try {
+            await safetyAPI.unblockUser(userId);
+            setBlockedUsers(prev => prev.filter(u => u.id !== userId));
+          } catch {
+            Alert.alert('Error', 'Could not unblock user.');
+          }
+        },
+      },
+    ]);
   };
 
   const handleDeleteAccount = () => {
@@ -347,8 +376,53 @@ export default function ProfileScreen() {
                 <Ionicons name="trash-outline" size={16} color="#ef4444" />
                 <Text style={styles.deleteAccountText}>Delete Account</Text>
               </TouchableOpacity>
+
+              {/* Blocked Users */}
+              <TouchableOpacity style={styles.blockedUsersButton} onPress={openBlockedUsers}>
+                <Ionicons name="ban-outline" size={16} color="#aaa" />
+                <Text style={styles.blockedUsersText}>Blocked Users</Text>
+              </TouchableOpacity>
             </ScrollView>
           </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Blocked Users Modal */}
+      <Modal visible={blockedVisible} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+          <View style={styles.blockedHeader}>
+            <Text style={styles.blockedTitle}>Blocked Users</Text>
+            <TouchableOpacity onPress={() => setBlockedVisible(false)}>
+              <Ionicons name="close" size={26} color="#333" />
+            </TouchableOpacity>
+          </View>
+          {blockedUsers.length === 0 ? (
+            <View style={styles.blockedEmpty}>
+              <Ionicons name="checkmark-circle-outline" size={48} color="#ccc" />
+              <Text style={styles.blockedEmptyText}>No blocked users</Text>
+            </View>
+          ) : (
+            <ScrollView>
+              {blockedUsers.map(u => (
+                <View key={u.id} style={styles.blockedRow}>
+                  {u.profile_photo_url ? (
+                    <Image source={{ uri: u.profile_photo_url }} style={styles.blockedAvatar} />
+                  ) : (
+                    <View style={[styles.blockedAvatar, styles.blockedAvatarPlaceholder]}>
+                      <Ionicons name="person" size={20} color="#999" />
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.blockedName}>{u.display_name}</Text>
+                    <Text style={styles.blockedUsername}>@{u.username}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.unblockButton} onPress={() => handleUnblock(u.id, u.display_name)}>
+                    <Text style={styles.unblockText}>Unblock</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -407,6 +481,33 @@ const styles = StyleSheet.create({
     marginTop: 300, paddingVertical: 12,
   },
   deleteAccountText: { color: '#ef4444', fontSize: 14, fontWeight: '500' },
+  blockedUsersButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, marginTop: 16, marginBottom: 40, paddingVertical: 10,
+  },
+  blockedUsersText: { color: '#aaa', fontSize: 13 },
+  blockedHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 16,
+    borderBottomWidth: 1, borderBottomColor: '#e0e0e0',
+  },
+  blockedTitle: { fontSize: 18, fontWeight: '600', color: '#333' },
+  blockedEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  blockedEmptyText: { fontSize: 16, color: '#aaa' },
+  blockedRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 20, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
+  },
+  blockedAvatar: { width: 44, height: 44, borderRadius: 22 },
+  blockedAvatarPlaceholder: { backgroundColor: '#e0e0e0', alignItems: 'center', justifyContent: 'center' },
+  blockedName: { fontSize: 15, fontWeight: '600', color: '#333' },
+  blockedUsername: { fontSize: 13, color: '#888' },
+  unblockButton: {
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: 16, borderWidth: 1, borderColor: '#ddd',
+  },
+  unblockText: { fontSize: 13, color: '#555', fontWeight: '500' },
 
   // Modal
   modalContainer: { flex: 1, backgroundColor: '#fff' },
