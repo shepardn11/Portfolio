@@ -383,6 +383,17 @@ export default function ProfileScreen() {
                 <Ionicons name="ban-outline" size={16} color="#aaa" />
                 <Text style={styles.blockedUsersText}>Blocked Users</Text>
               </TouchableOpacity>
+
+              {/* Legal Links */}
+              <View style={styles.legalRow}>
+                <TouchableOpacity onPress={() => Linking.openURL('https://tagalong.app/privacy')}>
+                  <Text style={styles.legalLink}>Privacy Policy</Text>
+                </TouchableOpacity>
+                <Text style={styles.legalDot}>·</Text>
+                <TouchableOpacity onPress={() => Linking.openURL('https://tagalong.app/terms')}>
+                  <Text style={styles.legalLink}>Terms of Service</Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -484,9 +495,15 @@ const styles = StyleSheet.create({
   deleteAccountText: { color: '#ef4444', fontSize: 14, fontWeight: '500' },
   blockedUsersButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 8, marginTop: 16, marginBottom: 40, paddingVertical: 10,
+    gap: 8, marginTop: 16, marginBottom: 8, paddingVertical: 10,
   },
   blockedUsersText: { color: '#aaa', fontSize: 13 },
+  legalRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 8, marginBottom: 40, paddingVertical: 4,
+  },
+  legalLink: { color: '#aaa', fontSize: 12 },
+  legalDot: { color: '#ccc', fontSize: 12 },
   blockedHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 16,

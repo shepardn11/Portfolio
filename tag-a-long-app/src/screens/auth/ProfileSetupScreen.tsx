@@ -17,7 +17,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
 import { useAuthStore } from '../../store/authStore';
-import { profileAPI, subscriptionAPI } from '../../api/endpoints';
+import { profileAPI } from '../../api/endpoints';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';
@@ -38,7 +38,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   const [instagramHandle, setInstagramHandle] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [galleryPhotos, setGalleryPhotos] = useState<(string | null)[]>([null, null, null, null, null]);
-  const [wantsPremium, setWantsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(null);
@@ -77,12 +76,8 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       });
 
       if (!result.canceled && result.assets[0]) {
-        console.log('DEBUG ProfileSetup: Inside result check');
         setIsUploadingPhoto(true);
-        console.log('DEBUG ProfileSetup: isUploadingPhoto set to true');
         const imageUri = result.assets[0].uri;
-        console.log('DEBUG ProfileSetup: Image selected:', imageUri);
-        console.log('DEBUG ProfileSetup: User:', JSON.stringify(user));
 
         if (!user || !user.id) {
           console.error('DEBUG ProfileSetup: User is null or missing ID!');
@@ -90,24 +85,17 @@ export default function ProfileSetupScreen({ navigation }: Props) {
           throw new Error('User not found - cannot upload photo');
         }
 
-        console.log('DEBUG ProfileSetup: User check passed, user.id:', user.id);
 
         // Upload to Supabase Storage
-        console.log('DEBUG ProfileSetup: Starting upload to Supabase...');
         const publicUrl = await uploadImage(imageUri, user.id);
-        console.log('DEBUG ProfileSetup: Upload successful, URL:', publicUrl);
 
         // Update profile via backend API using the photo endpoint
-        console.log('DEBUG ProfileSetup: Updating profile via API...');
         const updatedUser = await profileAPI.uploadPhoto(publicUrl);
-        console.log('DEBUG ProfileSetup: Profile updated:', updatedUser);
 
         // Update local state
-        console.log('DEBUG ProfileSetup: Setting profilePhoto state to:', publicUrl);
         setProfilePhoto(publicUrl);
         updateUser(updatedUser);
 
-        console.log('DEBUG ProfileSetup: Profile photo should now be visible');
         Alert.alert('Success', 'Profile photo uploaded!');
       }
     } catch (error: any) {
@@ -159,15 +147,11 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       if (!result.canceled && result.assets[0] && user) {
         setUploadingGalleryIndex(index);
         const imageUri = result.assets[0].uri;
-        console.log('DEBUG ProfileSetup: Gallery image selected:', imageUri, 'index:', index);
 
         // Upload to Supabase Storage
-        console.log('DEBUG ProfileSetup: Uploading gallery photo to Supabase...');
         const publicUrl = await uploadImage(imageUri, user.id);
-        console.log('DEBUG ProfileSetup: Gallery upload successful, URL:', publicUrl);
 
         // Update profile via backend API using the gallery endpoint
-        console.log('DEBUG ProfileSetup: Adding to gallery via API...');
         const response = await apiClient.getInstance().post('/profile/gallery', {
           photo_url: publicUrl,
         });
@@ -176,12 +160,10 @@ export default function ProfileSetupScreen({ navigation }: Props) {
           throw new Error('Failed to add photo to gallery');
         }
 
-        console.log('DEBUG ProfileSetup: Gallery updated:', response.data.data);
 
         // Update local state with the uploaded photo URL
         const newGalleryPhotos = [...galleryPhotos];
         newGalleryPhotos[index] = publicUrl;
-        console.log('DEBUG ProfileSetup: Updating local state, newGalleryPhotos:', newGalleryPhotos);
         setGalleryPhotos(newGalleryPhotos);
 
         // Update user store with new gallery
@@ -189,7 +171,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
           updateUser({ ...user, photo_gallery: response.data.data.photo_gallery });
         }
 
-        console.log('DEBUG ProfileSetup: Photo should now be visible at index', index);
         Alert.alert('Success', 'Photo added to gallery!');
       }
     } catch (error: any) {
@@ -231,11 +212,8 @@ export default function ProfileSetupScreen({ navigation }: Props) {
       return;
     }
 
-    console.log('DEBUG: handleComplete called');
-    console.log('DEBUG: wantsPremium:', wantsPremium);
     try {
       setIsLoading(true);
-      console.log('DEBUG: Loading state set to true');
 
       // Update profile with bio and instagram if provided
       const updates: any = {};
@@ -248,47 +226,16 @@ export default function ProfileSetupScreen({ navigation }: Props) {
         updates.instagram_handle = instagramHandle.trim();
       }
 
-      console.log('DEBUG: Updates to apply:', updates);
 
       // Only update if there's something to update
       if (Object.keys(updates).length > 0) {
-        console.log('DEBUG: Updating profile...');
         const updatedUser = await profileAPI.updateProfile(updates);
         updateUser(updatedUser);
-        console.log('DEBUG: Profile updated successfully');
       }
 
       // Complete profile setup immediately - user can access app right away
       completeSetup();
 
-      // Handle premium subscription if requested (asynchronously)
-      if (wantsPremium) {
-        console.log('DEBUG: User wants premium, creating checkout session...');
-        try {
-          const checkoutData = await subscriptionAPI.createCheckout();
-          console.log('DEBUG: Checkout session created:', checkoutData);
-
-          if (checkoutData.url) {
-            // Open Stripe checkout in browser
-            const canOpen = await Linking.canOpenURL(checkoutData.url);
-            if (canOpen) {
-              await Linking.openURL(checkoutData.url);
-              // Show a non-blocking message
-              Alert.alert(
-                'Premium Checkout',
-                'Complete your payment in the browser to activate premium features. You can access the app now and your premium status will be updated once payment is confirmed.'
-              );
-            }
-          }
-        } catch (error) {
-          console.error('DEBUG: Error creating checkout session:', error);
-          // Don't block the user - they can still use the app
-          Alert.alert(
-            'Payment Error',
-            'Could not open premium checkout. You can upgrade to premium later from your profile.'
-          );
-        }
-      }
     } catch (error: any) {
       console.error('DEBUG: Error in handleComplete:', error);
       Alert.alert(
@@ -338,7 +285,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                 disabled={isLoading || isUploadingPhoto}
               >
                 {(() => {
-                  console.log('DEBUG ProfileSetup: Rendering profile photo, profilePhoto:', profilePhoto, 'isUploadingPhoto:', isUploadingPhoto);
                   if (isUploadingPhoto) {
                     return <ActivityIndicator size="large" color="#B8860B" />;
                   } else if (profilePhoto) {
@@ -347,8 +293,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                         <Image
                           source={{ uri: profilePhoto }}
                           style={styles.largePhotoImage}
-                          onLoad={() => console.log('DEBUG ProfileSetup: Profile photo loaded')}
-                          onError={(error) => console.log('DEBUG ProfileSetup: Profile photo error:', error.nativeEvent)}
                         />
                         <TouchableOpacity
                           style={styles.removePhotoButton}
@@ -376,7 +320,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
             <Text style={styles.sectionTitle}>Photo Gallery (up to 5 photos)</Text>
             <View style={styles.galleryGrid}>
               {galleryPhotos.map((photo, index) => {
-                console.log(`DEBUG ProfileSetup: Rendering gallery slot ${index}, photo:`, photo);
                 return (
                   <TouchableOpacity
                     key={index}
@@ -391,8 +334,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                         <Image
                           source={{ uri: photo }}
                           style={styles.galleryPhotoImage}
-                          onLoad={() => console.log(`DEBUG ProfileSetup: Image loaded at index ${index}`)}
-                          onError={(error) => console.log(`DEBUG ProfileSetup: Image error at index ${index}:`, error.nativeEvent)}
                         />
                         <TouchableOpacity
                           style={styles.removeGalleryPhotoButton}
@@ -430,27 +371,6 @@ export default function ProfileSetupScreen({ navigation }: Props) {
               editable={!isLoading}
             />
             <Text style={styles.characterCount}>{bio.length}/150</Text>
-
-            {/* Premium Subscription Option */}
-            <TouchableOpacity
-              style={styles.premiumOption}
-              onPress={() => Alert.alert('Coming Soon', 'Premium subscriptions are not available yet. Stay tuned!')}
-              disabled={isLoading}
-            >
-              <View style={styles.premiumContent}>
-                <Ionicons
-                  name={wantsPremium ? 'checkbox' : 'square-outline'}
-                  size={24}
-                  color="#B8860B"
-                />
-                <View style={styles.premiumText}>
-                  <Text style={styles.premiumTitle}>Premium Subscription ($4.99/month)</Text>
-                  <Text style={styles.premiumSubtitle}>
-                    Get priority placement in feeds and exclusive features
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.completeButton, isLoading && styles.buttonDisabled]}
@@ -607,32 +527,6 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'right',
     marginBottom: 15,
-  },
-  premiumOption: {
-    backgroundColor: '#f8f9ff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: '#e8ebff',
-  },
-  premiumContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  premiumText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  premiumTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#B8860B',
-    marginBottom: 2,
-  },
-  premiumSubtitle: {
-    fontSize: 13,
-    color: '#666',
   },
   completeButton: {
     backgroundColor: '#B8860B',

@@ -48,7 +48,6 @@ exports.handleStripeWebhook = async (req, res) => {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
 
     res.json({ received: true });
@@ -70,7 +69,6 @@ async function handleCheckoutCompleted(session) {
   const customerId = session.customer;
   const subscriptionId = session.subscription;
 
-  console.log('Checkout completed for user:', userId);
 
   // Get premium plan ID
   const { data: premiumPlan } = await supabase
@@ -109,7 +107,6 @@ async function handleSubscriptionCreated(subscription) {
   const userId = subscription.metadata.supabase_user_id;
   const customerId = subscription.customer;
 
-  console.log('Subscription created for user:', userId);
 
   // Get premium plan ID
   const { data: premiumPlan } = await supabase
@@ -150,7 +147,6 @@ async function handleSubscriptionCreated(subscription) {
 async function handleSubscriptionUpdated(subscription) {
   const userId = subscription.metadata.supabase_user_id;
 
-  console.log('Subscription updated for user:', userId);
 
   const { error } = await supabase
     .from('user_subscriptions')
@@ -173,7 +169,6 @@ async function handleSubscriptionUpdated(subscription) {
 async function handleSubscriptionDeleted(subscription) {
   const userId = subscription.metadata.supabase_user_id;
 
-  console.log('Subscription cancelled for user:', userId);
 
   // Get free plan ID
   const { data: freePlan } = await supabase
@@ -210,7 +205,6 @@ async function handlePaymentSucceeded(invoice) {
   const customerId = invoice.customer;
   const subscriptionId = invoice.subscription;
 
-  console.log('Payment succeeded for subscription:', subscriptionId);
 
   // Get user from customer ID
   const { data: subscription } = await supabase
@@ -254,7 +248,6 @@ async function handlePaymentFailed(invoice) {
   const customerId = invoice.customer;
   const subscriptionId = invoice.subscription;
 
-  console.log('Payment failed for subscription:', subscriptionId);
 
   // Get user from customer ID
   const { data: subscription } = await supabase

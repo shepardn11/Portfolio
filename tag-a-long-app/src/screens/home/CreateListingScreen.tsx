@@ -306,9 +306,7 @@ export default function CreateListingScreen({ navigation }: Props) {
 
       if (photoUri && user?.id) {
         try {
-          console.log('Uploading activity photo...');
           uploadedPhotoUrl = await uploadImage(photoUri, user.id, 'listing-photos');
-          console.log('Photo uploaded successfully:', uploadedPhotoUrl);
         } catch (uploadError) {
           console.error('Photo upload failed:', uploadError);
           Alert.alert(
@@ -361,7 +359,6 @@ export default function CreateListingScreen({ navigation }: Props) {
         listingData.tagged_users = taggedUsers.map(u => u.id);
       }
 
-      console.log('Creating listing with data:', JSON.stringify(listingData, null, 2));
 
       const response = await apiClient.getInstance().post('/listings', listingData);
 

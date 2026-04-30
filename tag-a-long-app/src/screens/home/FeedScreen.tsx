@@ -18,7 +18,7 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HomeStackParamList, ActivityListing } from '../../types';
 import { Ionicons } from '@expo/vector-icons';
-import { listingAPI } from '../../api/endpoints';
+import { listingAPI, notificationAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
 import { useAuthStore } from '../../store/authStore';
 
@@ -38,6 +38,7 @@ export default function FeedScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [radius, setRadius] = useState(50);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { user } = useAuthStore();
   const locationInitialized = useRef(false);
 
@@ -117,6 +118,7 @@ export default function FeedScreen({ navigation }: Props) {
   useFocusEffect(
     useCallback(() => {
       fetchListings();
+      notificationAPI.getUnreadCount().then(setUnreadNotifications).catch(() => {});
     }, [fetchListings])
   );
 
@@ -129,9 +131,21 @@ export default function FeedScreen({ navigation }: Props) {
     <View>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tag A Long</Text>
-        <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
-          <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.headerIcon} onPress={() => navigation.navigate('Notifications')}>
+            <Ionicons name="notifications-outline" size={26} color="#333" />
+            {unreadNotifications > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
+            <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={styles.radiusBar}>
         <Ionicons name="location-outline" size={16} color="#666" />
@@ -251,6 +265,32 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     color: '#B8860B',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  headerIcon: {
+    padding: 5,
+    position: 'relative',
+  },
+  notifBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: '#ff3b30',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  notifBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   createButton: {
     padding: 5,

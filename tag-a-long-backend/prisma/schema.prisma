@@ -37,6 +37,8 @@ model User {
   messages          Message[]
   blocks_made       Block[]             @relation("BlocksMade")
   blocks_received   Block[]             @relation("BlocksReceived")
+  reports_made      Report[]            @relation("ReportsMade")
+  reports_received  Report[]            @relation("ReportsReceived")
 
   @@index([city])
   @@index([username])
@@ -164,6 +166,23 @@ model Message {
   @@index([conversation_id, created_at])
   @@index([sender_id])
   @@map("messages")
+}
+
+model Report {
+  id                String   @id @default(uuid())
+  reporter_id       String
+  reported_user_id  String
+  reason            String
+  description       String?
+  status            String   @default("pending")
+  created_at        DateTime @default(now())
+
+  reporter          User     @relation("ReportsMade", fields: [reporter_id], references: [id], onDelete: Cascade)
+  reported_user     User     @relation("ReportsReceived", fields: [reported_user_id], references: [id], onDelete: Cascade)
+
+  @@index([reported_user_id])
+  @@index([reporter_id])
+  @@map("reports")
 }
 
 model PasswordResetToken {

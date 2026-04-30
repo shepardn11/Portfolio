@@ -14,9 +14,8 @@ const listingsRoutes = require('./routes/listings');
 const requestsRoutes = require('./routes/requests');
 const notificationsRoutes = require('./routes/notifications');
 const messagesRoutes = require('./routes/messages');
-const subscriptionRoutes = require('./routes/subscriptionRoutes');
-const webhookRoutes = require('./routes/webhookRoutes');
 const safetyRoutes = require('./routes/safety');
+const uploadRoutes = require('./routes/upload');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,9 +29,6 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN?.split(',') || '*',
   credentials: true,
 }));
-
-// IMPORTANT: Webhook route needs raw body BEFORE express.json()
-app.use('/api/webhooks', webhookRoutes);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,7 +45,7 @@ app.use('/api/requests', requestsRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/safety', safetyRoutes);
-app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

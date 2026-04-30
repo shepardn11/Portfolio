@@ -37,16 +37,13 @@ export default function UserProfileScreen({ navigation, route }: Props) {
   const [isStartingConversation, setIsStartingConversation] = useState(false);
 
   useEffect(() => {
-    console.log('UserProfileScreen mounted with params:', routeParams);
     // If we have a user object, use it directly
     if (routeParams.user) {
-      console.log('Using provided user object');
       setUser(routeParams.user);
       setIsLoading(false);
     }
     // If we have a userId but no user object, fetch the user
     else if (routeParams.userId) {
-      console.log('UserProfileScreen: Fetching user with ID:', routeParams.userId);
       fetchUserProfile(routeParams.userId);
     } else {
       console.error('No user or userId provided');
@@ -60,12 +57,10 @@ export default function UserProfileScreen({ navigation, route }: Props) {
       setIsLoading(true);
       setError(null);
       const id = userId || routeParams.user?.id || routeParams.userId;
-      console.log('fetchUserProfile: Using ID:', id);
       if (!id) {
         throw new Error('No user ID provided');
       }
       const userData = await profileAPI.getUserById(id);
-      console.log('fetchUserProfile: Got user data:', userData);
       setUser(userData);
     } catch (err: any) {
       console.error('Fetch user profile error:', err);

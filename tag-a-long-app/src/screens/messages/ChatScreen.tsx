@@ -42,10 +42,25 @@ export default function ChatScreen({ route, navigation }: any) {
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  const handleBlockUser = () => {
+  const handleMenuPress = () => {
+    Alert.alert(otherUser.display_name, undefined, [
+      {
+        text: 'Report',
+        onPress: handleReportUser,
+      },
+      {
+        text: 'Block',
+        style: 'destructive',
+        onPress: confirmBlockUser,
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const confirmBlockUser = () => {
     Alert.alert(
       `Block ${otherUser.display_name}?`,
-      'They won\'t be able to message you and their conversations will be hidden. You can unblock them from your profile settings.',
+      "They won't be able to message you and their conversations will be hidden. You can unblock them from your profile settings.",
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -56,11 +71,40 @@ export default function ChatScreen({ route, navigation }: any) {
               await safetyAPI.blockUser(otherUser.id);
               Alert.alert('Blocked', `${otherUser.display_name} has been blocked.`);
               navigation.navigate('MessagesList');
-            } catch (error: any) {
+            } catch {
               Alert.alert('Error', 'Could not block user. Please try again.');
             }
           },
         },
+      ]
+    );
+  };
+
+  const handleReportUser = () => {
+    const REASONS: { label: string; value: string }[] = [
+      { label: 'Harassment', value: 'harassment' },
+      { label: 'Spam', value: 'spam' },
+      { label: 'Inappropriate content', value: 'inappropriate_content' },
+      { label: 'Fake account', value: 'fake_account' },
+      { label: 'Other', value: 'other' },
+    ];
+
+    Alert.alert(
+      'Report User',
+      'Why are you reporting this user?',
+      [
+        ...REASONS.map(r => ({
+          text: r.label,
+          onPress: async () => {
+            try {
+              await safetyAPI.reportUser(otherUser.id, r.value);
+              Alert.alert('Reported', 'Thank you for your report. We will review it shortly.');
+            } catch {
+              Alert.alert('Error', 'Could not submit report. Please try again.');
+            }
+          },
+        })),
+        { text: 'Cancel', style: 'cancel' },
       ]
     );
   };
@@ -201,7 +245,7 @@ export default function ChatScreen({ route, navigation }: any) {
             <Text style={styles.headerTitle}>{otherUser.display_name}</Text>
             <Text style={styles.headerSubtitle}>@{otherUser.username}</Text>
           </View>
-          <TouchableOpacity onPress={handleBlockUser} style={styles.blockButton}>
+          <TouchableOpacity onPress={handleMenuPress} style={styles.blockButton}>
             <Ionicons name="ellipsis-vertical" size={22} color="#333" />
           </TouchableOpacity>
         </View>

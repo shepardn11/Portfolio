@@ -15,7 +15,6 @@ const initializeFirebase = () => {
         }),
       });
       firebaseInitialized = true;
-      console.log('Firebase initialized successfully');
     } catch (error) {
       console.error('Firebase initialization error:', error.message);
     }
@@ -47,7 +46,6 @@ const sendPushNotification = async (fcmToken, notification) => {
 
   try {
     const response = await admin.messaging().send(message);
-    console.log('Successfully sent message:', response);
     return response;
   } catch (error) {
     console.error('Error sending message:', error);

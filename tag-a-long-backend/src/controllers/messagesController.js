@@ -51,28 +51,32 @@ const getConversations = async (req, res, next) => {
       orderBy: { updated_at: 'desc' },
     });
 
-    // Format conversations with the other user's info and last message
-    const formattedConversations = conversations.map(conv => {
-      const otherUser = conv.participant1 === userId ? conv.user2 : conv.user1;
-      const lastMessage = conv.messages[0] || null;
+    // Fetch all unread counts in a single query grouped by conversation
+    const conversationIds = conversations.map(c => c.id);
+    const unreadGroups = await prisma.message.groupBy({
+      by: ['conversation_id'],
+      where: {
+        conversation_id: { in: conversationIds },
+        sender_id: { not: userId },
+        is_read: false,
+      },
+      _count: { id: true },
+    });
+    const unreadMap = Object.fromEntries(
+      unreadGroups.map(g => [g.conversation_id, g._count.id])
+    );
 
-      // Count unread messages
-      return prisma.message.count({
-        where: {
-          conversation_id: conv.id,
-          sender_id: { not: userId },
-          is_read: false,
-        },
-      }).then(unreadCount => ({
+    // Format conversations with the other user's info and last message
+    const results = conversations.map(conv => {
+      const otherUser = conv.participant1 === userId ? conv.user2 : conv.user1;
+      return {
         id: conv.id,
         other_user: otherUser,
-        last_message: lastMessage,
-        unread_count: unreadCount,
+        last_message: conv.messages[0] || null,
+        unread_count: unreadMap[conv.id] ?? 0,
         updated_at: conv.updated_at,
-      }));
+      };
     });
-
-    const results = await Promise.all(formattedConversations);
 
     res.json({
       success: true,
@@ -105,6 +109,26 @@ const getOrCreateConversation = async (req, res, next) => {
         error: {
           code: 'INVALID_USER',
           message: 'Cannot create conversation with yourself',
+        },
+      });
+    }
+
+    // Check for block in either direction
+    const block = await prisma.block.findFirst({
+      where: {
+        OR: [
+          { blocker_id: userId, blocked_id: other_user_id },
+          { blocker_id: other_user_id, blocked_id: userId },
+        ],
+      },
+    });
+
+    if (block) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'BLOCKED',
+          message: 'Cannot start a conversation with this user',
         },
       });
     }
@@ -289,6 +313,27 @@ const sendMessage = async (req, res, next) => {
         error: {
           code: 'FORBIDDEN',
           message: 'Not part of this conversation',
+        },
+      });
+    }
+
+    // Check for block in either direction
+    const otherId = conversation.participant1 === userId ? conversation.participant2 : conversation.participant1;
+    const block = await prisma.block.findFirst({
+      where: {
+        OR: [
+          { blocker_id: userId, blocked_id: otherId },
+          { blocker_id: otherId, blocked_id: userId },
+        ],
+      },
+    });
+
+    if (block) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'BLOCKED',
+          message: 'Cannot send a message to this user',
         },
       });
     }

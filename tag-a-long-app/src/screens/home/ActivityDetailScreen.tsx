@@ -87,8 +87,6 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
     try {
       setIsLoading(true);
       const data = await listingAPI.getById(activityId);
-      console.log('Fetched activity data:', data);
-      console.log('Activity user_id:', data.user_id);
       setListing(data);
 
       // If it's own activity, fetch requests
@@ -388,7 +386,6 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
           <TouchableOpacity
             style={styles.hostSection}
             onPress={() => {
-              console.log('Navigating to host profile, user_id:', listing.user_id);
               if (listing.user_id) {
                 navigation.navigate('UserProfile', { userId: listing.user_id });
               } else {

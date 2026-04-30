@@ -22,6 +22,7 @@ import MessagesScreen from '../screens/messages/MessagesScreen';
 import ChatScreen from '../screens/messages/ChatScreen';
 import MyActivitiesScreen from '../screens/activities/MyActivitiesScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import { HomeStackParamList, SearchStackParamList, ActivitiesStackParamList, MessagesStackParamList } from '../types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -39,6 +40,7 @@ function HomeNavigator() {
       <HomeStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
       <HomeStack.Screen name="CreateActivity" component={CreateListingScreen} />
       <HomeStack.Screen name="UserProfile" component={UserProfileScreen} />
+      <HomeStack.Screen name="Notifications" component={NotificationsScreen} />
     </HomeStack.Navigator>
   );
 }

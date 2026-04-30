@@ -333,32 +333,3 @@ export const messageAPI = {
   },
 };
 
-// ============================================================================
-// SUBSCRIPTION ENDPOINTS
-// ============================================================================
-
-export const subscriptionAPI = {
-  // Create checkout session
-  createCheckout: async () => {
-    const response = await api.post('/subscription/create-checkout');
-    return response.data;
-  },
-
-  // Cancel subscription
-  cancel: async (immediate = false) => {
-    const response = await api.post('/subscription/cancel', { immediate });
-    return response.data;
-  },
-
-  // Get subscription status
-  getStatus: async () => {
-    const response = await api.get('/subscription/status');
-    return response.data;
-  },
-
-  // Check if premium
-  isPremium: async (): Promise<boolean> => {
-    const response = await api.get('/subscription/is-premium');
-    return response.data.isPremium;
-  },
-};

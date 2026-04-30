@@ -5,6 +5,7 @@ const notificationsController = require('../controllers/notificationsController'
 const router = express.Router();
 
 router.get('/', authenticateToken, notificationsController.getNotifications);
+router.get('/unread-count', authenticateToken, notificationsController.getUnreadCount);
 router.put('/:id/read', authenticateToken, notificationsController.markAsRead);
 router.put('/read-all', authenticateToken, notificationsController.markAllAsRead);
 router.post('/register-token', authenticateToken, notificationsController.registerToken);

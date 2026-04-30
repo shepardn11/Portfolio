@@ -11,7 +11,9 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
 import { useAuthStore } from '../../store/authStore';
@@ -33,7 +35,11 @@ export default function SignupScreen({ navigation }: Props) {
   const [username, setUsername] = useState('');
   const [city, setCity] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const { signup, isLoading } = useAuthStore();
+
+  const PRIVACY_URL = 'https://tagalong.app/privacy';
+  const TERMS_URL = 'https://tagalong.app/terms';
 
   const handleSignup = async () => {
     // Validation
@@ -76,8 +82,23 @@ export default function SignupScreen({ navigation }: Props) {
       return;
     }
 
+    // Enforce minimum age of 18
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    if (age < 18) {
+      Alert.alert('Age Requirement', 'You must be at least 18 years old to use Tag-A-Long.');
+      return;
+    }
+
+    if (!agreedToTerms) {
+      Alert.alert('Agreement Required', 'Please accept the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
+
     try {
-      console.log('Attempting signup with:', { email, displayName, username, city, dateOfBirth });
       await signup({
         email,
         password,
@@ -86,11 +107,8 @@ export default function SignupScreen({ navigation }: Props) {
         city,
         date_of_birth: dateOfBirth
       });
-      console.log('Signup successful!');
-      console.log('DEBUG: About to navigate to ProfileSetup');
       // Navigate to profile setup to add photos and bio
       navigation.navigate('ProfileSetup');
-      console.log('DEBUG: navigation.navigate(ProfileSetup) called');
     } catch (error: any) {
       console.error('Signup error:', error);
       console.error('Signup error response:', error.response?.data);
@@ -203,10 +221,33 @@ export default function SignupScreen({ navigation }: Props) {
               autoCorrect={false}
             />
 
+            {/* Terms agreement */}
             <TouchableOpacity
-              style={[styles.signupButton, isLoading && styles.buttonDisabled]}
+              style={styles.termsRow}
+              onPress={() => setAgreedToTerms(!agreedToTerms)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={agreedToTerms ? 'checkbox' : 'square-outline'}
+                size={22}
+                color={agreedToTerms ? '#B8860B' : '#aaa'}
+              />
+              <Text style={styles.termsText}>
+                I agree to the{' '}
+                <Text style={styles.termsLink} onPress={() => Linking.openURL(TERMS_URL)}>
+                  Terms of Service
+                </Text>
+                {' '}and{' '}
+                <Text style={styles.termsLink} onPress={() => Linking.openURL(PRIVACY_URL)}>
+                  Privacy Policy
+                </Text>
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.signupButton, (isLoading || !agreedToTerms) && styles.buttonDisabled]}
               onPress={handleSignup}
-              disabled={isLoading}
+              disabled={isLoading || !agreedToTerms}
             >
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
@@ -280,6 +321,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginBottom: 2,
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#555',
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: '#B8860B',
+    fontWeight: '600',
   },
   signupButton: {
     backgroundColor: '#B8860B',

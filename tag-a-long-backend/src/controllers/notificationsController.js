@@ -45,6 +45,17 @@ const getNotifications = async (req, res, next) => {
   }
 };
 
+const getUnreadCount = async (req, res, next) => {
+  try {
+    const unread_count = await prisma.notification.count({
+      where: { user_id: req.user.id, is_read: false },
+    });
+    res.json({ success: true, data: { unread_count } });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const markAsRead = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -182,6 +193,7 @@ const unregisterToken = async (req, res, next) => {
 
 module.exports = {
   getNotifications,
+  getUnreadCount,
   markAsRead,
   markAllAsRead,
   registerToken,

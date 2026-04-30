@@ -65,4 +65,54 @@ const isBlocked = async (req, res, next) => {
   }
 };
 
-module.exports = { blockUser, unblockUser, getBlockedUsers, isBlocked };
+const VALID_REASONS = ['harassment', 'spam', 'inappropriate_content', 'fake_account', 'other'];
+
+const reportUser = async (req, res, next) => {
+  try {
+    const { reported_user_id, reason, description } = req.body;
+    const reporterId = req.user.id;
+
+    if (!reported_user_id || !reason) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_FIELDS', message: 'reported_user_id and reason are required' },
+      });
+    }
+
+    if (reported_user_id === reporterId) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID', message: 'You cannot report yourself' },
+      });
+    }
+
+    if (!VALID_REASONS.includes(reason)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_REASON', message: 'Invalid report reason' },
+      });
+    }
+
+    const report = await prisma.report.create({
+      data: { reporter_id: reporterId, reported_user_id, reason, description },
+    });
+
+    res.status(201).json({ success: true, data: report });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getMyReports = async (req, res, next) => {
+  try {
+    const reports = await prisma.report.findMany({
+      where: { reporter_id: req.user.id },
+      orderBy: { created_at: 'desc' },
+    });
+    res.json({ success: true, data: reports });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { blockUser, unblockUser, getBlockedUsers, isBlocked, reportUser, getMyReports };
