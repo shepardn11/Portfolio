@@ -12,6 +12,7 @@ import {
   Platform,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { messageAPI, safetyAPI } from '../../api/endpoints';
