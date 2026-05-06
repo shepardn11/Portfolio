@@ -38,8 +38,8 @@ export default function SignupScreen({ navigation }: Props) {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const { signup, isLoading } = useAuthStore();
 
-  const PRIVACY_URL = 'https://tagalong.app/privacy';
-  const TERMS_URL = 'https://tagalong.app/terms';
+  const PRIVACY_URL = 'https://maddening-sodium-7eb.notion.site/Tag-A-Long-Privacy-Policy-35843955dac980749da8ef205ab7a8d6';
+  const TERMS_URL = 'https://maddening-sodium-7eb.notion.site/Tag-A-Long-Terms-of-Service-35843955dac98002853bcc3efa059da6';
 
   const handleSignup = async () => {
     // Validation

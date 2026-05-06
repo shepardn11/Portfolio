@@ -386,11 +386,11 @@ export default function ProfileScreen() {
 
               {/* Legal Links */}
               <View style={styles.legalRow}>
-                <TouchableOpacity onPress={() => Linking.openURL('https://tagalong.app/privacy')}>
+                <TouchableOpacity onPress={() => Linking.openURL('https://maddening-sodium-7eb.notion.site/Tag-A-Long-Privacy-Policy-35843955dac980749da8ef205ab7a8d6')}>
                   <Text style={styles.legalLink}>Privacy Policy</Text>
                 </TouchableOpacity>
                 <Text style={styles.legalDot}>·</Text>
-                <TouchableOpacity onPress={() => Linking.openURL('https://tagalong.app/terms')}>
+                <TouchableOpacity onPress={() => Linking.openURL('https://maddening-sodium-7eb.notion.site/Tag-A-Long-Terms-of-Service-35843955dac98002853bcc3efa059da6')}>
                   <Text style={styles.legalLink}>Terms of Service</Text>
                 </TouchableOpacity>
               </View>
