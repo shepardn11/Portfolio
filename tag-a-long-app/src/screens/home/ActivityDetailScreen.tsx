@@ -246,7 +246,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       social: 'people',
       music: 'musical-notes',
       gaming: 'game-controller',
-      travel: 'airplane',
+      travel: 'car',
       arts: 'color-palette',
       nightlife: 'moon',
       wellness: 'heart',

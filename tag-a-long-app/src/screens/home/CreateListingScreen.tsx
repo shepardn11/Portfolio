@@ -141,7 +141,7 @@ export default function CreateListingScreen({ navigation }: Props) {
     { value: 'social', label: '👥 Social', icon: 'people' },
     { value: 'music', label: '🎵 Music', icon: 'musical-notes' },
     { value: 'gaming', label: '🎮 Gaming', icon: 'game-controller' },
-    { value: 'travel', label: '✈️ Travel', icon: 'airplane' },
+    { value: 'travel', label: '🚗 Travel', icon: 'car' },
     { value: 'arts', label: '🎨 Arts & Culture', icon: 'color-palette' },
     { value: 'nightlife', label: '🌙 Nightlife', icon: 'moon' },
     { value: 'wellness', label: '🧘 Wellness', icon: 'heart' },

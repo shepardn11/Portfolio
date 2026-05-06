@@ -40,7 +40,7 @@ const CATEGORIES = [
   { value: 'social', label: 'Social', emoji: '👥' },
   { value: 'music', label: 'Music', emoji: '🎵' },
   { value: 'gaming', label: 'Gaming', emoji: '🎮' },
-  { value: 'travel', label: 'Travel', emoji: '✈️' },
+  { value: 'travel', label: 'Travel', emoji: '🚗' },
   { value: 'arts', label: 'Arts & Culture', emoji: '🎨' },
   { value: 'nightlife', label: 'Nightlife', emoji: '🌙' },
   { value: 'wellness', label: 'Wellness', emoji: '🧘' },
