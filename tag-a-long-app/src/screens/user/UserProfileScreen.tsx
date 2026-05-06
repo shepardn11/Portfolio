@@ -6,7 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   ScrollView,
-  Image,
+
   TouchableOpacity,
   ActivityIndicator,
   Alert,
@@ -14,6 +14,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { SearchStackParamList, HomeStackParamList, ActivitiesStackParamList, User } from '../../types';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { profileAPI, messageAPI } from '../../api/endpoints';
 

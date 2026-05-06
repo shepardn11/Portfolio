@@ -9,10 +9,11 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
+
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SearchStackParamList, User } from '../../types';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { profileAPI } from '../../api/endpoints';
 

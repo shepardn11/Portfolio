@@ -5,9 +5,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
+
   Dimensions,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityListing } from '../types';
 
@@ -77,7 +78,7 @@ export default function ListingCard({ listing, onPress, pendingRequestCount }: L
         <Image
           source={{ uri: listing.photo_url || listing.profile_photo_url }}
           style={styles.featuredImage}
-          resizeMode="cover"
+          contentFit="cover"
         />
       ) : (
         <View style={[styles.featuredImage, styles.placeholderImage]}>

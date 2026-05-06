@@ -6,7 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Image,
+
   ScrollView,
   Modal,
   TextInput,
@@ -19,6 +19,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { profileAPI, safetyAPI } from '../../api/endpoints';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadImage } from '../../utils/imageUpload';
@@ -265,7 +266,7 @@ export default function ProfileScreen() {
                 <View style={styles.galleryGrid}>
                   {user.photo_gallery.map((photoUrl: string, index: number) => (
                     <View key={index} style={styles.galleryPhotoContainer}>
-                      <Image source={{ uri: photoUrl }} style={styles.galleryPhoto} resizeMode="cover" />
+                      <Image source={{ uri: photoUrl }} style={styles.galleryPhoto} contentFit="cover" />
                     </View>
                   ))}
                 </View>

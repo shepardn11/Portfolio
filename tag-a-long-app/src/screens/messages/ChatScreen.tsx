@@ -10,10 +10,11 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Image,
+
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { messageAPI, safetyAPI } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';

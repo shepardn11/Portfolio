@@ -7,10 +7,11 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
-  Image,
+
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { messageAPI } from '../../api/endpoints';
 import { useFocusEffect } from '@react-navigation/native';

@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   FlatList,
   TextInput,
-  Image,
+
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { profileAPI } from '../api/endpoints';
 

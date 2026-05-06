@@ -11,11 +11,12 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Image,
+
   Modal,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../types';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';

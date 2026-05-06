@@ -11,13 +11,14 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  Image,
+
   Linking,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { profileAPI } from '../../api/endpoints';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';

@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
+
   ActivityIndicator,
   Alert,
   Dimensions,
@@ -20,6 +20,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { HomeStackParamList, ActivityListing } from '../../types';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { listingAPI, requestAPI } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
@@ -301,7 +302,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             uri: listing.photo_url || listing.profile_photo_url || 'https://via.placeholder.com/400x300',
           }}
           style={styles.featuredImage}
-          resizeMode="cover"
+          contentFit="cover"
         />
 
         {/* Content */}
