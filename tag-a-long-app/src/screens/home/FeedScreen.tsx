@@ -31,6 +31,25 @@ interface Props {
 const RADIUS_OPTIONS = [10, 25, 50, 100];
 const RADIUS_KEY = 'feed_radius_miles';
 
+const CATEGORIES = [
+  { value: 'sports', label: 'Sports', emoji: '⚽' },
+  { value: 'food', label: 'Food & Dining', emoji: '🍽️' },
+  { value: 'entertainment', label: 'Entertainment', emoji: '🎬' },
+  { value: 'outdoor', label: 'Outdoors', emoji: '🏞️' },
+  { value: 'fitness', label: 'Fitness', emoji: '💪' },
+  { value: 'social', label: 'Social', emoji: '👥' },
+  { value: 'music', label: 'Music', emoji: '🎵' },
+  { value: 'gaming', label: 'Gaming', emoji: '🎮' },
+  { value: 'travel', label: 'Travel', emoji: '✈️' },
+  { value: 'arts', label: 'Arts & Culture', emoji: '🎨' },
+  { value: 'nightlife', label: 'Nightlife', emoji: '🌙' },
+  { value: 'wellness', label: 'Wellness', emoji: '🧘' },
+  { value: 'volunteering', label: 'Volunteering', emoji: '🤝' },
+  { value: 'learning', label: 'Learning', emoji: '📚' },
+  { value: 'pets', label: 'Pets', emoji: '🐾' },
+  { value: 'other', label: 'Other', emoji: '✨' },
+];
+
 export default function FeedScreen({ navigation }: Props) {
   const [listings, setListings] = useState<ActivityListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +58,7 @@ export default function FeedScreen({ navigation }: Props) {
   const [radius, setRadius] = useState(50);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { user } = useAuthStore();
   const locationInitialized = useRef(false);
 
@@ -169,6 +189,28 @@ export default function FeedScreen({ navigation }: Props) {
           </TouchableOpacity>
         )}
       </View>
+
+      {/* Category Filter */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryBar}>
+        <TouchableOpacity
+          style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
+          onPress={() => setSelectedCategory(null)}
+        >
+          <Text style={[styles.categoryChipText, !selectedCategory && styles.categoryChipTextActive]}>All</Text>
+        </TouchableOpacity>
+        {CATEGORIES.map(cat => (
+          <TouchableOpacity
+            key={cat.value}
+            style={[styles.categoryChip, selectedCategory === cat.value && styles.categoryChipActive]}
+            onPress={() => setSelectedCategory(selectedCategory === cat.value ? null : cat.value)}
+          >
+            <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+            <Text style={[styles.categoryChipText, selectedCategory === cat.value && styles.categoryChipTextActive]}>
+              {cat.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   );
 
@@ -219,7 +261,7 @@ export default function FeedScreen({ navigation }: Props) {
         </>
       ) : (
         <FlatList
-          data={listings}
+          data={selectedCategory ? listings.filter(l => l.category === selectedCategory) : listings}
           keyExtractor={(item) => item.id}
           ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
@@ -334,6 +376,40 @@ const styles = StyleSheet.create({
   },
   radiusChipTextActive: {
     color: '#fff',
+  },
+  categoryBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f9fafb',
+    gap: 4,
+  },
+  categoryChipActive: {
+    backgroundColor: '#B8860B',
+    borderColor: '#B8860B',
+  },
+  categoryEmoji: {
+    fontSize: 13,
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#555',
+  },
+  categoryChipTextActive: {
+    color: '#fff',
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,

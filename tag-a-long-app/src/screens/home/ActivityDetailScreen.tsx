@@ -244,6 +244,15 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       outdoor: 'leaf',
       fitness: 'barbell',
       social: 'people',
+      music: 'musical-notes',
+      gaming: 'game-controller',
+      travel: 'airplane',
+      arts: 'color-palette',
+      nightlife: 'moon',
+      wellness: 'heart',
+      volunteering: 'hand-left',
+      learning: 'book',
+      pets: 'paw',
       other: 'apps',
     };
     return icons[category] || 'apps';
@@ -257,6 +266,15 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       outdoor: '#22c55e',
       fitness: '#ef4444',
       social: '#3b82f6',
+      music: '#ec4899',
+      gaming: '#6366f1',
+      travel: '#0ea5e9',
+      arts: '#f97316',
+      nightlife: '#7c3aed',
+      wellness: '#14b8a6',
+      volunteering: '#84cc16',
+      learning: '#eab308',
+      pets: '#d97706',
       other: '#6b7280',
     };
     return colors[category] || '#6b7280';
