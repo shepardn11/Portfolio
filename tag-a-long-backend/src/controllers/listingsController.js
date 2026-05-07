@@ -450,6 +450,9 @@ const searchListings = async (req, res, next) => {
     if (!query || query.trim().length === 0) {
       return res.json({ success: true, data: [] });
     }
+    if (query.length > 100) {
+      return res.status(400).json({ success: false, error: { code: 'QUERY_TOO_LONG', message: 'Search query cannot exceed 100 characters' } });
+    }
 
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 

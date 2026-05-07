@@ -14,10 +14,13 @@ const getMailTransport = () => nodemailer.createTransport({
 
 const sendPhoneOtp = async (req, res, next) => {
   try {
-    const { phone } = req.body;
+    let { phone } = req.body;
     if (!phone) {
       return res.status(400).json({ success: false, error: { code: 'MISSING_PHONE', message: 'Phone number is required' } });
     }
+
+    // Normalize to E.164: keep leading + and digits only
+    phone = '+' + phone.replace(/\D/g, '');
 
     const existingUser = await prisma.user.findFirst({ where: { phone } });
     if (existingUser) {
@@ -34,7 +37,8 @@ const sendPhoneOtp = async (req, res, next) => {
 
 const signup = async (req, res, next) => {
   try {
-    const { email, password, display_name, username, bio, date_of_birth, city, instagram_handle, phone, otp_code } = req.body;
+    const { email, password, display_name, username, bio, date_of_birth, city, instagram_handle, otp_code } = req.body;
+    const phone = '+' + (req.body.phone || '').replace(/\D/g, '');
 
     // Verify phone OTP via Twilio Verify
     const approved = await checkVerification(phone, otp_code);
@@ -168,6 +172,9 @@ const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, error: { code: 'MISSING_EMAIL', message: 'Email is required' } });
+
+    // Clean up expired tokens
+    await prisma.passwordResetToken.deleteMany({ where: { expires_at: { lt: new Date() } } });
 
     const user = await prisma.user.findUnique({ where: { email } });
 
