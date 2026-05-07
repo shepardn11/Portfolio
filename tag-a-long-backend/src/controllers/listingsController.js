@@ -16,7 +16,7 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
 
 const getFeed = async (req, res, next) => {
   try {
-    const { city, lat, lng, radius = 50, limit = 50, offset = 0 } = req.query;
+    const { city, lat, lng, radius = 50, limit = 50, offset = 0, min_age, max_age } = req.query;
     const userLat = lat ? parseFloat(lat) : null;
     const userLng = lng ? parseFloat(lng) : null;
     const radiusMiles = parseFloat(radius);
@@ -31,6 +31,7 @@ const getFeed = async (req, res, next) => {
       date: { gte: thirtyMinutesAgo },
     };
 
+
     // Get listings
     const listings = await prisma.listing.findMany({
       where,
@@ -43,6 +44,7 @@ const getFeed = async (req, res, next) => {
             username: true,
             display_name: true,
             profile_photo_url: true,
+            date_of_birth: true,
           },
         },
         requests: {
@@ -72,6 +74,10 @@ const getFeed = async (req, res, next) => {
 
     // Filter by date expiry and optional radius
     const now = new Date();
+    if (min_age || max_age) {
+      console.log('[Age filter] min_age:', min_age, 'max_age:', max_age, 'listings count:', listings.length);
+      listings.forEach(l => console.log('  user dob:', l.user.date_of_birth, 'username:', l.user.username));
+    }
     const formattedListings = listings
       .filter(listing => {
         // Radius filter using creator's GPS coords (accurate, no geocoding)
@@ -80,7 +86,14 @@ const getFeed = async (req, res, next) => {
             const dist = haversineDistance(userLat, userLng, listing.latitude, listing.longitude);
             if (dist > radiusMiles) return false;
           }
-          // No coordinates stored — include it regardless
+        }
+
+        // Age filter based on listing creator's date_of_birth
+        if ((min_age || max_age) && listing.user.date_of_birth) {
+          const dob = new Date(listing.user.date_of_birth);
+          const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+          if (min_age && age < parseInt(min_age)) return false;
+          if (max_age && age > parseInt(max_age)) return false;
         }
 
         // Filter expired activities

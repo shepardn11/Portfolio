@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const prisma = require('../config/database');
 const { generateToken } = require('../utils/jwt');
+const { sendOTP } = require('../utils/twilio');
 
 const getMailTransport = () => nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -11,9 +12,49 @@ const getMailTransport = () => nodemailer.createTransport({
   auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
 });
 
+const sendPhoneOtp = async (req, res, next) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ success: false, error: { code: 'MISSING_PHONE', message: 'Phone number is required' } });
+    }
+
+    const existingUser = await prisma.user.findFirst({ where: { phone } });
+    if (existingUser) {
+      return res.status(400).json({ success: false, error: { code: 'PHONE_IN_USE', message: 'Phone number already registered' } });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.phoneVerification.upsert({
+      where: { phone },
+      create: { phone, otp_hash: otpHash, expires_at: expiresAt },
+      update: { otp_hash: otpHash, expires_at: expiresAt },
+    });
+
+    await sendOTP(phone, otp);
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const signup = async (req, res, next) => {
   try {
-    const { email, password, display_name, username, bio, date_of_birth, city, instagram_handle } = req.body;
+    const { email, password, display_name, username, bio, date_of_birth, city, instagram_handle, phone, otp_code } = req.body;
+
+    // Verify phone OTP
+    const verification = await prisma.phoneVerification.findUnique({ where: { phone } });
+    const otpHash = crypto.createHash('sha256').update(otp_code).digest('hex');
+
+    if (!verification || verification.otp_hash !== otpHash || verification.expires_at < new Date()) {
+      return res.status(400).json({ success: false, error: { code: 'INVALID_OTP', message: 'Invalid or expired verification code' } });
+    }
+
+    await prisma.phoneVerification.delete({ where: { phone } });
 
     // Hash password
     const password_hash = await bcrypt.hash(password, 10);
@@ -29,6 +70,8 @@ const signup = async (req, res, next) => {
         date_of_birth: new Date(date_of_birth),
         city,
         instagram_handle: instagram_handle || null,
+        phone,
+        phone_verified: true,
       },
       select: {
         id: true,
@@ -225,6 +268,7 @@ const deleteAccount = async (req, res, next) => {
 };
 
 module.exports = {
+  sendPhoneOtp,
   signup,
   login,
   logout,

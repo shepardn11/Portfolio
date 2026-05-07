@@ -23,6 +23,7 @@ model User {
   instagram_handle  String?
   date_of_birth     DateTime
   is_active         Boolean             @default(true)
+  phone_verified    Boolean             @default(false)
   token_version     Int                 @default(0)
   created_at        DateTime            @default(now())
   last_active       DateTime            @default(now())
@@ -195,4 +196,14 @@ model PasswordResetToken {
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("password_reset_tokens")
+}
+
+model PhoneVerification {
+  id         String   @id @default(uuid())
+  phone      String   @unique
+  otp_hash   String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  @@map("phone_verifications")
 }

@@ -24,6 +24,10 @@ const signupSchema = Joi.object({
     }),
   city: Joi.string().min(2).max(100).required(),
   instagram_handle: Joi.string().max(50).allow(''),
+  phone: Joi.string().pattern(/^\+[1-9]\d{1,14}$/).required().messages({
+    'string.pattern.base': 'Phone must be in E.164 format (e.g. +14155551234)',
+  }),
+  otp_code: Joi.string().length(6).pattern(/^\d+$/).required(),
 });
 
 const loginSchema = Joi.object({

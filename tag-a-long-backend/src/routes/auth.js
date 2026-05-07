@@ -7,6 +7,7 @@ const authController = require('../controllers/authController');
 
 const router = express.Router();
 
+router.post('/send-phone-otp', authLimiter, authController.sendPhoneOtp);
 router.post('/signup', authLimiter, validate(signupSchema), authController.signup);
 router.post('/login', authLimiter, validate(loginSchema), authController.login);
 router.post('/logout', authenticateToken, authController.logout);
