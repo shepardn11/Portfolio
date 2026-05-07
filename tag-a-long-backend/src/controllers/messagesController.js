@@ -285,10 +285,14 @@ const sendMessage = async (req, res, next) => {
     if (!content || !content.trim()) {
       return res.status(400).json({
         success: false,
-        error: {
-          code: 'EMPTY_MESSAGE',
-          message: 'Message content cannot be empty',
-        },
+        error: { code: 'EMPTY_MESSAGE', message: 'Message content cannot be empty' },
+      });
+    }
+
+    if (content.length > 500) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'MESSAGE_TOO_LONG', message: 'Message cannot exceed 500 characters' },
       });
     }
 
