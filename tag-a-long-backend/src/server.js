@@ -20,6 +20,9 @@ const uploadRoutes = require('./routes/upload');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Vercel's proxy so rate limiter sees real client IPs
+app.set('trust proxy', 1);
+
 // Initialize Firebase for push notifications
 initializeFirebase();
 

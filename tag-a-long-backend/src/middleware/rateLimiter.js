@@ -29,6 +29,21 @@ const authLimiter = rateLimit({
   },
 });
 
+// Stricter limiter for OTP sends (prevent Twilio bill abuse)
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  message: {
+    success: false,
+    error: {
+      code: 'OTP_RATE_LIMIT_EXCEEDED',
+      message: 'Too many verification attempts, please try again in 15 minutes',
+    },
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Limiter for creating listings (prevent spam)
 const createListingLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -42,4 +57,4 @@ const createListingLimiter = rateLimit({
   },
 });
 
-module.exports = { apiLimiter, authLimiter, createListingLimiter };
+module.exports = { apiLimiter, authLimiter, otpLimiter, createListingLimiter };
