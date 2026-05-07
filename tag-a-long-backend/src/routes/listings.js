@@ -9,6 +9,7 @@ const upload = require('../config/multer');
 const router = express.Router();
 
 router.get('/feed', authenticateToken, listingsController.getFeed);
+router.get('/search', authenticateToken, listingsController.searchListings);
 router.get('/my-listings', authenticateToken, listingsController.getMyListings);
 router.get('/:id', authenticateToken, listingsController.getListingById);
 

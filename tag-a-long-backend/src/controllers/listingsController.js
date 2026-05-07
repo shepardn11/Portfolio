@@ -444,9 +444,79 @@ const deleteListing = async (req, res, next) => {
   }
 };
 
+const searchListings = async (req, res, next) => {
+  try {
+    const { query } = req.query;
+    if (!query || query.trim().length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    const listings = await prisma.listing.findMany({
+      where: {
+        is_active: true,
+        date: { gte: thirtyMinutesAgo },
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+          { location: { contains: query, mode: 'insensitive' } },
+          { category: { contains: query, mode: 'insensitive' } },
+          { city: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      take: 30,
+      orderBy: { date: 'asc' },
+      include: {
+        user: {
+          select: {
+            username: true,
+            display_name: true,
+            profile_photo_url: true,
+          },
+        },
+        requests: {
+          where: { requester_id: req.user.id },
+          select: { id: true },
+        },
+      },
+    });
+
+    const now = new Date();
+    const formatted = listings
+      .filter(listing => {
+        if (listing.date) {
+          const activityDate = new Date(listing.date);
+          activityDate.setMinutes(activityDate.getMinutes() + 30);
+          return activityDate > now;
+        }
+        return true;
+      })
+      .map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        description: listing.description,
+        category: listing.category,
+        location: listing.location,
+        date: listing.date,
+        time: listing.time,
+        photo_url: listing.photo_url,
+        city: listing.city,
+        created_at: listing.created_at,
+        user: listing.user,
+        has_requested: listing.requests.length > 0,
+      }));
+
+    res.json({ success: true, data: formatted });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getFeed,
   getListingById,
+  searchListings,
   createListing,
   getMyListings,
   updateListing,
