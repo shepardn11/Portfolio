@@ -1,4 +1,4 @@
-// Profile Screen - User profile and settings
+﻿// Profile Screen - User profile and settings
 import React, { useCallback, useState } from 'react';
 import {
   View,
@@ -36,6 +36,9 @@ export default function ProfileScreen() {
   const [uploadingProfile, setUploadingProfile] = useState(false);
   const [blockedVisible, setBlockedVisible] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState<Array<{ id: string; display_name: string; username: string; profile_photo_url?: string }>>([]);
+  const [deleteVisible, setDeleteVisible] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -185,34 +188,27 @@ export default function ProfileScreen() {
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'This will permanently delete your account and all your data. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            Alert.prompt(
-              'Confirm Password',
-              'Enter your password to confirm account deletion.',
-              async (password) => {
-                if (!password) return;
-                try {
-                  await apiClient.getInstance().delete('/auth/account', { data: { password } });
-                  await logout();
-                } catch (e: any) {
-                  const msg = e.response?.data?.error?.message || 'Could not delete account.';
-                  Alert.alert('Error', msg);
-                }
-              },
-              'secure-text'
-            );
-          },
-        },
-      ]
-    );
+    setEditVisible(false);
+    setDeletePassword('');
+    setTimeout(() => setDeleteVisible(true), 400);
+  };
+
+  const confirmDeleteAccount = async () => {
+    if (!deletePassword) {
+      Alert.alert('Error', 'Please enter your password.');
+      return;
+    }
+    try {
+      setIsDeleting(true);
+      await apiClient.getInstance().delete('/auth/account', { data: { password: deletePassword } });
+      setDeleteVisible(false);
+      await logout();
+    } catch (e: any) {
+      const msg = e.response?.data?.error?.message || 'Could not delete account.';
+      Alert.alert('Error', msg);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -220,7 +216,7 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Profile</Text>
         <TouchableOpacity style={styles.editIcon} onPress={openEdit}>
-          <Ionicons name="pencil-outline" size={22} color="#B8860B" />
+          <Ionicons name="pencil-outline" size={22} color="#D4AF37" />
         </TouchableOpacity>
       </View>
 
@@ -293,7 +289,7 @@ export default function ProfileScreen() {
               <Text style={styles.modalTitle}>Edit Profile</Text>
               <TouchableOpacity onPress={handleSave} disabled={isSaving}>
                 {isSaving ? (
-                  <ActivityIndicator size="small" color="#B8860B" />
+                  <ActivityIndicator size="small" color="#D4AF37" />
                 ) : (
                   <Text style={styles.modalSave}>Save</Text>
                 )}
@@ -305,7 +301,7 @@ export default function ProfileScreen() {
               <Text style={styles.modalSectionTitle}>Profile Photo</Text>
               <TouchableOpacity style={styles.profilePhotoEdit} onPress={handleEditProfilePhoto} disabled={uploadingProfile}>
                 {uploadingProfile ? (
-                  <ActivityIndicator color="#B8860B" />
+                  <ActivityIndicator color="#D4AF37" />
                 ) : user?.profile_photo_url ? (
                   <>
                     <Image source={{ uri: user.profile_photo_url }} style={styles.editProfilePhoto} />
@@ -315,7 +311,7 @@ export default function ProfileScreen() {
                   </>
                 ) : (
                   <View style={styles.editProfilePhotoPlaceholder}>
-                    <Ionicons name="camera-outline" size={32} color="#B8860B" />
+                    <Ionicons name="camera-outline" size={32} color="#D4AF37" />
                     <Text style={styles.editPhotoPlaceholderText}>Add Photo</Text>
                   </View>
                 )}
@@ -352,7 +348,7 @@ export default function ProfileScreen() {
                   <View key={index} style={styles.editGalleryBox}>
                     {uploadingIndex === index ? (
                       <View style={styles.editGalleryPlaceholder}>
-                        <ActivityIndicator color="#B8860B" />
+                        <ActivityIndicator color="#D4AF37" />
                       </View>
                     ) : photo ? (
                       <>
@@ -366,12 +362,18 @@ export default function ProfileScreen() {
                       </>
                     ) : (
                       <TouchableOpacity style={styles.editGalleryPlaceholder} onPress={() => handleEditGalleryPhoto(index)}>
-                        <Ionicons name="add" size={28} color="#B8860B" />
+                        <Ionicons name="add" size={28} color="#D4AF37" />
                       </TouchableOpacity>
                     )}
                   </View>
                 ))}
               </View>
+
+              {/* Notification Settings */}
+              <TouchableOpacity style={styles.blockedUsersButton} onPress={() => Linking.openSettings()}>
+                <Ionicons name="notifications-outline" size={16} color="#aaa" />
+                <Text style={styles.blockedUsersText}>Notification Settings</Text>
+              </TouchableOpacity>
 
               {/* Delete Account */}
               <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
@@ -390,12 +392,55 @@ export default function ProfileScreen() {
                 <TouchableOpacity onPress={() => Linking.openURL('https://maddening-sodium-7eb.notion.site/Tag-A-Long-Privacy-Policy-35843955dac980749da8ef205ab7a8d6')}>
                   <Text style={styles.legalLink}>Privacy Policy</Text>
                 </TouchableOpacity>
-                <Text style={styles.legalDot}>·</Text>
+                <Text style={styles.legalDot}>Â·</Text>
                 <TouchableOpacity onPress={() => Linking.openURL('https://maddening-sodium-7eb.notion.site/Tag-A-Long-Terms-of-Service-35843955dac98002853bcc3efa059da6')}>
                   <Text style={styles.legalLink}>Terms of Service</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Delete Account Modal */}
+      <Modal visible={deleteVisible} animationType="slide" presentationStyle="pageSheet">
+        <SafeAreaView style={styles.modalContainer}>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setDeleteVisible(false)}>
+                <Text style={styles.modalCancel}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>Delete Account</Text>
+              <View style={{ width: 60 }} />
+            </View>
+            <View style={{ padding: 24 }}>
+              <Ionicons name="warning-outline" size={48} color="#ef4444" style={{ alignSelf: 'center', marginBottom: 16 }} />
+              <Text style={styles.deleteWarningTitle}>This cannot be undone</Text>
+              <Text style={styles.deleteWarningText}>
+                Deleting your account will permanently remove your profile, listings, messages, and all other data.
+              </Text>
+              <Text style={[styles.modalSectionTitle, { marginTop: 24 }]}>Enter your password to confirm</Text>
+              <TextInput
+                style={styles.cityInput}
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+                placeholder="Password"
+                secureTextEntry
+                autoComplete="off"
+                textContentType="none"
+              />
+              <TouchableOpacity
+                style={[styles.deleteConfirmButton, isDeleting && styles.buttonDisabled]}
+                onPress={confirmDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.deleteConfirmText}>Permanently Delete Account</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
@@ -454,7 +499,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#B8860B' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#D4AF37' },
   editIcon: { padding: 4 },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 40 },
@@ -467,7 +512,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  profilePhoto: { width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: '#B8860B' },
+  profilePhoto: { width: 110, height: 110, borderRadius: 55, borderWidth: 3, borderColor: '#D4AF37' },
   photoPlaceholder: {
     width: 110, height: 110, borderRadius: 55, backgroundColor: '#f5f5f5',
     justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#e0e0e0',
@@ -536,14 +581,14 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 17, fontWeight: '600', color: '#1a1a1a' },
   modalCancel: { fontSize: 16, color: '#888' },
-  modalSave: { fontSize: 16, fontWeight: '600', color: '#B8860B' },
+  modalSave: { fontSize: 16, fontWeight: '600', color: '#D4AF37' },
   modalContent: { padding: 20, paddingBottom: 40 },
   modalSectionTitle: { fontSize: 15, fontWeight: '600', color: '#333', marginTop: 24, marginBottom: 12 },
 
   profilePhotoEdit: {
     width: 110, height: 110, borderRadius: 55, alignSelf: 'center',
     overflow: 'hidden', backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#B8860B',
+    borderWidth: 2, borderColor: '#D4AF37',
   },
   editProfilePhoto: { width: '100%', height: '100%' },
   editPhotoOverlay: {
@@ -551,7 +596,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center',
   },
   editProfilePhotoPlaceholder: { alignItems: 'center', gap: 4 },
-  editPhotoPlaceholderText: { fontSize: 12, color: '#B8860B', fontWeight: '500' },
+  editPhotoPlaceholderText: { fontSize: 12, color: '#D4AF37', fontWeight: '500' },
 
   bioInput: {
     borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 10, padding: 12,
@@ -575,4 +620,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center',
   },
   removePhotoBtn: { position: 'absolute', top: 6, right: 6, zIndex: 2 },
+  buttonDisabled: { opacity: 0.6 },
+  deleteWarningTitle: { fontSize: 20, fontWeight: '700', color: '#ef4444', textAlign: 'center', marginBottom: 10 },
+  deleteWarningText: { fontSize: 15, color: '#555', textAlign: 'center', lineHeight: 22 },
+  deleteConfirmButton: {
+    backgroundColor: '#ef4444', borderRadius: 10, padding: 16,
+    alignItems: 'center', marginTop: 24,
+  },
+  deleteConfirmText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

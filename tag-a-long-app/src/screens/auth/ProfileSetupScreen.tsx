@@ -21,6 +21,7 @@ import { profileAPI } from '../../api/endpoints';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Notifications from 'expo-notifications';
 import apiClient from '../../api/client';
 import { uploadImage } from '../../utils/imageUpload';
 
@@ -247,8 +248,8 @@ export default function ProfileSetupScreen({ navigation }: Props) {
     }
   };
 
-  const completeSetup = () => {
-    // Mark profile setup as complete and authenticate user
+  const completeSetup = async () => {
+    await Notifications.requestPermissionsAsync();
     setProfileSetupComplete(true);
     setIsAuthenticated(true);
     setIsLoading(false);
@@ -287,7 +288,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
               >
                 {(() => {
                   if (isUploadingPhoto) {
-                    return <ActivityIndicator size="large" color="#B8860B" />;
+                    return <ActivityIndicator size="large" color="#D4AF37" />;
                   } else if (profilePhoto) {
                     return (
                       <View style={{ width: '100%', height: '100%' }}>
@@ -329,7 +330,7 @@ export default function ProfileSetupScreen({ navigation }: Props) {
                     disabled={isLoading || uploadingGalleryIndex !== null}
                   >
                     {uploadingGalleryIndex === index ? (
-                      <ActivityIndicator size="small" color="#B8860B" />
+                      <ActivityIndicator size="small" color="#D4AF37" />
                     ) : photo ? (
                       <View style={{ width: '100%', height: '100%' }}>
                         <Image
@@ -414,7 +415,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#B8860B',
+    color: '#D4AF37',
     marginBottom: 8,
   },
   subtitle: {
@@ -530,7 +531,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   completeButton: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     borderRadius: 10,
     padding: 16,
     alignItems: 'center',

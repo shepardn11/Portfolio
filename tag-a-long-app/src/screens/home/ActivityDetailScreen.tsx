@@ -289,7 +289,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#B8860B" />
+          <ActivityIndicator size="large" color="#D4AF37" />
           <Text style={styles.loadingText}>Loading activity...</Text>
         </View>
       </View>
@@ -306,7 +306,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
         <Text style={styles.headerTitle}>Activity Details</Text>
         {isOwnActivity ? (
           <TouchableOpacity onPress={openEdit} style={styles.editButton}>
-            <Ionicons name="pencil-outline" size={22} color="#B8860B" />
+            <Ionicons name="pencil-outline" size={22} color="#D4AF37" />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
@@ -432,7 +432,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
             <View style={styles.detailCard}>
               <View style={styles.detailRow}>
-                <Ionicons name="calendar" size={20} color="#B8860B" />
+                <Ionicons name="calendar" size={20} color="#D4AF37" />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Date</Text>
                   <Text style={styles.detailValue}>{formatDate(listing.date)}</Text>
@@ -441,7 +441,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
               {listing.time && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="time" size={20} color="#B8860B" />
+                  <Ionicons name="time" size={20} color="#D4AF37" />
                   <View style={styles.detailContent}>
                     <Text style={styles.detailLabel}>Time</Text>
                     <Text style={styles.detailValue}>{formatTime(listing.time)}</Text>
@@ -450,7 +450,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               )}
 
               <View style={styles.detailRow}>
-                <Ionicons name="location" size={20} color="#B8860B" />
+                <Ionicons name="location" size={20} color="#D4AF37" />
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>Location</Text>
                   <Text style={styles.detailValue}>{listing.location}</Text>
@@ -459,7 +459,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
               {listing.max_participants && (
                 <View style={styles.detailRow}>
-                  <Ionicons name="people" size={20} color="#B8860B" />
+                  <Ionicons name="people" size={20} color="#D4AF37" />
                   <View style={styles.detailContent}>
                     <Text style={styles.detailLabel}>Looking for</Text>
                     <Text style={styles.detailValue}>
@@ -531,7 +531,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               <Text style={styles.modalTitle}>Edit Activity</Text>
               <TouchableOpacity onPress={handleEditSave} disabled={isSaving}>
                 {isSaving ? (
-                  <ActivityIndicator size="small" color="#B8860B" />
+                  <ActivityIndicator size="small" color="#D4AF37" />
                 ) : (
                   <Text style={styles.modalSave}>Save</Text>
                 )}
@@ -568,7 +568,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                   style={styles.dateTimeButton}
                   onPress={() => { setTempDate(editDate); setShowDatePicker(true); }}
                 >
-                  <Ionicons name="calendar-outline" size={18} color="#B8860B" />
+                  <Ionicons name="calendar-outline" size={18} color="#D4AF37" />
                   <Text style={styles.dateTimeButtonText}>
                     {editDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </Text>
@@ -577,7 +577,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                   style={styles.dateTimeButton}
                   onPress={() => { setTempTime(editTime); setShowTimePicker(true); }}
                 >
-                  <Ionicons name="time-outline" size={18} color="#B8860B" />
+                  <Ionicons name="time-outline" size={18} color="#D4AF37" />
                   <Text style={styles.dateTimeButtonText}>
                     {editTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </Text>
@@ -646,7 +646,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                     display="inline"
                     onChange={(_, d) => { if (d) { setEditDate(d); setTempDate(d); } }}
                     minimumDate={new Date()}
-                    accentColor="#B8860B"
+                    accentColor="#D4AF37"
                   />
                   <View style={styles.pickerFooter}>
                     <TouchableOpacity onPress={() => setShowDatePicker(false)}>
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
   modalSave: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   modalContent: {
     flex: 1,
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
   pickerDone: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   tagButton: {
     flexDirection: 'row',
@@ -887,7 +887,7 @@ const styles = StyleSheet.create({
   taggedUserName: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   headerTitle: {
     fontSize: 18,
@@ -1168,10 +1168,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     paddingVertical: 16,
     borderRadius: 12,
-    shadowColor: '#B8860B',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

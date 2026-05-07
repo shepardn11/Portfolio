@@ -1,4 +1,4 @@
-// My Activities Screen - User's created activities and requests
+﻿// My Activities Screen - User's created activities and requests
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -62,7 +62,7 @@ export default function MyActivitiesScreen() {
         style={styles.createButton}
         onPress={() => navigation.navigate('CreateActivity')}
       >
-        <Ionicons name="add-circle" size={48} color="#B8860B" />
+        <Ionicons name="add-circle" size={48} color="#D4AF37" />
       </TouchableOpacity>
     </View>
   );
@@ -85,11 +85,11 @@ export default function MyActivitiesScreen() {
           <View style={styles.header}>
             <Text style={styles.headerTitle}>My Activities</Text>
             <TouchableOpacity style={styles.headerCreateButton} onPress={() => navigation.navigate('CreateActivity')}>
-              <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+              <Ionicons name="add-circle-sharp" size={28} color="#D4AF37" />
             </TouchableOpacity>
           </View>
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#B8860B" />
+            <ActivityIndicator size="large" color="#D4AF37" />
             <Text style={styles.loadingText}>Loading your activities...</Text>
           </View>
         </>
@@ -98,7 +98,7 @@ export default function MyActivitiesScreen() {
           <View style={styles.header}>
             <Text style={styles.headerTitle}>My Activities</Text>
             <TouchableOpacity style={styles.headerCreateButton} onPress={() => navigation.navigate('CreateActivity')}>
-              <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+              <Ionicons name="add-circle-sharp" size={28} color="#D4AF37" />
             </TouchableOpacity>
           </View>
           {renderError()}
@@ -111,7 +111,7 @@ export default function MyActivitiesScreen() {
             <View style={styles.header}>
               <Text style={styles.headerTitle}>My Activities</Text>
               <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
-                <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+                <Ionicons name="add-circle-sharp" size={28} color="#D4AF37" />
               </TouchableOpacity>
             </View>
           }
@@ -131,8 +131,8 @@ export default function MyActivitiesScreen() {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={['#B8860B']}
-              tintColor="#B8860B"
+              colors={['#D4AF37']}
+              tintColor="#D4AF37"
             />
           }
         />
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   loadingContainer: {
     flex: 1,
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#B8860B',
+    color: '#D4AF37',
     marginTop: 16,
   },
   emptySubtitle: {
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#B8860B',
+    color: '#D4AF37',
     marginTop: 16,
   },
   errorText: {
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,

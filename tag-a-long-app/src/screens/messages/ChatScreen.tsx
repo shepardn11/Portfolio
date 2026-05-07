@@ -217,7 +217,7 @@ export default function ChatScreen({ route, navigation }: any) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#B8860B" />
+        <ActivityIndicator size="large" color="#D4AF37" />
       </View>
     );
   }
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   myMessageBubble: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     borderBottomRightRadius: 4,
   },
   otherMessageBubble: {
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     alignItems: 'center',
     justifyContent: 'center',
   },

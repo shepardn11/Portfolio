@@ -141,7 +141,7 @@ export default function MessagesScreen({ navigation }: any) {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#B8860B" />
+        <ActivityIndicator size="large" color="#D4AF37" />
       </View>
     );
   }
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   listContent: {
     paddingVertical: 8,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   timestamp: {
     fontSize: 13,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   unreadMessage: {
     fontWeight: '600',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   noMessages: {
     fontSize: 14,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   unreadBadge: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#B8860B',
+    color: '#D4AF37',
     marginTop: 16,
     marginBottom: 8,
   },

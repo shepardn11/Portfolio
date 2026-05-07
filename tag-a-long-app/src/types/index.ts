@@ -1,4 +1,4 @@
-// TypeScript Types for Tag-A-Long App
+﻿// TypeScript Types for Tag-A-Long App
 
 export interface User {
   id: string;
@@ -96,7 +96,11 @@ export interface SignupData {
   date_of_birth: string;
   bio?: string;
   instagram_handle?: string;
+  phone: string;
+  otp_code: string;
 }
+
+export type SignupFormData = Omit<SignupData, 'otp_code'>;
 
 // Navigation types
 export type RootStackParamList = {
@@ -107,6 +111,7 @@ export type RootStackParamList = {
 export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
+  PhoneVerification: { signupData: SignupFormData };
   ProfileSetup: undefined;
   ForgotPassword: undefined;
   ResetPassword: { email: string };
@@ -131,6 +136,7 @@ export type HomeStackParamList = {
 export type SearchStackParamList = {
   SearchMain: undefined;
   UserProfile: { user: User };
+  ActivityDetail: { activityId: string };
 };
 
 export type MessagesStackParamList = {

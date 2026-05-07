@@ -7,7 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, MainTabParamList } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { navigationRef } from './navigationRef';
-import { ActivityIndicator, View } from 'react-native';
+
+const TAB_ORDER = ['Home', 'Search', 'Messages', 'MyActivities', 'Profile'] as const;
+import { ActivityIndicator, View, PanResponder } from 'react-native';
 
 // Navigators
 import AuthNavigator from './AuthNavigator';
@@ -51,6 +53,7 @@ function SearchNavigator() {
     <SearchStack.Navigator screenOptions={{ headerShown: false }}>
       <SearchStack.Screen name="SearchMain" component={SearchScreen} />
       <SearchStack.Screen name="UserProfile" component={UserProfileScreen} />
+      <SearchStack.Screen name="ActivityDetail" component={ActivityDetailScreen} />
     </SearchStack.Navigator>
   );
 }
@@ -81,6 +84,25 @@ function ActivitiesNavigator() {
 function MainTabs() {
   const [unreadCount, setUnreadCount] = React.useState(0);
   const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0);
+  const currentTabIndex = React.useRef(0);
+
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        Math.abs(g.dx) > Math.abs(g.dy) * 1.5 && Math.abs(g.dx) > 30,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx < -60) {
+          const next = Math.min(currentTabIndex.current + 1, TAB_ORDER.length - 1);
+          if (next !== currentTabIndex.current)
+            navigationRef.current?.navigate(TAB_ORDER[next] as never);
+        } else if (g.dx > 60) {
+          const prev = Math.max(currentTabIndex.current - 1, 0);
+          if (prev !== currentTabIndex.current)
+            navigationRef.current?.navigate(TAB_ORDER[prev] as never);
+        }
+      },
+    })
+  ).current;
 
   // Fetch unread message count
   const fetchUnreadCount = async () => {
@@ -120,6 +142,7 @@ function MainTabs() {
   }, []);
 
   return (
+    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
@@ -139,7 +162,7 @@ function MainTabs() {
 
           return <Ionicons name={iconName} size={24} color={color} />;
         },
-        tabBarActiveTintColor: '#B8860B',
+        tabBarActiveTintColor: '#D4AF37',
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: false,
         tabBarStyle: {
@@ -154,8 +177,8 @@ function MainTabs() {
         headerShown: false,
       })}
       screenListeners={{
-        state: () => {
-          // Refresh counts when navigating between tabs
+        state: (e: any) => {
+          currentTabIndex.current = e.data?.state?.index ?? 0;
           fetchUnreadCount();
           fetchPendingRequests();
         },
@@ -213,6 +236,7 @@ function MainTabs() {
         options={{ tabBarLabel: 'Profile' }}
       />
     </Tab.Navigator>
+    </View>
   );
 }
 
@@ -227,7 +251,7 @@ export default function AppNavigator() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#B8860B" />
+        <ActivityIndicator size="large" color="#D4AF37" />
       </View>
     );
   }

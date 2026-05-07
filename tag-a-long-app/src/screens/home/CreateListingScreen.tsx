@@ -476,7 +476,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   onPress={takePhoto}
                   disabled={isLoading}
                 >
-                  <Ionicons name="camera" size={24} color="#B8860B" />
+                  <Ionicons name="camera" size={24} color="#D4AF37" />
                   <Text style={styles.photoButtonText}>Take Photo</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -484,7 +484,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   onPress={pickImage}
                   disabled={isLoading}
                 >
-                  <Ionicons name="images" size={24} color="#B8860B" />
+                  <Ionicons name="images" size={24} color="#D4AF37" />
                   <Text style={styles.photoButtonText}>Choose from Library</Text>
                 </TouchableOpacity>
               </View>
@@ -513,7 +513,7 @@ export default function CreateListingScreen({ navigation }: Props) {
               {/* Date Button/Picker */}
               {Platform.OS === 'web' ? (
                 <View style={styles.dateTimeButton}>
-                  <Ionicons name="calendar-outline" size={24} color="#B8860B" />
+                  <Ionicons name="calendar-outline" size={24} color="#D4AF37" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Date</Text>
                     <input
@@ -552,7 +552,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   }}
                   disabled={isLoading}
                 >
-                  <Ionicons name="calendar-outline" size={24} color="#B8860B" />
+                  <Ionicons name="calendar-outline" size={24} color="#D4AF37" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Date</Text>
                     <Text style={styles.buttonValue}>{formatDate(date)}</Text>
@@ -563,7 +563,7 @@ export default function CreateListingScreen({ navigation }: Props) {
               {/* Time Button/Picker */}
               {Platform.OS === 'web' ? (
                 <View style={styles.dateTimeButton}>
-                  <Ionicons name="time-outline" size={24} color="#B8860B" />
+                  <Ionicons name="time-outline" size={24} color="#D4AF37" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Time</Text>
                     <input
@@ -604,7 +604,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                   }}
                   disabled={isLoading}
                 >
-                  <Ionicons name="time-outline" size={24} color="#B8860B" />
+                  <Ionicons name="time-outline" size={24} color="#D4AF37" />
                   <View style={styles.buttonTextContainer}>
                     <Text style={styles.buttonLabel}>Time</Text>
                     <Text style={styles.buttonValue}>{formatTime(time)}</Text>
@@ -630,7 +630,7 @@ export default function CreateListingScreen({ navigation }: Props) {
                     display="inline"
                     onChange={handleDateChange}
                     minimumDate={new Date()}
-                    accentColor="#B8860B"
+                    accentColor="#D4AF37"
                   />
                   <View style={styles.pickerFooter}>
                     <TouchableOpacity onPress={confirmDate}>
@@ -878,8 +878,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   categoryButtonActive: {
-    backgroundColor: '#B8860B',
-    borderColor: '#B8860B',
+    backgroundColor: '#D4AF37',
+    borderColor: '#D4AF37',
   },
   categoryLabel: {
     fontSize: 14,
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   createButton: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     borderRadius: 10,
     padding: 16,
     flexDirection: 'row',
@@ -974,12 +974,12 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#B8860B',
+    borderColor: '#D4AF37',
   },
   photoButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#B8860B',
+    color: '#D4AF37',
     marginLeft: 8,
   },
   photoPreview: {
@@ -1031,7 +1031,7 @@ const styles = StyleSheet.create({
   taggedUserName: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   modalOverlay: {
     flex: 1,
@@ -1055,7 +1055,7 @@ const styles = StyleSheet.create({
   },
   pickerButton: {
     fontSize: 17,
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   pickerButtonDone: {
     fontWeight: '600',

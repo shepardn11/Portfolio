@@ -11,6 +11,13 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Modal,
+  Pressable,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+  Easing,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -22,6 +29,8 @@ import { listingAPI, notificationAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
 import { useAuthStore } from '../../store/authStore';
 
+const HEADER_HEIGHT = 72;
+
 type FeedScreenNavigationProp = NativeStackNavigationProp<HomeStackParamList, 'Feed'>;
 
 interface Props {
@@ -32,22 +41,22 @@ const RADIUS_OPTIONS = [10, 25, 50, 100];
 const RADIUS_KEY = 'feed_radius_miles';
 
 const CATEGORIES = [
-  { value: 'sports', label: 'Sports', emoji: '⚽' },
-  { value: 'food', label: 'Food & Dining', emoji: '🍽️' },
-  { value: 'entertainment', label: 'Entertainment', emoji: '🎬' },
-  { value: 'outdoor', label: 'Outdoors', emoji: '🏞️' },
-  { value: 'fitness', label: 'Fitness', emoji: '💪' },
-  { value: 'social', label: 'Social', emoji: '👥' },
-  { value: 'music', label: 'Music', emoji: '🎵' },
-  { value: 'gaming', label: 'Gaming', emoji: '🎮' },
-  { value: 'travel', label: 'Travel', emoji: '🚗' },
-  { value: 'arts', label: 'Arts & Culture', emoji: '🎨' },
-  { value: 'nightlife', label: 'Nightlife', emoji: '🌙' },
-  { value: 'wellness', label: 'Wellness', emoji: '🧘' },
-  { value: 'volunteering', label: 'Volunteering', emoji: '🤝' },
-  { value: 'learning', label: 'Learning', emoji: '📚' },
-  { value: 'pets', label: 'Pets', emoji: '🐾' },
-  { value: 'other', label: 'Other', emoji: '✨' },
+  { value: 'sports',        label: 'Sports',        emoji: '⚽' },
+  { value: 'food',          label: 'Food & Dining',  emoji: '🍽️' },
+  { value: 'entertainment', label: 'Entertainment',  emoji: '🎬' },
+  { value: 'outdoor',       label: 'Outdoors',       emoji: '🏞️' },
+  { value: 'fitness',       label: 'Fitness',        emoji: '💪' },
+  { value: 'social',        label: 'Social',         emoji: '👥' },
+  { value: 'music',         label: 'Music',          emoji: '🎵' },
+  { value: 'gaming',        label: 'Gaming',         emoji: '🎮' },
+  { value: 'travel',        label: 'Travel',         emoji: '🚗' },
+  { value: 'arts',          label: 'Arts & Culture', emoji: '🎨' },
+  { value: 'nightlife',     label: 'Nightlife',      emoji: '🌙' },
+  { value: 'wellness',      label: 'Wellness',       emoji: '🧘' },
+  { value: 'volunteering',  label: 'Volunteering',   emoji: '🤝' },
+  { value: 'learning',      label: 'Learning',       emoji: '📚' },
+  { value: 'pets',          label: 'Pets',           emoji: '🐾' },
+  { value: 'other',         label: 'Other',          emoji: '✨' },
 ];
 
 export default function FeedScreen({ navigation }: Props) {
@@ -58,9 +67,53 @@ export default function FeedScreen({ navigation }: Props) {
   const [radius, setRadius] = useState(50);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [minAge, setMinAge] = useState<number | null>(null);
+  const [maxAge, setMaxAge] = useState<number | null>(null);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [draftRadius, setDraftRadius] = useState(50);
+  const [draftMinAge, setDraftMinAge] = useState('');
+  const [draftMaxAge, setDraftMaxAge] = useState('');
+  const [draftCategories, setDraftCategories] = useState<string[]>([]);
   const { user } = useAuthStore();
   const locationInitialized = useRef(false);
+  const headerHeight = useRef(new Animated.Value(HEADER_HEIGHT)).current;
+  const lastScrollY = useRef(0);
+  const isHeaderVisible = useRef(true);
+  const isAnimating = useRef(false);
+
+  const handleScroll = useCallback((event: any) => {
+    const currentY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+    const diff = currentY - lastScrollY.current;
+    lastScrollY.current = currentY;
+
+    if (isAnimating.current) return;
+    if (currentY + layoutHeight >= contentHeight - 20) return;
+
+    if (diff > 4 && isHeaderVisible.current && currentY > HEADER_HEIGHT) {
+      isHeaderVisible.current = false;
+      isAnimating.current = true;
+      Animated.timing(headerHeight, {
+        toValue: 0,
+        duration: 250,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start(() => { isAnimating.current = false; });
+    } else if (diff < -4 && !isHeaderVisible.current) {
+      isHeaderVisible.current = true;
+      isAnimating.current = true;
+      Animated.timing(headerHeight, {
+        toValue: HEADER_HEIGHT,
+        duration: 250,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: false,
+      }).start(() => { isAnimating.current = false; });
+    }
+  }, []);
+
+  const filtersActive = radius !== 50 || minAge !== null || maxAge !== null || selectedCategories.length > 0;
 
   const requestLocation = async () => {
     const { status: existing } = await Location.getForegroundPermissionsAsync();
@@ -82,7 +135,6 @@ export default function FeedScreen({ navigation }: Props) {
               const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
               setUserCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
             } else {
-              // Permission denied by system — prompt again
               requestLocation();
             }
           },
@@ -94,12 +146,11 @@ export default function FeedScreen({ navigation }: Props) {
 
   const loadSavedRadius = async () => {
     const saved = await AsyncStorage.getItem(RADIUS_KEY);
-    if (saved) setRadius(parseInt(saved));
-  };
-
-  const saveRadius = async (value: number) => {
-    setRadius(value);
-    await AsyncStorage.setItem(RADIUS_KEY, String(value));
+    if (saved) {
+      const val = parseInt(saved);
+      setRadius(val);
+      setDraftRadius(val);
+    }
   };
 
   useEffect(() => {
@@ -113,9 +164,11 @@ export default function FeedScreen({ navigation }: Props) {
   const fetchListings = useCallback(async () => {
     try {
       setError(null);
-      const options = userCoords
-        ? { lat: userCoords.lat, lng: userCoords.lng, radius }
-        : { city: user?.city };
+      const options = {
+        ...(userCoords ? { lat: userCoords.lat, lng: userCoords.lng, radius } : { city: user?.city }),
+        ...(minAge !== null ? { min_age: minAge } : {}),
+        ...(maxAge !== null ? { max_age: maxAge } : {}),
+      };
       const data = await listingAPI.getFeed(20, 0, options);
       setListings(data);
     } catch (err: any) {
@@ -125,11 +178,11 @@ export default function FeedScreen({ navigation }: Props) {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [userCoords, radius, user?.city]);
+  }, [userCoords, radius, user?.city, minAge, maxAge]);
 
   useEffect(() => {
     fetchListings();
-  }, [radius, userCoords]);
+  }, [radius, userCoords, minAge, maxAge]);
 
   useEffect(() => {
     fetchListings();
@@ -147,8 +200,48 @@ export default function FeedScreen({ navigation }: Props) {
     fetchListings();
   }, [fetchListings]);
 
+  const openFilter = () => {
+    setDraftRadius(radius);
+    setDraftMinAge(minAge !== null ? String(minAge) : '');
+    setDraftMaxAge(maxAge !== null ? String(maxAge) : '');
+    setDraftCategories([...selectedCategories]);
+    setFilterVisible(true);
+  };
+
+  const applyFilter = async () => {
+    const parsedMin = draftMinAge.trim() !== '' ? parseInt(draftMinAge) : null;
+    const parsedMax = draftMaxAge.trim() !== '' ? parseInt(draftMaxAge) : null;
+
+    if (parsedMin !== null && (isNaN(parsedMin) || parsedMin < 18 || parsedMin > 99)) {
+      Alert.alert('Invalid Age', 'Minimum age must be between 18 and 99.');
+      return;
+    }
+    if (parsedMax !== null && (isNaN(parsedMax) || parsedMax < 18 || parsedMax > 99)) {
+      Alert.alert('Invalid Age', 'Maximum age must be between 18 and 99.');
+      return;
+    }
+    if (parsedMin !== null && parsedMax !== null && parsedMin > parsedMax) {
+      Alert.alert('Invalid Range', 'Minimum age cannot be greater than maximum age.');
+      return;
+    }
+
+    await AsyncStorage.setItem(RADIUS_KEY, String(draftRadius));
+    setRadius(draftRadius);
+    setMinAge(parsedMin);
+    setMaxAge(parsedMax);
+    setSelectedCategories(draftCategories);
+    setFilterVisible(false);
+  };
+
+  const clearFilter = () => {
+    setDraftRadius(50);
+    setDraftMinAge('');
+    setDraftMaxAge('');
+    setDraftCategories([]);
+  };
+
   const renderHeader = () => (
-    <View>
+    <Animated.View style={{ height: headerHeight, overflow: 'hidden' }}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Tag A Long</Text>
         <View style={styles.headerActions}>
@@ -162,56 +255,121 @@ export default function FeedScreen({ navigation }: Props) {
               </View>
             )}
           </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIcon} onPress={openFilter}>
+            <Ionicons name="options-outline" size={26} color="#333" />
+            {filtersActive && <View style={styles.filterDot} />}
+          </TouchableOpacity>
           <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('CreateActivity')}>
-            <Ionicons name="add-circle-sharp" size={28} color="#B8860B" />
+            <Ionicons name="add-circle-sharp" size={28} color="#D4AF37" />
           </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.radiusBar}>
-        <Ionicons name="location-outline" size={16} color="#666" />
-        <Text style={styles.radiusLabel}>Within</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.radiusOptions}>
-          {RADIUS_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={[styles.radiusChip, radius === option && styles.radiusChipActive]}
-              onPress={() => saveRadius(option)}
-            >
-              <Text style={[styles.radiusChipText, radius === option && styles.radiusChipTextActive]}>
-                {option} mi
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        {!userCoords && (
-          <TouchableOpacity onPress={requestLocation}>
-            <Ionicons name="navigate-circle-outline" size={22} color="#B8860B" />
-          </TouchableOpacity>
-        )}
-      </View>
+    </Animated.View>
+  );
 
-      {/* Category Filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryBar}>
-        <TouchableOpacity
-          style={[styles.categoryChip, !selectedCategory && styles.categoryChipActive]}
-          onPress={() => setSelectedCategory(null)}
-        >
-          <Text style={[styles.categoryChipText, !selectedCategory && styles.categoryChipTextActive]}>All</Text>
-        </TouchableOpacity>
-        {CATEGORIES.map(cat => (
-          <TouchableOpacity
-            key={cat.value}
-            style={[styles.categoryChip, selectedCategory === cat.value && styles.categoryChipActive]}
-            onPress={() => setSelectedCategory(selectedCategory === cat.value ? null : cat.value)}
-          >
-            <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-            <Text style={[styles.categoryChipText, selectedCategory === cat.value && styles.categoryChipTextActive]}>
-              {cat.label}
-            </Text>
+  const renderFilterModal = () => (
+    <Modal
+      visible={filterVisible}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setFilterVisible(false)}
+    >
+      <KeyboardAvoidingView
+        style={styles.modalContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setFilterVisible(false)} />
+        <View style={styles.modalSheet}>
+          <View style={styles.sheetHandle} />
+
+          <View style={styles.sheetHeader}>
+            <Text style={styles.sheetTitle}>Filters</Text>
+            <TouchableOpacity onPress={clearFilter}>
+              <Text style={styles.clearText}>Clear all</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <Text style={styles.sectionLabel}>Distance</Text>
+            {!userCoords && (
+              <TouchableOpacity style={styles.locationPrompt} onPress={requestLocation}>
+                <Ionicons name="navigate-circle-outline" size={18} color="#D4AF37" />
+                <Text style={styles.locationPromptText}>Enable location for distance filtering</Text>
+              </TouchableOpacity>
+            )}
+            <View style={styles.chipRow}>
+              {RADIUS_OPTIONS.map(option => (
+                <TouchableOpacity
+                  key={option}
+                  style={[styles.filterChip, draftRadius === option && styles.filterChipActive]}
+                  onPress={() => setDraftRadius(option)}
+                >
+                  <Text style={[styles.filterChipText, draftRadius === option && styles.filterChipTextActive]}>
+                    {option} mi
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.sectionLabel}>Age Range</Text>
+            <View style={styles.ageInputRow}>
+              <View style={styles.ageInputGroup}>
+                <Text style={styles.ageInputLabel}>Min age</Text>
+                <TextInput
+                  style={styles.ageInput}
+                  value={draftMinAge}
+                  onChangeText={setDraftMinAge}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  placeholder="18"
+                  placeholderTextColor="#bbb"
+                />
+              </View>
+              <View style={styles.ageDash}>
+                <Text style={styles.ageDashText}>—</Text>
+              </View>
+              <View style={styles.ageInputGroup}>
+                <Text style={styles.ageInputLabel}>Max age</Text>
+                <TextInput
+                  style={styles.ageInput}
+                  value={draftMaxAge}
+                  onChangeText={setDraftMaxAge}
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  placeholder="99"
+                  placeholderTextColor="#bbb"
+                />
+              </View>
+            </View>
+
+            <Text style={styles.sectionLabel}>Categories</Text>
+            <View style={styles.chipRow}>
+              {CATEGORIES.map(cat => {
+                const active = draftCategories.includes(cat.value);
+                return (
+                  <TouchableOpacity
+                    key={cat.value}
+                    style={[styles.filterChip, active && styles.filterChipActive]}
+                    onPress={() => setDraftCategories(prev =>
+                      active ? prev.filter(c => c !== cat.value) : [...prev, cat.value]
+                    )}
+                  >
+                    <Text style={styles.categoryEmoji}>{cat.emoji} </Text>
+                    <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+                      {cat.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
+
+          <TouchableOpacity style={styles.applyButton} onPress={applyFilter}>
+            <Text style={styles.applyButtonText}>Apply Filters</Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 
   const renderEmptyState = () => (
@@ -246,24 +404,19 @@ export default function FeedScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {renderHeader()}
+      {renderFilterModal()}
       {isLoading ? (
-        <>
-          {renderHeader()}
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#B8860B" />
-            <Text style={styles.loadingText}>Loading activities...</Text>
-          </View>
-        </>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#D4AF37" />
+          <Text style={styles.loadingText}>Loading activities...</Text>
+        </View>
       ) : error && listings.length === 0 ? (
-        <>
-          {renderHeader()}
-          {renderError()}
-        </>
+        renderError()
       ) : (
         <FlatList
-          data={selectedCategory ? listings.filter(l => l.category === selectedCategory) : listings}
+          data={selectedCategories.length > 0 ? listings.filter(l => selectedCategories.includes(l.category)) : listings}
           keyExtractor={(item) => item.id}
-          ListHeaderComponent={renderHeader}
           renderItem={({ item }) => (
             <ListingCard
               listing={item}
@@ -276,10 +429,12 @@ export default function FeedScreen({ navigation }: Props) {
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={handleRefresh}
-              colors={['#B8860B']}
-              tintColor="#B8860B"
+              colors={['#D4AF37']}
+              tintColor="#D4AF37"
             />
           }
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
         />
@@ -306,7 +461,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#B8860B',
+    color: '#D4AF37',
   },
   headerActions: {
     flexDirection: 'row',
@@ -334,82 +489,148 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  filterDot: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D4AF37',
+  },
   createButton: {
     padding: 5,
-  },
-  radiusBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    gap: 8,
-  },
-  radiusLabel: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '500',
-  },
-  radiusOptions: {
-    flexDirection: 'row',
-    gap: 8,
-    flex: 1,
-  },
-  radiusChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#f9fafb',
-  },
-  radiusChipActive: {
-    backgroundColor: '#B8860B',
-    borderColor: '#B8860B',
-  },
-  radiusChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#555',
-  },
-  radiusChipTextActive: {
-    color: '#fff',
-  },
-  categoryBar: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#f9fafb',
-    gap: 4,
-  },
-  categoryChipActive: {
-    backgroundColor: '#B8860B',
-    borderColor: '#B8860B',
   },
   categoryEmoji: {
     fontSize: 13,
   },
-  categoryChipText: {
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+    paddingTop: 12,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#ddd',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111',
+  },
+  clearText: {
+    fontSize: 14,
+    color: '#D4AF37',
+    fontWeight: '600',
+  },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#444',
+    marginBottom: 12,
+  },
+  locationPrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 10,
+  },
+  locationPromptText: {
     fontSize: 13,
-    fontWeight: '500',
+    color: '#D4AF37',
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 24,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f9fafb',
+  },
+  filterChipActive: {
+    backgroundColor: '#D4AF37',
+    borderColor: '#D4AF37',
+  },
+  filterChipText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#555',
   },
-  categoryChipTextActive: {
+  filterChipTextActive: {
     color: '#fff',
+  },
+  ageInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 12,
+    marginBottom: 28,
+  },
+  ageInputGroup: {
+    flex: 1,
+  },
+  ageInputLabel: {
+    fontSize: 12,
+    color: '#888',
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  ageInput: {
+    borderWidth: 1.5,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 18,
     fontWeight: '600',
+    color: '#111',
+    textAlign: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  ageDash: {
+    paddingBottom: 10,
+  },
+  ageDashText: {
+    fontSize: 20,
+    color: '#aaa',
+    fontWeight: '300',
+  },
+  applyButton: {
+    backgroundColor: '#D4AF37',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  applyButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   loadingContainer: {
     flex: 1,
@@ -447,7 +668,7 @@ const styles = StyleSheet.create({
   createFirstButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
@@ -478,7 +699,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,

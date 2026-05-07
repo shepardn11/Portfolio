@@ -16,7 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../types';
-import { useAuthStore } from '../../store/authStore';
+import { authAPI } from '../../api/endpoints';
 
 type SignupScreenNavigationProp = NativeStackNavigationProp<
   AuthStackParamList,
@@ -35,15 +35,15 @@ export default function SignupScreen({ navigation }: Props) {
   const [username, setUsername] = useState('');
   const [city, setCity] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [phone, setPhone] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const { signup, isLoading } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const PRIVACY_URL = 'https://maddening-sodium-7eb.notion.site/Tag-A-Long-Privacy-Policy-35843955dac980749da8ef205ab7a8d6';
   const TERMS_URL = 'https://maddening-sodium-7eb.notion.site/Tag-A-Long-Terms-of-Service-35843955dac98002853bcc3efa059da6';
 
   const handleSignup = async () => {
-    // Validation
-    if (!email || !password || !displayName || !username || !city || !dateOfBirth) {
+    if (!email || !password || !displayName || !username || !city || !dateOfBirth || !phone) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -58,7 +58,6 @@ export default function SignupScreen({ navigation }: Props) {
       return;
     }
 
-    // Validate password complexity (uppercase, lowercase, number)
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
     if (!passwordRegex.test(password)) {
       Alert.alert('Error', 'Password must contain uppercase, lowercase, and number');
@@ -75,14 +74,12 @@ export default function SignupScreen({ navigation }: Props) {
       return;
     }
 
-    // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(dateOfBirth)) {
       Alert.alert('Error', 'Date of birth must be in YYYY-MM-DD format');
       return;
     }
 
-    // Enforce minimum age of 18
     const dob = new Date(dateOfBirth);
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
@@ -93,29 +90,28 @@ export default function SignupScreen({ navigation }: Props) {
       return;
     }
 
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phone)) {
+      Alert.alert('Error', 'Phone must be in international format (e.g. +14155551234)');
+      return;
+    }
+
     if (!agreedToTerms) {
       Alert.alert('Agreement Required', 'Please accept the Terms of Service and Privacy Policy to continue.');
       return;
     }
 
     try {
-      await signup({
-        email,
-        password,
-        display_name: displayName,
-        username,
-        city,
-        date_of_birth: dateOfBirth
+      setIsLoading(true);
+      await authAPI.sendPhoneOtp(phone);
+      navigation.navigate('PhoneVerification', {
+        signupData: { email, password, display_name: displayName, username, city, date_of_birth: dateOfBirth, phone },
       });
-      // Navigate to profile setup to add photos and bio
-      navigation.navigate('ProfileSetup');
     } catch (error: any) {
-      console.error('Signup error:', error);
-      console.error('Signup error response:', error.response?.data);
-      const errorMsg = error.response?.data?.error?.message ||
-                       error.message ||
-                       'Could not create account';
-      Alert.alert('Signup Failed', errorMsg);
+      const errorMsg = error.response?.data?.error?.message || error.message || 'Could not send verification code';
+      Alert.alert('Error', errorMsg);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,6 +189,19 @@ export default function SignupScreen({ navigation }: Props) {
 
             <TextInput
               style={styles.input}
+              placeholder="Phone Number * (e.g. +14155551234)"
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              autoComplete="tel"
+              editable={!isLoading}
+            />
+            <View style={styles.requirementsContainer}>
+              <Text style={styles.requirementText}>• International format with country code</Text>
+            </View>
+
+            <TextInput
+              style={styles.input}
               placeholder="Password *"
               value={password}
               onChangeText={setPassword}
@@ -230,7 +239,7 @@ export default function SignupScreen({ navigation }: Props) {
               <Ionicons
                 name={agreedToTerms ? 'checkbox' : 'square-outline'}
                 size={22}
-                color={agreedToTerms ? '#B8860B' : '#aaa'}
+                color={agreedToTerms ? '#D4AF37' : '#aaa'}
               />
               <Text style={styles.termsText}>
                 I agree to the{' '}
@@ -294,7 +303,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#B8860B',
+    color: '#D4AF37',
     marginBottom: 10,
   },
   subtitle: {
@@ -336,11 +345,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   termsLink: {
-    color: '#B8860B',
+    color: '#D4AF37',
     fontWeight: '600',
   },
   signupButton: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     borderRadius: 10,
     padding: 16,
     alignItems: 'center',
@@ -364,7 +373,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loginLink: {
-    color: '#B8860B',
+    color: '#D4AF37',
     fontSize: 14,
     fontWeight: '600',
   },

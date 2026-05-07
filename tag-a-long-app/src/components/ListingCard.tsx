@@ -1,4 +1,4 @@
-// Listing Card Component - Display activity listing
+﻿// Listing Card Component - Display activity listing
 import React from 'react';
 import {
   View,
@@ -86,9 +86,6 @@ export default function ListingCard({ listing, onPress, pendingRequestCount }: L
         </View>
       )}
 
-      {/* Gradient Overlay for Text Readability */}
-      <View style={styles.gradientOverlay} />
-
       {/* Category Badge - Top Right */}
       <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(listing.category) }]}>
         <Ionicons
@@ -148,7 +145,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#000',
     marginBottom: 16,
-    minHeight: SCREEN_HEIGHT * 0.65,
+    minHeight: SCREEN_HEIGHT * 0.69,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -163,15 +160,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  gradientOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '33%',
-    backgroundColor: '#000',
-    opacity: 0.7,
   },
   categoryBadge: {
     position: 'absolute',
@@ -215,44 +203,45 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 14,
+    paddingHorizontal: 14,
+    paddingTop: 8,
+    paddingBottom: 4,
+    justifyContent: 'center',
     zIndex: 2,
+    backgroundColor: 'rgba(15, 30, 60, 0.75)',
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 12,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    marginBottom: 6,
   },
   infoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 12,
-    gap: 6,
+    marginBottom: 4,
+    gap: 4,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
   infoItemFull: {
     flex: 1,
     minWidth: '100%',
   },
   infoText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     color: '#fff',
-    marginLeft: 5,
+    marginLeft: 4,
   },
   userName: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.8)',
   },

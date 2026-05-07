@@ -1,4 +1,4 @@
-// API Endpoints - All backend API calls
+﻿// API Endpoints - All backend API calls
 import apiClient from './client';
 import {
   User,
@@ -19,6 +19,12 @@ export const authAPI = {
   // Login (returns JWT token)
   login: async (credentials: LoginCredentials) => {
     const response = await api.post('/auth/login', credentials);
+    return response.data;
+  },
+
+  // Send phone OTP before signup
+  sendPhoneOtp: async (phone: string) => {
+    const response = await api.post('/auth/send-phone-otp', { phone });
     return response.data;
   },
 
@@ -85,7 +91,7 @@ export const profileAPI = {
 
 export const listingAPI = {
   // Get feed (with premium priority)
-  getFeed: async (limit = 20, offset = 0, options?: { lat?: number; lng?: number; radius?: number; city?: string }): Promise<ActivityListing[]> => {
+  getFeed: async (limit = 20, offset = 0, options?: { lat?: number; lng?: number; radius?: number; city?: string; min_age?: number; max_age?: number }): Promise<ActivityListing[]> => {
     const response = await api.get('/listings/feed', {
       params: { limit, offset, ...options },
     });
@@ -98,10 +104,10 @@ export const listingAPI = {
     return response.data.data;
   },
 
-  // Search listings
-  search: async (query: string, city?: string): Promise<ActivityListing[]> => {
+  // Search listings by keyword
+  search: async (query: string): Promise<ActivityListing[]> => {
     const response = await api.get('/listings/search', {
-      params: { query, city },
+      params: { query },
     });
     return response.data.data;
   },

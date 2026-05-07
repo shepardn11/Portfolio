@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#B8860B',
+    color: '#D4AF37',
     marginBottom: 10,
   },
   subtitle: {
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
   },
   loginButton: {
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
     borderRadius: 10,
     padding: 16,
     alignItems: 'center',
@@ -171,10 +171,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signupLink: {
-    color: '#B8860B',
+    color: '#D4AF37',
     fontSize: 14,
     fontWeight: '600',
   },
   forgotPassword: { alignItems: 'center', marginTop: 12 },
-  forgotPasswordText: { color: '#B8860B', fontSize: 14 },
+  forgotPasswordText: { color: '#D4AF37', fontSize: 14 },
 });

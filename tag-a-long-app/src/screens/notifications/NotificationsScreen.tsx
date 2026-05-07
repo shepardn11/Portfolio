@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,7 @@ interface Notification {
 }
 
 const TYPE_ICON: Record<string, { name: keyof typeof Ionicons.glyphMap; color: string }> = {
-  request_received: { name: 'person-add', color: '#B8860B' },
+  request_received: { name: 'person-add', color: '#D4AF37' },
   request_accepted: { name: 'checkmark-circle', color: '#34c759' },
   request_rejected: { name: 'close-circle', color: '#ff3b30' },
 };
@@ -48,7 +48,7 @@ export default function NotificationsScreen({ navigation }: any) {
       const result = await notificationAPI.getAll() as any;
       setNotifications(result.notifications ?? result);
     } catch {
-      // ignore — list stays as-is
+      // ignore â€” list stays as-is
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -112,7 +112,7 @@ export default function NotificationsScreen({ navigation }: any) {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#B8860B" />
+          <ActivityIndicator size="large" color="#D4AF37" />
         </View>
       ) : (
         <FlatList
@@ -123,7 +123,7 @@ export default function NotificationsScreen({ navigation }: any) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => { setRefreshing(true); fetchNotifications(true); }}
-              tintColor="#B8860B"
+              tintColor="#D4AF37"
             />
           }
           ListEmptyComponent={
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   back: { padding: 8 },
   headerTitle: { flex: 1, fontSize: 17, fontWeight: '600', textAlign: 'center' },
   markAll: { paddingHorizontal: 12, paddingVertical: 6 },
-  markAllText: { fontSize: 14, color: '#B8860B', fontWeight: '500' },
+  markAllText: { fontSize: 14, color: '#D4AF37', fontWeight: '500' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#B8860B',
+    backgroundColor: '#D4AF37',
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
   emptyText: { fontSize: 16, color: '#aaa', marginTop: 12 },
