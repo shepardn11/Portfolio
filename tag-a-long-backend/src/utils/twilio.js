@@ -9,12 +9,17 @@ const getClient = () => {
   return client;
 };
 
-const sendOTP = async (phone, otp) => {
-  await getClient().messages.create({
-    body: `Your Tag-A-Long verification code is: ${otp}. It expires in 10 minutes.`,
-    from: process.env.TWILIO_PHONE_NUMBER,
-    to: phone,
-  });
+const sendVerification = async (phone) => {
+  await getClient().verify.v2
+    .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+    .verifications.create({ to: phone, channel: 'sms' });
 };
 
-module.exports = { sendOTP };
+const checkVerification = async (phone, code) => {
+  const result = await getClient().verify.v2
+    .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+    .verificationChecks.create({ to: phone, code });
+  return result.status === 'approved';
+};
+
+module.exports = { sendVerification, checkVerification };

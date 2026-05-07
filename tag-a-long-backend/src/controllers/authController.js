@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const prisma = require('../config/database');
 const { generateToken } = require('../utils/jwt');
-const { sendOTP } = require('../utils/twilio');
+const { sendVerification, checkVerification } = require('../utils/twilio');
 
 const getMailTransport = () => nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -24,17 +24,7 @@ const sendPhoneOtp = async (req, res, next) => {
       return res.status(400).json({ success: false, error: { code: 'PHONE_IN_USE', message: 'Phone number already registered' } });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-    await prisma.phoneVerification.upsert({
-      where: { phone },
-      create: { phone, otp_hash: otpHash, expires_at: expiresAt },
-      update: { otp_hash: otpHash, expires_at: expiresAt },
-    });
-
-    await sendOTP(phone, otp);
+    await sendVerification(phone);
 
     res.json({ success: true });
   } catch (error) {
@@ -46,15 +36,11 @@ const signup = async (req, res, next) => {
   try {
     const { email, password, display_name, username, bio, date_of_birth, city, instagram_handle, phone, otp_code } = req.body;
 
-    // Verify phone OTP
-    const verification = await prisma.phoneVerification.findUnique({ where: { phone } });
-    const otpHash = crypto.createHash('sha256').update(otp_code).digest('hex');
-
-    if (!verification || verification.otp_hash !== otpHash || verification.expires_at < new Date()) {
+    // Verify phone OTP via Twilio Verify
+    const approved = await checkVerification(phone, otp_code);
+    if (!approved) {
       return res.status(400).json({ success: false, error: { code: 'INVALID_OTP', message: 'Invalid or expired verification code' } });
     }
-
-    await prisma.phoneVerification.delete({ where: { phone } });
 
     // Hash password
     const password_hash = await bcrypt.hash(password, 10);
