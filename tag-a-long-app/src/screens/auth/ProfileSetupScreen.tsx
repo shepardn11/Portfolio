@@ -249,7 +249,9 @@ export default function ProfileSetupScreen({ navigation }: Props) {
   };
 
   const completeSetup = async () => {
-    await Notifications.requestPermissionsAsync();
+    try {
+      await Notifications.requestPermissionsAsync();
+    } catch (_) {}
     setProfileSetupComplete(true);
     setIsAuthenticated(true);
     setIsLoading(false);
