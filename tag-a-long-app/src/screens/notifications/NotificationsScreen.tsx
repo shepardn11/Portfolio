@@ -18,6 +18,7 @@ interface Notification {
   type: string;
   title: string;
   body: string;
+  data?: string;
   is_read: boolean;
   created_at: string;
 }
@@ -69,6 +70,13 @@ export default function NotificationsScreen({ navigation }: any) {
         prev.map(n => n.id === item.id ? { ...n, is_read: true } : n)
       );
     }
+
+    try {
+      const data = item.data ? JSON.parse(item.data) : null;
+      if (data?.listing_id && item.type === 'request_received') {
+        navigation.navigate('ActivityDetail', { activityId: data.listing_id });
+      }
+    } catch (_) {}
   };
 
   const renderItem = ({ item }: { item: Notification }) => {
