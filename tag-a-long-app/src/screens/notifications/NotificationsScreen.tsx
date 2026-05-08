@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { notificationAPI } from '../../api/endpoints';
+import { navigationRef } from '../../navigation/navigationRef';
 
 interface Notification {
   id: string;
@@ -73,8 +74,26 @@ export default function NotificationsScreen({ navigation }: any) {
 
     try {
       const data = item.data ? JSON.parse(item.data) : null;
-      if (data?.listing_id && item.type === 'request_received') {
+      if (!data) return;
+
+      if (item.type === 'request_received' && data.listing_id) {
         navigation.navigate('ActivityDetail', { activityId: data.listing_id });
+      } else if (item.type === 'request_accepted' && data.conversation_id) {
+        navigationRef.navigate('Main' as never, {
+          screen: 'Messages',
+          params: {
+            screen: 'Chat',
+            params: {
+              conversationId: data.conversation_id,
+              otherUser: {
+                id: data.other_user_id,
+                username: data.other_user_username,
+                display_name: data.other_user_display_name,
+                profile_photo_url: data.other_user_photo,
+              },
+            },
+          },
+        } as never);
       }
     } catch (_) {}
   };
