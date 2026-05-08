@@ -311,8 +311,11 @@ const acceptRequest = async (req, res, next) => {
         data: JSON.stringify({
           request_id: request.id,
           listing_id: request.listing_id,
-          poster_username: request.listing.user.username,
           conversation_id: conversation.id,
+          other_user_id: request.listing.user_id,
+          other_user_username: request.listing.user.username,
+          other_user_display_name: request.listing.user.display_name,
+          other_user_photo: request.listing.user.profile_photo_url || null,
         }),
       },
     });
