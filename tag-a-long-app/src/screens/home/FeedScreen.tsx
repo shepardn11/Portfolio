@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   FlatList,
   RefreshControl,
@@ -20,6 +19,7 @@ import {
   Easing,
   PanResponder,
   Linking,
+  StatusBar,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -31,6 +31,8 @@ import { listingAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
 import { useAuthStore } from '../../store/authStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { hideTabBar, showTabBar, listBottomPadding, setBottomInset } from '../../utils/tabBarAnimation';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HEADER_HEIGHT = 72;
 
@@ -118,8 +120,13 @@ export default function FeedScreen({ navigation }: Props) {
   const [draftSpecificDate, setDraftSpecificDate] = useState<Date | null>(null);
   const [showDayPicker, setShowDayPicker] = useState(false);
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
+  useEffect(() => { setBottomInset(insets.bottom); }, [insets.bottom]);
+  const totalHeaderHeight = HEADER_HEIGHT + insets.top;
+  const totalHeaderHeightRef = useRef(totalHeaderHeight);
+  totalHeaderHeightRef.current = totalHeaderHeight;
   const locationInitialized = useRef(false);
-  const headerHeight = useRef(new Animated.Value(HEADER_HEIGHT)).current;
+  const headerHeight = useRef(new Animated.Value(totalHeaderHeight)).current;
   const sheetTranslateY = useRef(new Animated.Value(0)).current;
   const sheetPanResponder = useRef(
     PanResponder.create({
@@ -153,24 +160,28 @@ export default function FeedScreen({ navigation }: Props) {
     if (isAnimating.current) return;
     // If content fits on screen even with the header visible, don't animate —
     // the bounce would create a layout-shift feedback loop causing the shake.
-    if (contentHeight <= layoutHeight + HEADER_HEIGHT) return;
+    if (contentHeight <= layoutHeight + totalHeaderHeightRef.current) return;
     if (currentY + layoutHeight >= contentHeight - 20) return;
 
-    if (diff > 4 && isHeaderVisible.current && currentY > HEADER_HEIGHT) {
+    if (diff > 4 && isHeaderVisible.current && currentY > totalHeaderHeightRef.current) {
       isHeaderVisible.current = false;
       isAnimating.current = true;
+      hideTabBar();
+      StatusBar.setHidden(true, 'slide');
       Animated.timing(headerHeight, {
         toValue: 0,
-        duration: 250,
+        duration: 500,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: false,
       }).start(() => { isAnimating.current = false; });
     } else if (diff < -4 && !isHeaderVisible.current) {
       isHeaderVisible.current = true;
       isAnimating.current = true;
+      showTabBar();
+      StatusBar.setHidden(false, 'slide');
       Animated.timing(headerHeight, {
-        toValue: HEADER_HEIGHT,
-        duration: 250,
+        toValue: totalHeaderHeightRef.current,
+        duration: 500,
         easing: Easing.inOut(Easing.ease),
         useNativeDriver: false,
       }).start(() => { isAnimating.current = false; });
@@ -245,7 +256,9 @@ export default function FeedScreen({ navigation }: Props) {
     setHasMore(true);
     if (!isHeaderVisible.current) {
       isHeaderVisible.current = true;
-      headerHeight.setValue(HEADER_HEIGHT);
+      headerHeight.setValue(totalHeaderHeightRef.current);
+      showTabBar();
+      StatusBar.setHidden(false, 'slide');
     }
     try {
       setError(null);
@@ -356,6 +369,7 @@ export default function FeedScreen({ navigation }: Props) {
 
   const renderHeader = () => (
     <Animated.View style={{ height: headerHeight, overflow: 'hidden' }}>
+      <View style={{ height: insets.top, backgroundColor: '#fff' }} />
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity style={styles.headerIcon} onPress={openFilter} accessibilityLabel="Filter activities">
@@ -585,7 +599,7 @@ export default function FeedScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {renderHeader()}
       {renderFilterModal()}
       {isLoading ? (
@@ -621,14 +635,19 @@ export default function FeedScreen({ navigation }: Props) {
           decelerationRate="normal"
           onEndReached={loadMore}
           onEndReachedThreshold={0.4}
-          ListFooterComponent={isFetchingMore ? (
-            <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color="#E8572A" />
+          ListFooterComponent={
+            <View>
+              {isFetchingMore && (
+                <View style={styles.footerLoader}>
+                  <ActivityIndicator size="small" color="#E8572A" />
+                </View>
+              )}
+              <Animated.View style={{ height: listBottomPadding }} />
             </View>
-          ) : null}
+          }
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

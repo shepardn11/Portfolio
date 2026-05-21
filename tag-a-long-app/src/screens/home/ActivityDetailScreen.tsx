@@ -145,13 +145,18 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       await requestAPI.accept(requestId);
       Alert.alert('Accepted!', 'You accepted the Tag-A-Long request');
 
-      // Immediately add the accepted user to the who's joining list
+      // Immediately add the accepted user to both lists so the edit modal sees them right away
       const acceptedRequest = requests.find(r => r.id === requestId);
       if (acceptedRequest && listing) {
         const currentAccepted = (listing as any).accepted_participants || [];
+        const currentTagged = (listing.tagged_users as any[]) || [];
         const alreadyThere = currentAccepted.some((p: any) => p.id === acceptedRequest.requester.id);
         if (!alreadyThere) {
-          setListing({ ...listing, accepted_participants: [...currentAccepted, acceptedRequest.requester] } as any);
+          setListing({
+            ...listing,
+            accepted_participants: [...currentAccepted, acceptedRequest.requester],
+            tagged_users: [...currentTagged, acceptedRequest.requester],
+          } as any);
         }
       }
 
@@ -214,6 +219,36 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const removeParticipantSilent = (userId: string) => {
+    const matchingRequest = requests.find(r => r.requester.id === userId);
+    if (matchingRequest) {
+      requestAPI.removeParticipant(matchingRequest.id).catch(() => {});
+    }
+    setListing(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        accepted_participants: ((prev as any).accepted_participants || []).filter((p: any) => p.id !== userId),
+        tagged_users: ((prev.tagged_users as any[]) || []).filter((u: any) => u.id !== userId),
+      } as any;
+    });
+    setRequests(prev => prev.filter(r => r.requester.id !== userId));
+    setEditTaggedUsers(prev => prev.filter(u => u.id !== userId));
+  };
+
+  const handleUserSelectionDone = (newUsers: typeof editTaggedUsers) => {
+    const removedUsers = editTaggedUsers.filter(u => !newUsers.some(n => n.id === u.id));
+    setEditTaggedUsers(newUsers);
+    removedUsers.forEach(u => removeParticipantSilent(u.id));
+  };
+
+  const handleRemoveParticipant = (userId: string) => {
+    Alert.alert('Remove Participant', 'Remove this person from your activity?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => removeParticipantSilent(userId) },
+    ]);
   };
 
   const handleDeleteActivity = () => {
@@ -685,6 +720,9 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
                         </View>
                       )}
                       <Text style={styles.taggedUserName}>{u.display_name}</Text>
+                      <TouchableOpacity onPress={() => handleRemoveParticipant(u.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <Ionicons name="close" size={14} color="#E8572A" />
+                      </TouchableOpacity>
                     </View>
                   ))}
                 </View>
@@ -735,7 +773,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
             <UserSelectionModal
               visible={showUserModal}
               onClose={() => setShowUserModal(false)}
-              onSelectUsers={setEditTaggedUsers}
+              onSelectUsers={handleUserSelectionDone}
               selectedUsers={editTaggedUsers}
             />
           </View>

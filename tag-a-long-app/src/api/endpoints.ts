@@ -198,6 +198,12 @@ export const requestAPI = {
     return response.data.data;
   },
 
+  // Remove an accepted participant from an activity
+  removeParticipant: async (requestId: string) => {
+    const response = await api.put(`/requests/${requestId}/remove`);
+    return response.data.data;
+  },
+
   // Cancel request (sender)
   cancel: async (requestId: string) => {
     const response = await api.delete(`/requests/${requestId}`);

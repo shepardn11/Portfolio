@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabBar } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, MainTabParamList } from '../types';
 import { useAuthStore } from '../store/authStore';
@@ -10,6 +10,7 @@ import { navigationRef } from './navigationRef';
 
 const TAB_ORDER = ['Home', 'Search', 'Messages', 'MyActivities', 'Profile'] as const;
 import { ActivityIndicator, View, PanResponder, Animated, Easing } from 'react-native';
+import { tabBarTranslateY, showTabBar } from '../utils/tabBarAnimation';
 
 // Navigators
 import AuthNavigator from './AuthNavigator';
@@ -155,6 +156,17 @@ function MainTabs() {
     <View style={{ flex: 1 }} {...panResponder.panHandlers}>
     <Animated.View style={{ flex: 1, transform: [{ translateX: swipeX }] }}>
     <Tab.Navigator
+      tabBar={(props) => (
+        <Animated.View style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          transform: [{ translateY: tabBarTranslateY }],
+        }}>
+          <BottomTabBar {...props} />
+        </Animated.View>
+      )}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home';
@@ -197,6 +209,7 @@ function MainTabs() {
       screenListeners={{
         state: (e: any) => {
           currentTabIndex.current = e.data?.state?.index ?? 0;
+          showTabBar();
           fetchUnreadCount();
           fetchPendingRequests();
         },

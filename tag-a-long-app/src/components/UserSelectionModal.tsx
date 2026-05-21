@@ -44,11 +44,18 @@ export default function UserSelectionModal({
   useEffect(() => {
     if (visible) {
       setTempSelectedUsers(selectedUsers);
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible) {
       if (searchQuery.length >= 2) {
         searchUsers();
+      } else {
+        setUsers([]);
       }
     }
-  }, [visible, searchQuery]);
+  }, [searchQuery]);
 
   const searchUsers = async () => {
     if (searchQuery.length < 2) {

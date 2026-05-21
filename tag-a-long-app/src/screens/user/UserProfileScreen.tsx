@@ -321,8 +321,6 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    borderWidth: 2.5,
-    borderColor: '#E8572A',
   },
   profilePhotoPlaceholder: {
     width: 88,

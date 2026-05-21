@@ -368,26 +368,20 @@ export default function ProfileScreen() {
                 ))}
               </View>
 
-              {/* Notification Settings */}
-              <TouchableOpacity style={styles.blockedUsersButton} onPress={() => Linking.openSettings()}>
-                <Ionicons name="notifications-outline" size={16} color="#aaa" />
-                <Text style={styles.blockedUsersText}>Notification Settings</Text>
-              </TouchableOpacity>
-
-              {/* Delete Account */}
-              <TouchableOpacity style={styles.deleteAccountButton} onPress={handleDeleteAccount}>
-                <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                <Text style={styles.deleteAccountText}>Delete Account</Text>
-              </TouchableOpacity>
-
-              {/* Blocked Users */}
-              <TouchableOpacity style={styles.blockedUsersButton} onPress={openBlockedUsers}>
-                <Ionicons name="ban-outline" size={16} color="#aaa" />
-                <Text style={styles.blockedUsersText}>Blocked Users</Text>
-              </TouchableOpacity>
+              {/* Notification Settings + Blocked Users side by side */}
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 250, marginBottom: 24 }}>
+                <TouchableOpacity style={[styles.blockedUsersButton, { marginTop: 0, marginBottom: 0 }]} onPress={() => Linking.openSettings()}>
+                  <Ionicons name="notifications-outline" size={16} color="#aaa" />
+                  <Text style={styles.blockedUsersText}>Notification Settings</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.blockedUsersButton, { marginTop: 0, marginBottom: 0 }]} onPress={openBlockedUsers}>
+                  <Ionicons name="ban-outline" size={16} color="#aaa" />
+                  <Text style={styles.blockedUsersText}>Blocked Users</Text>
+                </TouchableOpacity>
+              </View>
 
               {/* Legal Links */}
-              <View style={styles.legalRow}>
+              <View style={[styles.legalRow, { marginBottom: 4 }]}>
                 <TouchableOpacity onPress={() => Linking.openURL('https://maddening-sodium-7eb.notion.site/Tag-A-Long-Privacy-Policy-35843955dac980749da8ef205ab7a8d6')}>
                   <Text style={styles.legalLink}>Privacy Policy</Text>
                 </TouchableOpacity>
@@ -396,6 +390,12 @@ export default function ProfileScreen() {
                   <Text style={styles.legalLink}>Terms of Service</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Delete Account */}
+              <TouchableOpacity style={[styles.deleteAccountButton, { marginTop: 8 }]} onPress={handleDeleteAccount}>
+                <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                <Text style={styles.deleteAccountText}>Delete Account</Text>
+              </TouchableOpacity>
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  profilePhoto: { width: 88, height: 88, borderRadius: 44, borderWidth: 2.5, borderColor: '#E8572A' },
+  profilePhoto: { width: 88, height: 88, borderRadius: 44 },
   photoPlaceholder: {
     width: 88, height: 88, borderRadius: 44, backgroundColor: '#f5f5f5',
     justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#e0e0e0',
@@ -596,7 +596,6 @@ const styles = StyleSheet.create({
   profilePhotoEdit: {
     width: 110, height: 110, borderRadius: 55, alignSelf: 'center',
     overflow: 'hidden', backgroundColor: '#f5f5f5', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#E8572A',
   },
   editProfilePhoto: { width: '100%', height: '100%' },
   editPhotoOverlay: {
