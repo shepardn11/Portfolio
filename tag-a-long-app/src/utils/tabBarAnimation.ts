@@ -38,7 +38,7 @@ export const hideTabBar = () => {
 };
 
 export const showTabBar = () => {
-  if (isTabBarVisible || isAnimating) return;
+  if (isAnimating) return;
   isTabBarVisible = true;
   isAnimating = true;
   Animated.parallel([

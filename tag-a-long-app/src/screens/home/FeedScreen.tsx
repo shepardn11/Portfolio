@@ -31,7 +31,7 @@ import { listingAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
 import { useAuthStore } from '../../store/authStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { hideTabBar, showTabBar, listBottomPadding, setBottomInset } from '../../utils/tabBarAnimation';
+import { listBottomPadding, setBottomInset, tabBarTranslateY, TAB_BAR_HEIGHT } from '../../utils/tabBarAnimation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HEADER_HEIGHT = 72;
@@ -125,8 +125,10 @@ export default function FeedScreen({ navigation }: Props) {
   const totalHeaderHeight = HEADER_HEIGHT + insets.top;
   const totalHeaderHeightRef = useRef(totalHeaderHeight);
   totalHeaderHeightRef.current = totalHeaderHeight;
+  const tabBarMaxRef = useRef(TAB_BAR_HEIGHT + insets.bottom);
+  tabBarMaxRef.current = TAB_BAR_HEIGHT + insets.bottom;
   const locationInitialized = useRef(false);
-  const headerHeight = useRef(new Animated.Value(totalHeaderHeight)).current;
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
   const sheetTranslateY = useRef(new Animated.Value(0)).current;
   const sheetPanResponder = useRef(
     PanResponder.create({
@@ -147,44 +149,38 @@ export default function FeedScreen({ navigation }: Props) {
     })
   ).current;
   const lastScrollY = useRef(0);
-  const isHeaderVisible = useRef(true);
-  const isAnimating = useRef(false);
+  const clampedScrollRef = useRef(0);
+  const statusBarHiddenRef = useRef(false);
 
   const handleScroll = useCallback((event: any) => {
     const currentY = event.nativeEvent.contentOffset.y;
-    const contentHeight = event.nativeEvent.contentSize.height;
-    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+    if (currentY < 0) return; // ignore iOS overscroll bounce at top
     const diff = currentY - lastScrollY.current;
     lastScrollY.current = currentY;
 
-    if (isAnimating.current) return;
-    // If content fits on screen even with the header visible, don't animate —
-    // the bounce would create a layout-shift feedback loop causing the shake.
-    if (contentHeight <= layoutHeight + totalHeaderHeightRef.current) return;
-    if (currentY + layoutHeight >= contentHeight - 20) return;
+    const maxScroll = totalHeaderHeightRef.current;
+    const prev = clampedScrollRef.current;
+    const next = Math.max(0, Math.min(prev + diff, maxScroll));
+    if (next === prev) return;
+    clampedScrollRef.current = next;
 
-    if (diff > 4 && isHeaderVisible.current && currentY > totalHeaderHeightRef.current) {
-      isHeaderVisible.current = false;
-      isAnimating.current = true;
-      hideTabBar();
+    const progress = next / maxScroll;
+
+    // Header slides up in sync with finger
+    headerTranslateY.setValue(-next);
+
+    // Tab bar and its padding track the same progress
+    const tabMax = tabBarMaxRef.current;
+    tabBarTranslateY.setValue(progress * tabMax);
+    listBottomPadding.setValue((1 - progress) * tabMax);
+
+    // Status bar: one-shot hide/show at thresholds to avoid calling setHidden every frame
+    if (progress > 0.85 && !statusBarHiddenRef.current) {
       StatusBar.setHidden(true, 'slide');
-      Animated.timing(headerHeight, {
-        toValue: 0,
-        duration: 500,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
-      }).start(() => { isAnimating.current = false; });
-    } else if (diff < -4 && !isHeaderVisible.current) {
-      isHeaderVisible.current = true;
-      isAnimating.current = true;
-      showTabBar();
+      statusBarHiddenRef.current = true;
+    } else if (progress < 0.15 && statusBarHiddenRef.current) {
       StatusBar.setHidden(false, 'slide');
-      Animated.timing(headerHeight, {
-        toValue: totalHeaderHeightRef.current,
-        duration: 500,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: false,
-      }).start(() => { isAnimating.current = false; });
+      statusBarHiddenRef.current = false;
     }
   }, []);
 
@@ -254,11 +250,13 @@ export default function FeedScreen({ navigation }: Props) {
   const fetchListings = useCallback(async () => {
     dbOffsetRef.current = 0;
     setHasMore(true);
-    if (!isHeaderVisible.current) {
-      isHeaderVisible.current = true;
-      headerHeight.setValue(totalHeaderHeightRef.current);
-      showTabBar();
+    clampedScrollRef.current = 0;
+    headerTranslateY.setValue(0);
+    tabBarTranslateY.setValue(0);
+    listBottomPadding.setValue(tabBarMaxRef.current);
+    if (statusBarHiddenRef.current) {
       StatusBar.setHidden(false, 'slide');
+      statusBarHiddenRef.current = false;
     }
     try {
       setError(null);
@@ -368,7 +366,12 @@ export default function FeedScreen({ navigation }: Props) {
   };
 
   const renderHeader = () => (
-    <Animated.View style={{ height: headerHeight, overflow: 'hidden' }}>
+    <Animated.View style={{
+      position: 'absolute',
+      top: 0, left: 0, right: 0,
+      zIndex: 10,
+      transform: [{ translateY: headerTranslateY }],
+    }}>
       <View style={{ height: insets.top, backgroundColor: '#fff' }} />
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -600,15 +603,16 @@ export default function FeedScreen({ navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      {renderHeader()}
       {renderFilterModal()}
       {isLoading ? (
-        <View style={styles.loadingContainer}>
+        <View style={[styles.loadingContainer, { paddingTop: totalHeaderHeight }]}>
           <ActivityIndicator size="large" color="#E8572A" />
           <Text style={styles.loadingText}>Loading activities...</Text>
         </View>
       ) : error && listings.length === 0 ? (
-        renderError()
+        <View style={{ flex: 1, paddingTop: totalHeaderHeight }}>
+          {renderError()}
+        </View>
       ) : (
         <FlatList
           data={listings}
@@ -619,7 +623,7 @@ export default function FeedScreen({ navigation }: Props) {
               onPress={() => navigation.navigate('ActivityDetail', { activityId: item.id })}
             />
           )}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingTop: totalHeaderHeight }]}
           ListEmptyComponent={renderEmptyState}
           refreshControl={
             <RefreshControl
@@ -647,6 +651,7 @@ export default function FeedScreen({ navigation }: Props) {
           }
         />
       )}
+      {renderHeader()}
     </View>
   );
 }
