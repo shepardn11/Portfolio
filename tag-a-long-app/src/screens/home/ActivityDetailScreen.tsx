@@ -28,6 +28,8 @@ import UserSelectionModal from '../../components/UserSelectionModal';
 import LightboxModal from '../../components/LightboxModal';
 import ShareActivityModal from '../../components/ShareActivityModal';
 import { refreshTabCounts } from '../../utils/tabRefresh';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TAB_BAR_HEIGHT } from '../../utils/tabBarAnimation';
 
 type ActivityDetailScreenNavigationProp = NativeStackNavigationProp<
   HomeStackParamList,
@@ -59,6 +61,7 @@ interface Request {
 export default function ActivityDetailScreen({ navigation, route }: Props) {
   const { activityId } = route.params;
   const { user } = useAuthStore();
+  const insets = useSafeAreaInsets();
   const [listing, setListing] = useState<ActivityListing | null>(null);
   const [requests, setRequests] = useState<Request[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -402,7 +405,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
         </TouchableOpacity>
 
         {/* Content */}
-        <View style={[styles.content, isOwnActivity && styles.contentNoButton]}>
+        <View style={[styles.content, isOwnActivity ? styles.contentNoButton : { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 100 }]}>
           {/* Category Badge */}
           <View
             style={[styles.categoryBadge, { backgroundColor: getCategoryColor(listing.category) }]}
@@ -785,7 +788,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
 
       {/* Fixed Bottom Button - Only show if not own activity */}
       {!isOwnActivity && (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { bottom: TAB_BAR_HEIGHT + insets.bottom }]}>
           <TouchableOpacity
             style={[styles.tagAlongButton, (hasRequested || isRequesting) && styles.tagAlongButtonDisabled]}
             onPress={handleTagAlong}
