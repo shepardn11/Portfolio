@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-
+  Keyboard,
   ActivityIndicator,
   Alert,
 } from 'react-native';
@@ -44,6 +44,13 @@ export default function ChatScreen({ route, navigation }: any) {
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardWillShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardWillHide', () => setKeyboardVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
@@ -345,7 +352,7 @@ export default function ChatScreen({ route, navigation }: any) {
         />
 
         {/* Input Bar */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { paddingBottom: keyboardVisible ? 12 : TAB_BAR_HEIGHT + 12 }]}>
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
@@ -557,7 +564,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: TAB_BAR_HEIGHT + 12,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
     backgroundColor: '#fff',
