@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { messageAPI, safetyAPI } from '../../api/endpoints';
 import { useAuthStore } from '../../store/authStore';
 import { refreshTabCounts } from '../../utils/tabRefresh';
+import { TAB_BAR_HEIGHT } from '../../utils/tabBarAnimation';
 
 const ACTIVITY_SHARE_PREFIX = '[activity_share]';
 const ACTIVITY_ACCEPT_PREFIX = '[activity_accept]';
@@ -555,7 +556,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: TAB_BAR_HEIGHT + 12,
     borderTopWidth: 1,
     borderTopColor: '#f0f0f0',
     backgroundColor: '#fff',
