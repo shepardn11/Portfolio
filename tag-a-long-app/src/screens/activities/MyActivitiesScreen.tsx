@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityListing, ActivitiesStackParamList } from '../../types';
 import { listingAPI } from '../../api/endpoints';
 import ListingCard from '../../components/ListingCard';
+import { TAB_BAR_HEIGHT } from '../../utils/tabBarAnimation';
 
 
 type MyActivitiesScreenNavigationProp = NativeStackNavigationProp<ActivitiesStackParamList, 'MyActivitiesMain'>;
@@ -159,6 +160,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingTop: 0,
+    paddingBottom: TAB_BAR_HEIGHT,
     flexGrow: 1,
   },
   emptyState: {

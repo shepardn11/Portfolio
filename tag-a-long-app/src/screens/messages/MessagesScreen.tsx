@@ -15,6 +15,7 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { messageAPI } from '../../api/endpoints';
 import { useFocusEffect } from '@react-navigation/native';
+import { TAB_BAR_HEIGHT } from '../../utils/tabBarAnimation';
 
 interface Conversation {
   id: string;
@@ -211,7 +212,8 @@ const styles = StyleSheet.create({
     color: '#E8572A',
   },
   listContent: {
-    paddingVertical: 8,
+    paddingTop: 8,
+    paddingBottom: TAB_BAR_HEIGHT + 8,
   },
   conversationItem: {
     flexDirection: 'row',

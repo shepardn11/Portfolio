@@ -15,6 +15,7 @@ import { SearchStackParamList, User, ActivityListing } from '../../types';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { profileAPI, listingAPI } from '../../api/endpoints';
+import { TAB_BAR_HEIGHT } from '../../utils/tabBarAnimation';
 
 type SearchScreenNavigationProp = NativeStackNavigationProp<SearchStackParamList, 'SearchMain'>;
 
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 15, color: '#999', fontWeight: '500' },
   tabTextActive: { color: '#E8572A', fontWeight: '600' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: 16, flexGrow: 1 },
+  listContent: { padding: 16, paddingBottom: TAB_BAR_HEIGHT + 16, flexGrow: 1 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,

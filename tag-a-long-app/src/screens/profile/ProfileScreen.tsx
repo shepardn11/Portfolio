@@ -25,6 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadImage } from '../../utils/imageUpload';
 import apiClient from '../../api/client';
+import { TAB_BAR_HEIGHT } from '../../utils/tabBarAnimation';
 
 export default function ProfileScreen() {
   const { user, logout, setUser, updateUser } = useAuthStore();
@@ -504,7 +505,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontFamily: 'Lora_600SemiBold_Italic', color: '#E8572A' },
   editIcon: { padding: 4 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 40 },
+  scrollContent: { paddingBottom: TAB_BAR_HEIGHT + 40 },
   heroSection: {
     flexDirection: 'row',
     alignItems: 'flex-start',
