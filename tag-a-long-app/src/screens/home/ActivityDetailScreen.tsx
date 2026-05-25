@@ -405,7 +405,7 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
         </TouchableOpacity>
 
         {/* Content */}
-        <View style={[styles.content, isOwnActivity ? styles.contentNoButton : { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 100 }]}>
+        <View style={[styles.content, { paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20 }]}>
           {/* Category Badge */}
           <View
             style={[styles.categoryBadge, { backgroundColor: getCategoryColor(listing.category) }]}
@@ -611,6 +611,27 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
               <Text style={styles.deleteButtonText}>Delete Activity</Text>
             </TouchableOpacity>
           )}
+
+          {!isOwnActivity && (
+            <View style={styles.bottomBar}>
+              <TouchableOpacity
+                style={[styles.tagAlongButton, (hasRequested || isRequesting) && styles.tagAlongButtonDisabled]}
+                onPress={handleTagAlong}
+                disabled={hasRequested || isRequesting}
+              >
+                {isRequesting ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name={hasRequested ? 'checkmark-circle' : 'add-circle'} size={24} color="#fff" />
+                    <Text style={styles.tagAlongButtonText}>
+                      {hasRequested ? 'Request Sent' : 'Tag-A-Long!'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -786,27 +807,6 @@ export default function ActivityDetailScreen({ navigation, route }: Props) {
       <LightboxModal uri={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       <ShareActivityModal visible={shareVisible} listing={listing} onClose={() => setShareVisible(false)} />
 
-      {/* Fixed Bottom Button - Only show if not own activity */}
-      {!isOwnActivity && (
-        <View style={[styles.bottomBar, { bottom: TAB_BAR_HEIGHT + insets.bottom }]}>
-          <TouchableOpacity
-            style={[styles.tagAlongButton, (hasRequested || isRequesting) && styles.tagAlongButtonDisabled]}
-            onPress={handleTagAlong}
-            disabled={hasRequested || isRequesting}
-          >
-            {isRequesting ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name={hasRequested ? 'checkmark-circle' : 'add-circle'} size={24} color="#fff" />
-                <Text style={styles.tagAlongButtonText}>
-                  {hasRequested ? 'Request Sent' : 'Tag-A-Long!'}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }
@@ -1269,14 +1269,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    marginTop: 16,
   },
   tagAlongButton: {
     flexDirection: 'row',
